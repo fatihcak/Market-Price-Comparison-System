@@ -1,2 +1,2 @@
 # Market-Price-Comparison-System
-This repository is for Market Price Comparison System Project. This project is developed by Eastern Mediterranen Students Doğukan Bilal Örs, Doğukan Güler, Aleyna Yılmaz, Fatih Çakır
+This repository is for Market Price Comparison System Project. This project is developed by Eastern Mediterranen Students Doğukan Bilal Örs, Doğukan Güler, Aleyna Yılmaz, Fatih Çakır. In this project our aim is make a system that helps the users for a better and optimized market price detection for shoping. Users can see the different prices of goods for different markets for making desicions about their daily, weekly, mothly or unusal market shopings. 
