@@ -1,0 +1,20 @@
+{
+  "version": 2,
+  "dgSpecHash": "gwstuKXhVeU=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\DOU\\Documents\\GitHub\\Market-Price-Comparison-System\\BACKEND\\src\\Domain\\Domain.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\DOU\\.nuget\\packages\\microsoft.extensions.configuration.abstractions\\8.0.0\\microsoft.extensions.configuration.abstractions.8.0.0.nupkg.sha512",
+    "C:\\Users\\DOU\\.nuget\\packages\\microsoft.extensions.primitives\\8.0.0\\microsoft.extensions.primitives.8.0.0.nupkg.sha512",
+    "C:\\Users\\DOU\\.nuget\\packages\\microsoft.identitymodel.abstractions\\8.0.0\\microsoft.identitymodel.abstractions.8.0.0.nupkg.sha512",
+    "C:\\Users\\DOU\\.nuget\\packages\\microsoft.identitymodel.jsonwebtokens\\8.0.0\\microsoft.identitymodel.jsonwebtokens.8.0.0.nupkg.sha512",
+    "C:\\Users\\DOU\\.nuget\\packages\\microsoft.identitymodel.logging\\8.0.0\\microsoft.identitymodel.logging.8.0.0.nupkg.sha512",
+    "C:\\Users\\DOU\\.nuget\\packages\\microsoft.identitymodel.tokens\\8.0.0\\microsoft.identitymodel.tokens.8.0.0.nupkg.sha512",
+    "C:\\Users\\DOU\\.nuget\\packages\\system.componentmodel.annotations\\5.0.0\\system.componentmodel.annotations.5.0.0.nupkg.sha512",
+    "C:\\Users\\DOU\\.nuget\\packages\\system.identitymodel.tokens.jwt\\8.0.0\\system.identitymodel.tokens.jwt.8.0.0.nupkg.sha512",
+    "C:\\Users\\DOU\\.nuget\\packages\\microsoft.netcore.app.ref\\8.0.18\\microsoft.netcore.app.ref.8.0.18.nupkg.sha512",
+    "C:\\Users\\DOU\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\8.0.18\\microsoft.windowsdesktop.app.ref.8.0.18.nupkg.sha512",
+    "C:\\Users\\DOU\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\8.0.18\\microsoft.aspnetcore.app.ref.8.0.18.nupkg.sha512"
+  ],
+  "logs": []
+}
