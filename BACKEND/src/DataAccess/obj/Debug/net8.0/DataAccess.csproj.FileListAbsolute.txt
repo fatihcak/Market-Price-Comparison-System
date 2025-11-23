@@ -12,9 +12,9 @@ C:\Users\DOU\Documents\GitHub\Market-Price-Comparison-System\BACKEND\src\DataAcc
 C:\Users\DOU\Documents\GitHub\Market-Price-Comparison-System\BACKEND\src\DataAccess\obj\Debug\net8.0\DataAccess.AssemblyInfo.cs
 C:\Users\DOU\Documents\GitHub\Market-Price-Comparison-System\BACKEND\src\DataAccess\obj\Debug\net8.0\DataAccess.csproj.CoreCompileInputs.cache
 C:\Users\DOU\Documents\GitHub\Market-Price-Comparison-System\BACKEND\src\DataAccess\obj\Debug\net8.0\DataAccess.sourcelink.json
-C:\Users\DOU\Documents\GitHub\Market-Price-Comparison-System\BACKEND\src\DataAccess\obj\Debug\net8.0\DataAccess.csproj.CopyComplete
 C:\Users\DOU\Documents\GitHub\Market-Price-Comparison-System\BACKEND\src\DataAccess\obj\Debug\net8.0\DataAccess.dll
 C:\Users\DOU\Documents\GitHub\Market-Price-Comparison-System\BACKEND\src\DataAccess\obj\Debug\net8.0\refint\DataAccess.dll
 C:\Users\DOU\Documents\GitHub\Market-Price-Comparison-System\BACKEND\src\DataAccess\obj\Debug\net8.0\DataAccess.pdb
 C:\Users\DOU\Documents\GitHub\Market-Price-Comparison-System\BACKEND\src\DataAccess\obj\Debug\net8.0\DataAccess.genruntimeconfig.cache
 C:\Users\DOU\Documents\GitHub\Market-Price-Comparison-System\BACKEND\src\DataAccess\obj\Debug\net8.0\ref\DataAccess.dll
+C:\Users\DOU\Documents\GitHub\Market-Price-Comparison-System\BACKEND\src\DataAccess\obj\Debug\net8.0\DataAccess.csproj.CopyComplete

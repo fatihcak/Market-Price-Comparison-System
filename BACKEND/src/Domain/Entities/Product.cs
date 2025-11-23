@@ -5,21 +5,24 @@ namespace Domain.Entities;
 public class Product : BaseEntity
 {
     [Required]
+    public int CategoryId { get; set; }
+
+    [Required]
     [MaxLength(200)]
     public string ProductName { get; set; } = string.Empty;
 
-    [Required]
-    public int CategoryId { get; set; }
-
-    [MaxLength(500)]
-    public string? ImageUrl { get; set; }
+    [MaxLength(100)]
+    public string? Brand { get; set; }
 
     [Required]
     [MaxLength(50)]
     public string Unit { get; set; } = "piece";
 
+    [Required]
+    public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
+
     // Navigation Properties
-    public Category Category { get; set; } = null!;
-    public ICollection<Price> Prices { get; set; } = new List<Price>();
-    public ICollection<ShoppingListItem> ShoppingListItems { get; set; } = new List<ShoppingListItem>();
+    public ProductCategory Category { get; set; } = null!;
+    public ICollection<MarketProductPrice> MarketProductPrices { get; set; } = new List<MarketProductPrice>();
+    public ICollection<UserProductList> UserProductLists { get; set; } = new List<UserProductList>();
 }

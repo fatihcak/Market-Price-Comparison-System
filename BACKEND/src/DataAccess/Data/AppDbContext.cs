@@ -7,48 +7,27 @@ public class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
-    public DbSet<User> Users { get; set; }
-    public DbSet<UserAddress> UsersAddresses { get; set; }
+    public DbSet<ProductCategory> ProductCategories { get; set; }
     public DbSet<Product> Products { get; set; }
     public DbSet<Market> Markets { get; set; }
-    public DbSet<Price> Prices { get; set; }
-    public DbSet<Category> Categories { get; set; }
-    public DbSet<ShoppingList> ShoppingLists { get; set; }
-    public DbSet<ShoppingListItem> ShoppingListItems { get; set; }
+    public DbSet<MarketProductPrice> MarketProductPrices { get; set; }
+    public DbSet<City> Cities { get; set; }
+    public DbSet<District> Districts { get; set; }
+    public DbSet<UserProductList> UserProductLists { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        // User
-        modelBuilder.Entity<User>(entity =>
+        // ProductCategory
+        modelBuilder.Entity<ProductCategory>(entity =>
         {
-            entity.ToTable("Users");
+            entity.ToTable("ProductCategories");
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).HasColumnName("USERID");
-            entity.Property(e => e.Username).HasColumnName("USERNAME").HasMaxLength(100);
-            entity.Property(e => e.Surname).HasColumnName("SURNAME").HasMaxLength(100);
-            entity.Property(e => e.Email).HasColumnName("EMAIL").HasMaxLength(255);
-            entity.Property(e => e.PasswordHash).HasColumnName("PASSWORDHASH");
-            entity.Property(e => e.UserRole).HasColumnName("USERROLE").HasMaxLength(50);
-            entity.Property(e => e.IsDeleted).HasColumnName("ISDELETED");
-            entity.HasIndex(e => e.Email).IsUnique();
-        });
-
-        // UserAddress
-        modelBuilder.Entity<UserAddress>(entity =>
-        {
-            entity.ToTable("UsersAdresses");
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).HasColumnName("ADRESSID");
-            entity.Property(e => e.UserId).HasColumnName("USERID");
-            entity.Property(e => e.Address).HasColumnName("ADRESS").HasMaxLength(500);
-            entity.Property(e => e.City).HasColumnName("CITY").HasMaxLength(100);
-            entity.Property(e => e.District).HasColumnName("DISTRICT").HasMaxLength(100);
-            entity.Property(e => e.PostalCode).HasColumnName("POSTALCODE").HasMaxLength(20);
-            entity.Property(e => e.Country).HasColumnName("COUNTRY").HasMaxLength(100);
-            entity.Property(e => e.IsDeleted).HasColumnName("ISDELETED");
-            entity.HasOne(e => e.User).WithMany(u => u.Addresses).HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
+            entity.Property(e => e.Id).HasColumnName("CategoryID");
+            entity.Property(e => e.CategoryName).HasColumnName("CategoryName").HasMaxLength(100);
+            entity.Property(e => e.IsDeleted).HasColumnName("IsDeleted");
+            entity.Property(e => e.CreatedAt).HasColumnName("CreatedAt");
         });
 
         // Product
@@ -56,13 +35,24 @@ public class AppDbContext : DbContext
         {
             entity.ToTable("Products");
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).HasColumnName("PRODUCTID");
-            entity.Property(e => e.ProductName).HasColumnName("PRODUCTNAME").HasMaxLength(200);
-            entity.Property(e => e.CategoryId).HasColumnName("CATEGORYID");
-            entity.Property(e => e.ImageUrl).HasColumnName("IMAGEURL").HasMaxLength(500);
-            entity.Property(e => e.Unit).HasColumnName("UNIT").HasMaxLength(50);
-            entity.Property(e => e.CreatedAt).HasColumnName("CREATEDAT");
-            entity.HasOne(e => e.Category).WithMany(c => c.Products).HasForeignKey(e => e.CategoryId).OnDelete(DeleteBehavior.Restrict);
+            entity.Property(e => e.Id).HasColumnName("ProductID");
+            entity.Property(e => e.CategoryId).HasColumnName("CategoryID");
+            entity.Property(e => e.ProductName).HasColumnName("ProductName").HasMaxLength(200);
+            entity.Property(e => e.Brand).HasColumnName("Brand").HasMaxLength(100);
+            entity.Property(e => e.Unit).HasColumnName("Unit").HasMaxLength(50);
+            entity.Property(e => e.LastUpdated).HasColumnName("LastUpdated");
+            entity.Property(e => e.IsDeleted).HasColumnName("IsDeleted");
+            entity.Property(e => e.CreatedAt).HasColumnName("CreatedAt");
+
+            entity.HasOne(e => e.Category)
+                .WithMany(c => c.Products)
+                .HasForeignKey(e => e.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Indexes
+            entity.HasIndex(e => e.CategoryId);
+            entity.HasIndex(e => e.ProductName);
+            entity.HasIndex(e => e.Brand);
         });
 
         // Market
@@ -70,77 +60,117 @@ public class AppDbContext : DbContext
         {
             entity.ToTable("Markets");
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).HasColumnName("MARKETID");
-            entity.Property(e => e.MarketName).HasColumnName("MARKETNAME").HasMaxLength(200);
-            entity.Property(e => e.LogoUrl).HasColumnName("LOGOURL").HasMaxLength(500);
-            entity.Property(e => e.Website).HasColumnName("WEBSITE").HasMaxLength(500);
-            entity.Property(e => e.CreatedAt).HasColumnName("CREATEDAT");
+            entity.Property(e => e.Id).HasColumnName("MarketID");
+            entity.Property(e => e.MarketName).HasColumnName("MarketName").HasMaxLength(200);
+            entity.Property(e => e.LogoUrl).HasColumnName("LogoURL").HasMaxLength(500);
+            entity.Property(e => e.Website).HasColumnName("WebsiteURL").HasMaxLength(500);
+            entity.Property(e => e.IsDeleted).HasColumnName("IsDeleted");
+            entity.Property(e => e.CreatedAt).HasColumnName("CreatedAt");
+
+            // Indexes
+            entity.HasIndex(e => e.MarketName);
         });
 
-        // Price
-        modelBuilder.Entity<Price>(entity =>
+        // City
+        modelBuilder.Entity<City>(entity =>
         {
-            entity.ToTable("Prices");
+            entity.ToTable("Cities");
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).HasColumnName("PRICEID");
-            entity.Property(e => e.ProductId).HasColumnName("PRODUCTID");
-            entity.Property(e => e.MarketId).HasColumnName("MARKETID");
-            entity.Property(e => e.PriceValue).HasColumnName("PRICE").HasColumnType("decimal(18,2)");
-            entity.Property(e => e.DiscountPrice).HasColumnName("DISCOUNTPRICE").HasColumnType("decimal(18,2)");
-            entity.Property(e => e.UpdatedAt).HasColumnName("UPDATEDAT");
-            entity.Property(e => e.CreatedAt).HasColumnName("CREATEDAT");
-            entity.Property(e => e.IsDeleted).HasColumnName("ISDELETED");
-            entity.HasOne(e => e.Product).WithMany(p => p.Prices).HasForeignKey(e => e.ProductId).OnDelete(DeleteBehavior.Cascade);
-            entity.HasOne(e => e.Market).WithMany(m => m.Prices).HasForeignKey(e => e.MarketId).OnDelete(DeleteBehavior.Cascade);
+            entity.Property(e => e.Id).HasColumnName("CityID");
+            entity.Property(e => e.CityName).HasColumnName("CityName").HasMaxLength(100);
+            entity.Property(e => e.IsDeleted).HasColumnName("IsDeleted");
+            entity.Property(e => e.CreatedAt).HasColumnName("CreatedAt");
         });
 
-        // Category
-        modelBuilder.Entity<Category>(entity =>
+        // District
+        modelBuilder.Entity<District>(entity =>
         {
-            entity.ToTable("Categories");
+            entity.ToTable("Districts");
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).HasColumnName("CATEGORYID");
-            entity.Property(e => e.CategoryName).HasColumnName("CATEGORYNAME").HasMaxLength(100);
-            entity.Property(e => e.Icon).HasColumnName("ICON").HasMaxLength(200);
-            entity.Property(e => e.CreatedAt).HasColumnName("CREATEDAT");
+            entity.Property(e => e.Id).HasColumnName("DistrictID");
+            entity.Property(e => e.CityId).HasColumnName("CityID");
+            entity.Property(e => e.DistrictName).HasColumnName("DistrictName").HasMaxLength(100);
+            entity.Property(e => e.IsDeleted).HasColumnName("IsDeleted");
+            entity.Property(e => e.CreatedAt).HasColumnName("CreatedAt");
+
+            entity.HasOne(e => e.City)
+                .WithMany(c => c.Districts)
+                .HasForeignKey(e => e.CityId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Indexes
+            entity.HasIndex(e => e.CityId);
+            entity.HasIndex(e => e.DistrictName);
         });
 
-        // ShoppingList
-        modelBuilder.Entity<ShoppingList>(entity =>
+        // MarketProductPrice
+        modelBuilder.Entity<MarketProductPrice>(entity =>
         {
-            entity.ToTable("ShoppingLists");
+            entity.ToTable("MarketProductPrices");
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).HasColumnName("SHOPPINGLISTID");
-            entity.Property(e => e.UserId).HasColumnName("USERID");
-            entity.Property(e => e.ListName).HasColumnName("LISTNAME").HasMaxLength(200);
-            entity.Property(e => e.CreatedAt).HasColumnName("CREATEDAT");
-            entity.HasOne(e => e.User).WithMany(u => u.ShoppingLists).HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
+            entity.Property(e => e.Id).HasColumnName("PriceID");
+            entity.Property(e => e.MarketId).HasColumnName("MarketID");
+            entity.Property(e => e.ProductId).HasColumnName("ProductID");
+            entity.Property(e => e.DistrictId).HasColumnName("DistrictID");
+            entity.Property(e => e.Price).HasColumnName("Price").HasColumnType("decimal(18,2)");
+            entity.Property(e => e.LastUpdated).HasColumnName("LastUpdated");
+            entity.Property(e => e.IsDeleted).HasColumnName("IsDeleted");
+            entity.Property(e => e.CreatedAt).HasColumnName("CreatedAt");
+
+            entity.HasOne(e => e.Market)
+                .WithMany(m => m.MarketProductPrices)
+                .HasForeignKey(e => e.MarketId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Product)
+                .WithMany(p => p.MarketProductPrices)
+                .HasForeignKey(e => e.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.District)
+                .WithMany(d => d.MarketProductPrices)
+                .HasForeignKey(e => e.DistrictId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Indexes for performance
+            entity.HasIndex(e => e.MarketId);
+            entity.HasIndex(e => e.ProductId);
+            entity.HasIndex(e => e.DistrictId);
+            entity.HasIndex(e => new { e.ProductId, e.DistrictId });
+            entity.HasIndex(e => e.LastUpdated);
         });
 
-        // ShoppingListItem
-        modelBuilder.Entity<ShoppingListItem>(entity =>
+        // UserProductList
+        modelBuilder.Entity<UserProductList>(entity =>
         {
-            entity.ToTable("ShoppingListItems");
+            entity.ToTable("UserProductLists");
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).HasColumnName("LISTITEMID");
-            entity.Property(e => e.ShoppingListId).HasColumnName("SHOPPINGLISTID");
-            entity.Property(e => e.ProductId).HasColumnName("PRODUCTID");
-            entity.Property(e => e.Quantity).HasColumnName("QUANTITY");
-            entity.Property(e => e.CreatedAt).HasColumnName("CREATEDAT");
-            entity.HasOne(e => e.ShoppingList).WithMany(sl => sl.Items).HasForeignKey(e => e.ShoppingListId).OnDelete(DeleteBehavior.Cascade);
-            entity.HasOne(e => e.Product).WithMany(p => p.ShoppingListItems).HasForeignKey(e => e.ProductId).OnDelete(DeleteBehavior.Restrict);
+            entity.Property(e => e.Id).HasColumnName("ListID");
+            entity.Property(e => e.SessionId).HasColumnName("SessionID").HasMaxLength(255);
+            entity.Property(e => e.ProductId).HasColumnName("ProductID");
+            entity.Property(e => e.Quantity).HasColumnName("Quantity");
+            entity.Property(e => e.AddedDate).HasColumnName("AddedDate");
+            entity.Property(e => e.IsDeleted).HasColumnName("IsDeleted");
+            entity.Property(e => e.CreatedAt).HasColumnName("CreatedAt");
+
+            entity.HasOne(e => e.Product)
+                .WithMany(p => p.UserProductLists)
+                .HasForeignKey(e => e.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Indexes
+            entity.HasIndex(e => e.SessionId);
+            entity.HasIndex(e => e.ProductId);
+            entity.HasIndex(e => new { e.SessionId, e.ProductId }).IsUnique();
         });
 
-        // Global query filter for soft delete
-        modelBuilder.Entity<User>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<UserAddress>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<Price>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<ShoppingList>().HasQueryFilter(e => !e.IsDeleted);
+        // Global query filters for soft delete
+        modelBuilder.Entity<ProductCategory>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<Product>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<Market>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<Category>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<ShoppingListItem>().HasQueryFilter(e => !e.IsDeleted);
-
-
+        modelBuilder.Entity<MarketProductPrice>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<City>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<District>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<UserProductList>().HasQueryFilter(e => !e.IsDeleted);
     }
 }

@@ -15,5 +15,5 @@ public class Market : BaseEntity
     public string? Website { get; set; }
 
     // Navigation Property
-    public ICollection<Price> Prices { get; set; } = new List<Price>();
+    public ICollection<MarketProductPrice> MarketProductPrices { get; set; } = new List<MarketProductPrice>();
 }
