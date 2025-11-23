@@ -6,9 +6,9 @@
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "build",
-      "program": "${workspaceFolder}/BACKEND/src/MarketComparison.API/bin/Debug/net8.0/MarketComparison.API.dll",
+      "program": "${workspaceFolder}/BACKEND/src/API/bin/Debug/net8.0/API.dll",
       "args": [],
-      "cwd": "${workspaceFolder}/BACKEND/src/MarketComparison.API",
+      "cwd": "${workspaceFolder}/BACKEND/src/API",
       "stopAtEntry": false,
       "env": {
         "ASPNETCORE_ENVIRONMENT": "Development"

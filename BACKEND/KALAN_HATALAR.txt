@@ -57,7 +57,7 @@ Kalan Sorunlar: 16 adet
 
 ───────────────────────────────────────────────────────────────────────────────
 
-5. INDEX EKSİKLİKLERİ
+5. INDEX EKSİKLİKLERİ ✅ Tamamlandı
    Dosya: src/DataAccess/Data/AppDbContext.cs
    Problem: Sadece User.Email için unique index var
    - Performance için gerekli indexler eksik:
@@ -74,7 +74,7 @@ Kalan Sorunlar: 16 adet
 
 ───────────────────────────────────────────────────────────────────────────────
 
-6. EF CORE QUERY FILTER UYARISI
+6. EF CORE QUERY FILTER UYARISI ✅ Tamamlandı
    Durum: Migration sırasında uyarı alındı
    Problem: User entity'sinde global query filter var ve ShoppingList ile
             required relationship var. Filtered out olunca sorun çıkabilir.
