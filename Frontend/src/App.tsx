@@ -4,11 +4,11 @@ function App() {
 
 
   return (
-    <>
-      <div> 
-        Market Price Comparison Frontend
-      </div>
-    </>  
+    <div className="hover_selecter">
+    <p><span>HOVER ME</span></p>
+    <p><span>HOVER ME</span></p>
+    <p><span>HOVER ME</span></p>
+</div>
   )
 }
 
