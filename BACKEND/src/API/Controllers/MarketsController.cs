@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Domain.Interfaces.Services;
 using DTOs.DTOs.Requests;
+using Microsoft.AspNetCore.Authorization;
 
 namespace API.Controllers;
 
@@ -64,9 +65,10 @@ public class MarketsController : ControllerBase
     /// Create new market
     /// </summary>
     [HttpPost]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Create([FromBody] CreateMarketDTO dto)
+    public async Task<IActionResult> CreateMarket([FromBody] CreateMarketDTO dto)
     {
         if (!ModelState.IsValid)
         {
@@ -81,10 +83,11 @@ public class MarketsController : ControllerBase
     /// Update existing market
     /// </summary>
     [HttpPut("{id}")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Update(int id, [FromBody] UpdateMarketDTO dto)
+    public async Task<IActionResult> UpdateMarket(int id, [FromBody] UpdateMarketDTO dto)
     {
         if (!ModelState.IsValid)
         {
@@ -105,9 +108,10 @@ public class MarketsController : ControllerBase
     /// Delete market (soft delete)
     /// </summary>
     [HttpDelete("{id}")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> DeleteMarket(int id)
     {
         var result = await _marketService.DeleteMarketAsync(id);
 

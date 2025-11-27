@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Domain.Interfaces.Services;
 using DTOs.DTOs.Requests;
+using Microsoft.AspNetCore.Authorization;
 
 namespace API.Controllers;
 
@@ -40,9 +41,10 @@ public class PricesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Create([FromBody] CreatePriceDTO dto)
+    public async Task<IActionResult> AddPrice([FromBody] CreatePriceDTO dto)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
         var price = await _priceService.AddPriceAsync(dto);
@@ -52,10 +54,11 @@ public class PricesController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Update(int id, [FromBody] UpdatePriceDTO dto)
+    public async Task<IActionResult> UpdatePrice(int id, [FromBody] UpdatePriceDTO dto)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
         var price = await _priceService.UpdatePriceAsync(id, dto);
@@ -64,9 +67,10 @@ public class PricesController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> DeletePrice(int id)
     {
         var result = await _priceService.DeletePriceAsync(id);
         if (!result) return NotFound(new { message = $"Price with ID {id} not found" });

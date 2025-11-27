@@ -14,6 +14,7 @@ public class AppDbContext : DbContext
     public DbSet<City> Cities { get; set; }
     public DbSet<District> Districts { get; set; }
     public DbSet<UserProductList> UserProductLists { get; set; }
+    public DbSet<AdminUser> AdminUsers { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -172,5 +173,15 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<City>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<District>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<UserProductList>().HasQueryFilter(e => !e.IsDeleted);
+
+        // AdminUser
+        modelBuilder.Entity<AdminUser>(entity =>
+        {
+            entity.ToTable("AdminUsers");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Username).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.PasswordHash).IsRequired();
+            entity.HasIndex(e => e.Username).IsUnique();
+        });
     }
 }
