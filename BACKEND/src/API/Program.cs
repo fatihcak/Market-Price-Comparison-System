@@ -9,8 +9,14 @@ using System.Text;
 using API.Middleware;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
+using Serilog;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Serilog
+builder.Host.UseSerilog((context, configuration) =>
+    configuration.ReadFrom.Configuration(context.Configuration));
 
 // Database
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -41,6 +47,10 @@ builder.Services.AddRateLimiter(options =>
                 Window = TimeSpan.FromMinutes(1)
             }));
 });
+
+// Health Checks
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<AppDbContext>();
 
 
 
@@ -89,5 +99,6 @@ app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 app.UseRateLimiter();
 
+app.MapHealthChecks("/health");
 app.MapControllers();
 app.Run();
