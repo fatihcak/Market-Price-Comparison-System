@@ -56,6 +56,67 @@ public class MarketServiceTests
             .ReturnsAsync((Market?)null);
 
         // Act
+        var result = await _marketService.GetMarketByIdAsync(marketId);
+
+        // Assert
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task CreateMarket_ValidData_ReturnsCreatedMarket()
+    {
+        // Arrange
+        var createDto = new CreateMarketDTO
+        {
+            MarketName = "New Market",
+            LogoUrl = "new.jpg",
+            Website = "new.com"
+        };
+
+        _mockMarketRepository
+            .Setup(repo => repo.AddAsync(It.IsAny<Market>()))
+            .ReturnsAsync((Market m) => m);
+
+        // Act
+        var result = await _marketService.CreateMarketAsync(createDto);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(createDto.MarketName, result.MarketName);
+        _mockMarketRepository.Verify(repo => repo.AddAsync(It.IsAny<Market>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task UpdateMarket_ValidData_UpdatesMarket()
+    {
+        // Arrange
+        var marketId = 1;
+        var updateDto = new UpdateMarketDTO
+        {
+            MarketName = "Updated Market",
+            LogoUrl = "updated.jpg",
+            Website = "updated.com"
+        };
+
+        var existingMarket = new Market { Id = marketId, MarketName = "Old Market" };
+
+        _mockMarketRepository.Setup(repo => repo.GetByIdAsync(marketId)).ReturnsAsync(existingMarket);
+        _mockMarketRepository.Setup(repo => repo.UpdateAsync(It.IsAny<Market>())).Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _marketService.UpdateMarketAsync(marketId, updateDto);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(updateDto.MarketName, result.MarketName);
+        _mockMarketRepository.Verify(repo => repo.UpdateAsync(It.IsAny<Market>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeleteMarket_ExistingId_PerformsSoftDelete()
+    {
+        // Arrange
+        var marketId = 1;
         var existingMarket = new Market { Id = marketId, MarketName = "To Delete" };
 
         _mockMarketRepository.Setup(repo => repo.GetByIdAsync(marketId)).ReturnsAsync(existingMarket);
