@@ -1,0 +1,20 @@
+[
+  {
+    "Id": 1,
+    "Name": "SuperMart",
+    "City": "Istanbul",
+    "District": "Kadikoy"
+  },
+  {
+    "Id": 2,
+    "Name": "MegaStore",
+    "City": "Istanbul",
+    "District": "Besiktas"
+  },
+  {
+    "Id": 3,
+    "Name": "LocalBazaar",
+    "City": "Ankara",
+    "District": "Cankaya"
+  }
+]
