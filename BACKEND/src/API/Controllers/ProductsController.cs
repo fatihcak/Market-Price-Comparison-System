@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Domain.Interfaces.Services;
 using DTOs.DTOs.Requests;
+using Microsoft.AspNetCore.Authorization;
 
 namespace API.Controllers;
 
@@ -91,9 +92,10 @@ public class ProductsController : ControllerBase
     /// Create new product
     /// </summary>
     [HttpPost]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Create([FromBody] CreateProductDTO dto)
+    public async Task<IActionResult> CreateProduct([FromBody] CreateProductDTO dto)
     {
         if (!ModelState.IsValid)
         {
@@ -108,10 +110,11 @@ public class ProductsController : ControllerBase
     /// Update existing product
     /// </summary>
     [HttpPut("{id}")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Update(int id, [FromBody] UpdateProductDTO dto)
+    public async Task<IActionResult> UpdateProduct(int id, [FromBody] UpdateProductDTO dto)
     {
         if (!ModelState.IsValid)
         {
@@ -132,9 +135,10 @@ public class ProductsController : ControllerBase
     /// Delete product (soft delete)
     /// </summary>
     [HttpDelete("{id}")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> DeleteProduct(int id)
     {
         var result = await _productService.DeleteProductAsync(id);
 

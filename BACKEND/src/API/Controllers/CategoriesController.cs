@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Domain.Interfaces.Services;
 using DTOs.DTOs.Requests;
+using Microsoft.AspNetCore.Authorization;
 
 namespace API.Controllers;
 
@@ -36,7 +37,8 @@ public class CategoriesController : ControllerBase
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Create([FromBody] CreateCategoryDTO dto)
+    [Authorize]
+    public async Task<IActionResult> CreateCategory([FromBody] CreateCategoryDTO dto)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
         var category = await _categoryService.CreateCategoryAsync(dto);
@@ -47,7 +49,8 @@ public class CategoriesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Update(int id, [FromBody] UpdateCategoryDTO dto)
+    [Authorize]
+    public async Task<IActionResult> UpdateCategory(int id, [FromBody] UpdateCategoryDTO dto)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
         var category = await _categoryService.UpdateCategoryAsync(id, dto);
@@ -58,7 +61,8 @@ public class CategoriesController : ControllerBase
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Delete(int id)
+    [Authorize]
+    public async Task<IActionResult> DeleteCategory(int id)
     {
         var result = await _categoryService.DeleteCategoryAsync(id);
         if (!result) return NotFound(new { message = $"Category with ID {id} not found" });

@@ -1,0 +1,23 @@
+[
+  {
+    "Id": 1,
+    "Name": "Smartphone X",
+    "Brand": "TechBrand",
+    "CategoryId": 1,
+    "Description": "Latest model smartphone"
+  },
+  {
+    "Id": 2,
+    "Name": "Organic Milk",
+    "Brand": "FarmFresh",
+    "CategoryId": 2,
+    "Description": "1L Organic Milk"
+  },
+  {
+    "Id": 3,
+    "Name": "Running Shoes",
+    "Brand": "Sporty",
+    "CategoryId": 3,
+    "Description": "Comfortable running shoes"
+  }
+]
