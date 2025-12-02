@@ -14,6 +14,9 @@ public class Product : BaseEntity
     [MaxLength(100)]
     public string? Brand { get; set; }
 
+    [MaxLength(500)]
+    public string? ImageUrl { get; set; }
+
     [Required]
     [MaxLength(50)]
     public string Unit { get; set; } = "piece";
