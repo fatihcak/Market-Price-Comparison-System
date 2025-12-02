@@ -8,4 +8,5 @@ public interface IProductRepository : IRepository<Product>
     Task<IEnumerable<Product>> SearchByNameAsync(string searchTerm);
     Task<IEnumerable<Product>> SearchByBrandAsync(string brand);
     Task<Product?> GetProductWithCategoryAsync(int id);
+    Task<IEnumerable<Product>> GetAllWithDetailsAsync();
 }

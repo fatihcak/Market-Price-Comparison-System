@@ -11,3 +11,7 @@
 # Unignore compsys folder
 !compsys/
 !compsys/**
+
+# Unignore Frontend folder
+!Frontend/
+!Frontend/**

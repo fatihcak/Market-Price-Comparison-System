@@ -1,15 +1,260 @@
-import './App.css'
+import { MapPin, TrendingDown, ShoppingCart, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Routes, Route, useParams, useNavigate, Navigate } from 'react-router-dom';
+import Header from './components/Header';
+import SearchBar from './components/SearchBar';
+import ProductCard from './components/ProductCard';
+import CategorySection from './components/CategorySection';
+import FilterBar from './components/FilterBar';
+import Testimonials from './components/Testimonials';
+import PriceComparison from './components/PriceComparison';
+import ProductList from './components/ProductList';
+import { Product } from './types';
+import { api } from './services/api';
 
 function App() {
+  const [comparisonOpen, setComparisonOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState('Organik Süt 1L');
+  const [selectedProductId, setSelectedProductId] = useState<number | undefined>(undefined);
+  const [shoppingList, setShoppingList] = useState<Product[]>([]);
+  const [listOpen, setListOpen] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
 
+  useEffect(() => {
+    api.getProducts().then(setProducts);
+  }, []);
+
+  const openComparison = (productName: string, productId: number) => {
+    setSelectedProduct(productName);
+    setSelectedProductId(productId);
+    setComparisonOpen(true);
+  };
+
+  const addToShoppingList = (product: Product) => {
+    setShoppingList([...shoppingList, product]);
+    setListOpen(true);
+  };
+
+  const removeFromShoppingList = (index: number) => {
+    const newList = [...shoppingList];
+    newList.splice(index, 1);
+    setShoppingList(newList);
+  };
 
   return (
-    <>
-      <div> 
-        Market Price Comparison Frontend
-      </div>
-    </>  
-  )
+    <div className="min-h-screen bg-white">
+      <Header onOpenList={() => setListOpen(true)} />
+
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        <SearchBar />
+
+        <section className="mt-12">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-3xl font-bold text-gray-900">Categories</h2>
+          </div>
+          <CategorySection />
+        </section>
+
+        <Routes>
+          <Route path="/" element={<Navigate to="/products/All" replace />} />
+          <Route
+            path="/products/:category"
+            element={
+              <ProductGrid
+                products={products}
+                onAdd={addToShoppingList}
+                onCompare={openComparison}
+              />
+            }
+          />
+        </Routes>
+
+        <section className="mt-20 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="text-center hover:scale-105 transition-transform duration-300">
+              <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md">
+                <TrendingDown className="text-green-600" size={32} />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Price Tracking</h3>
+              <p className="text-gray-600">Track price changes of your favorite products</p>
+            </div>
+
+            <div className="text-center hover:scale-105 transition-transform duration-300">
+              <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md">
+                <MapPin className="text-green-600" size={32} />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Closest Market</h3>
+              <p className="text-gray-600">Find the most affordable markets around you</p>
+            </div>
+
+            <div className="text-center hover:scale-105 transition-transform duration-300">
+              <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md">
+                <ShoppingCart className="text-green-600" size={32} />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Smart List</h3>
+              <p className="text-gray-600">Create shopping lists and save money</p>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <Testimonials />
+
+      <footer className="bg-gray-900 text-gray-300 py-12">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            <div>
+              <h4 className="text-white font-bold mb-4">Market Price</h4>
+              <p className="text-sm">Find and compare the best prices</p>
+            </div>
+            <div>
+              <h4 className="text-white font-bold mb-4">Quick Links</h4>
+              <ul className="text-sm space-y-2">
+                <li><a href="#" className="hover:text-white transition-colors">About Us</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Markets</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-white font-bold mb-4">Support</h4>
+              <ul className="text-sm space-y-2">
+                <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Privacy</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Terms</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-white font-bold mb-4">Follow Us</h4>
+              <p className="text-sm">Follow Us</p>
+            </div>
+          </div>
+          <div className="border-t border-gray-700 pt-8 text-sm text-center">
+            <p>&copy; Market Price. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
+
+      <PriceComparison 
+        isOpen={comparisonOpen} 
+        onClose={() => setComparisonOpen(false)} 
+        productName={selectedProduct} 
+        productId={selectedProductId}
+      />
+
+      <ProductList
+        isOpen={listOpen}
+        onClose={() => setListOpen(false)}
+        products={shoppingList}
+        onRemove={removeFromShoppingList}
+      />
+    </div>
+  );
 }
 
-export default App
+interface ProductGridProps {
+  products: Product[];
+  onAdd: (product: Product) => void;
+  onCompare: (name: string, id: number) => void;
+}
+
+function ProductGrid({ products, onAdd, onCompare }: ProductGridProps) {
+  const { category } = useParams<{ category: string }>();
+  const navigate = useNavigate();
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 16;
+
+  const selectedCategory = category || 'All';
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory]);
+
+  const filteredProducts = selectedCategory === 'All'
+    ? products
+    : products.filter(product => product.category === selectedCategory);
+
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const displayedProducts = filteredProducts.slice(startIndex, startIndex + itemsPerPage);
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  return (
+    <section className="mt-16">
+      <FilterBar />
+
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="text-3xl font-bold text-gray-900">
+          {selectedCategory === 'All' ? 'Popular Products' : selectedCategory}
+        </h2>
+        <button
+          onClick={() => navigate('/products/All')}
+          className="text-green-600 hover:text-green-700 font-semibold text-sm transition-colors"
+        >
+          See All →
+        </button>
+      </div>
+
+      {displayedProducts.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {displayedProducts.map((product) => (
+            <div key={product.id}>
+              <ProductCard
+                product={product}
+                onAdd={onAdd}
+                onCompare={(productId) => onCompare(product.name, productId)}
+              />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-12 text-gray-500">
+          No products found in this category.
+        </div>
+      )}
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-4 mt-12">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <ChevronLeft size={20} />
+          </button>
+
+          <div className="flex gap-2">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => handlePageChange(page)}
+                className={`w-10 h-10 rounded-lg font-medium transition-colors ${currentPage === page
+                  ? 'bg-green-600 text-white'
+                  : 'hover:bg-gray-50 text-gray-600'
+                  }`}
+              >
+                {page}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <ChevronRight size={20} />
+          </button>
+        </div>
+      )}
+    </section>
+  );
+}
+
+export default App;
