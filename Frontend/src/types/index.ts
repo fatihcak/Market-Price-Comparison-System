@@ -50,3 +50,10 @@ export interface ProductResponseDTO {
     marketName: string;
     imageUrl: string;
 }
+
+export interface ProductPriceHistoryDTO {
+    date: string;
+    minPrice: number;
+    maxPrice: number;
+    averagePrice: number;
+}
