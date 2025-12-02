@@ -9,16 +9,24 @@ import FilterBar from './components/FilterBar';
 import Testimonials from './components/Testimonials';
 import PriceComparison from './components/PriceComparison';
 import ProductList from './components/ProductList';
-import { products, Product } from './data/products';
+import { Product } from './types';
+import { api } from './services/api';
 
 function App() {
   const [comparisonOpen, setComparisonOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState('Organik Süt 1L');
+  const [selectedProductId, setSelectedProductId] = useState<number | undefined>(undefined);
   const [shoppingList, setShoppingList] = useState<Product[]>([]);
   const [listOpen, setListOpen] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
 
-  const openComparison = (productName: string) => {
+  useEffect(() => {
+    api.getProducts().then(setProducts);
+  }, []);
+
+  const openComparison = (productName: string, productId: number) => {
     setSelectedProduct(productName);
+    setSelectedProductId(productId);
     setComparisonOpen(true);
   };
 
@@ -126,7 +134,12 @@ function App() {
         </div>
       </footer>
 
-      <PriceComparison isOpen={comparisonOpen} onClose={() => setComparisonOpen(false)} productName={selectedProduct} />
+      <PriceComparison 
+        isOpen={comparisonOpen} 
+        onClose={() => setComparisonOpen(false)} 
+        productName={selectedProduct} 
+        productId={selectedProductId}
+      />
 
       <ProductList
         isOpen={listOpen}
@@ -141,7 +154,7 @@ function App() {
 interface ProductGridProps {
   products: Product[];
   onAdd: (product: Product) => void;
-  onCompare: (name: string) => void;
+  onCompare: (name: string, id: number) => void;
 }
 
 function ProductGrid({ products, onAdd, onCompare }: ProductGridProps) {
@@ -194,7 +207,7 @@ function ProductGrid({ products, onAdd, onCompare }: ProductGridProps) {
               <ProductCard
                 product={product}
                 onAdd={onAdd}
-                onCompare={() => onCompare(product.name)}
+                onCompare={(productId) => onCompare(product.name, productId)}
               />
             </div>
           ))}

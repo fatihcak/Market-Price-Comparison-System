@@ -1,24 +1,37 @@
 import { X, MapPin, AlertCircle } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { api } from '../services/api';
+import { PriceResponseDTO } from '../types';
 
 interface PriceComparisonProps {
   isOpen: boolean;
   onClose: () => void;
   productName?: string;
+  productId?: number;
 }
 
-export default function PriceComparison({ isOpen, onClose, productName = 'Organik Süt 1L' }: PriceComparisonProps) {
+export default function PriceComparison({ isOpen, onClose, productName = 'Product', productId }: PriceComparisonProps) {
   const [selectedMarket, setSelectedMarket] = useState(0);
+  const [prices, setPrices] = useState<PriceResponseDTO[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const prices = [
-    { market: 'A101', price: 18.50, originalPrice: 22.0, discount: 16, distance: '0.5 km', rating: 4.5 },
-    { market: 'Migros', price: 19.99, originalPrice: 25.0, discount: 20, distance: '1.2 km', rating: 4.8 },
-    { market: 'Carrefour', price: 20.50, originalPrice: 26.0, discount: 21, distance: '2.1 km', rating: 4.6 },
-    { market: 'Bim', price: 27.80, originalPrice: 21.0, discount: 15, distance: '0.8 km', rating: 4.3 },
-    { market: 'Tesco', price: 21.00, originalPrice: 27.0, discount: 22, distance: '3.5 km', rating: 4.4 },
-  ];
-  const cheapest = prices.reduce((prev, curr) => (prev.price < curr.price ? prev : curr));
+  useEffect(() => {
+    if (isOpen && productId) {
+      setLoading(true);
+      api.getPricesByProduct(productId)
+        .then(data => {
+          setPrices(data);
+          setLoading(false);
+        })
+        .catch(() => setLoading(false));
+    }
+  }, [isOpen, productId]);
+
   if (!isOpen) return null;
+
+  const cheapest = prices.length > 0 
+    ? prices.reduce((prev, curr) => (prev.price < curr.price ? prev : curr))
+    : null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -34,55 +47,56 @@ export default function PriceComparison({ isOpen, onClose, productName = 'Organi
         </div>
 
         <div className="p-6 space-y-4">
-          {prices.map((item, index) => (
-            <div
-              key={index}
-              onClick={() => setSelectedMarket(index)}
-              className={`p-4 rounded-xl border-2 cursor-pointer transition-all transform hover:scale-102 ${selectedMarket === index
-                ? 'border-green-500 bg-green-50'
-                : 'border-gray-200 hover:border-green-200 bg-white'
-                }`}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex-1">
-                  <h3 className="font-bold text-lg text-gray-900">{item.market}</h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    <MapPin size={16} className="text-gray-500" />
-                    <span className="text-sm text-gray-600">{item.distance} uzaklıkta</span>
+          {loading ? (
+            <div className="text-center py-8 text-gray-500">Loading prices...</div>
+          ) : prices.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">No prices found for this product.</div>
+          ) : (
+            prices.map((item, index) => (
+              <div
+                key={item.id}
+                onClick={() => setSelectedMarket(index)}
+                className={`p-4 rounded-xl border-2 cursor-pointer transition-all transform hover:scale-102 ${selectedMarket === index
+                  ? 'border-green-500 bg-green-50'
+                  : 'border-gray-200 hover:border-green-200 bg-white'
+                  }`}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex-1">
+                    <h3 className="font-bold text-lg text-gray-900">{item.marketName}</h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <MapPin size={16} className="text-gray-500" />
+                      <span className="text-sm text-gray-600">{item.districtName}</span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="flex items-center gap-2 justify-end mb-2">
+                      <span className="text-3xl font-bold text-green-600">{item.price.toFixed(2)}₺</span>
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      Updated: {new Date(item.lastUpdated).toLocaleDateString()}
+                    </div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="flex items-center gap-2 justify-end mb-2">
-                    <span className="text-3xl font-bold text-green-600">{item.price.toFixed(2)}₺</span>
-                    <span className="text-sm text-gray-400 line-through">{item.originalPrice.toFixed(2)}₺</span>
-                  </div>
-                  <div className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-semibold inline-block">
-                    -{item.discount}%
-                  </div>
+
+                <div className="flex items-center gap-4 pt-3 border-t border-gray-100">
+                  <button className="ml-auto px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium text-sm transition-colors">
+                    Add to List
+                  </button>
                 </div>
               </div>
-
-              <div className="flex items-center gap-4 pt-3 border-t border-gray-100">
-                <div className="flex items-center gap-1">
-                  <span className="text-sm font-medium text-gray-700">Rating:</span>
-                  <span className="text-sm font-bold text-gray-900">{item.rating}</span>
-                  <span className="text-yellow-400 text-lg">★</span>
-                </div>
-                {/* BUTON FONKSİYONU EKLENECEK*/}
-                <button className="ml-auto px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium text-sm transition-colors">
-                  Add to List
-                </button>
-              </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
 
-        <div className="bg-blue-50 border-t border-blue-100 px-6 py-4 flex items-gap-3">
-          <AlertCircle size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-blue-700">
-            <strong>Tip:</strong> Cheapest Price on {cheapest.market} {cheapest.price.toFixed(2)}₺. Prices may vary in your city.
-          </p>
-        </div>
+        {cheapest && (
+          <div className="bg-blue-50 border-t border-blue-100 px-6 py-4 flex items-gap-3">
+            <AlertCircle size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-blue-700">
+              <strong>Tip:</strong> Cheapest Price on {cheapest.marketName} {cheapest.price.toFixed(2)}₺.
+            </p>
+          </div>
+        )}
 
         <div className="bg-gray-50 border-t border-gray-100 px-6 py-4 flex gap-3">
           <button
@@ -91,7 +105,6 @@ export default function PriceComparison({ isOpen, onClose, productName = 'Organi
           >
             Close
           </button>
-          {/* BUTON ADI DEĞİŞİLECEK FONKSİYON ?*/}
           <button className="flex-1 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors">
             Okay
           </button>

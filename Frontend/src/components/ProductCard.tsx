@@ -1,11 +1,11 @@
 import { Heart, MapPin, TrendingDown, Plus } from 'lucide-react';
 import { useState } from 'react';
-import { Product } from '../data/products';
+import { Product } from '../types';
 
 interface ProductCardProps {
   product: Product;
   onAdd?: (product: Product) => void;
-  onCompare?: () => void;
+  onCompare?: (productId: number) => void;
 }
 
 export default function ProductCard({ product, onAdd, onCompare }: ProductCardProps) {
@@ -20,7 +20,7 @@ export default function ProductCard({ product, onAdd, onCompare }: ProductCardPr
 
   return (
     <div
-      onClick={onCompare}
+      onClick={() => onCompare && onCompare(product.id)}
       className="group bg-white rounded-xl border border-gray-100 overflow-hidden hover:border-green-200 hover:shadow-lg transition-all duration-300 cursor-pointer"
     >
       <div className="relative bg-gray-100 h-48 overflow-hidden">
@@ -57,7 +57,7 @@ export default function ProductCard({ product, onAdd, onCompare }: ProductCardPr
 
         <div className="flex items-center gap-2 mb-4">
           <span className="text-2xl font-bold text-green-600">{product.price.toFixed(2)}₺</span>
-          <span className="text-sm text-gray-400 line-through">{product.oldPrice.toFixed(2)}₺</span>
+          {product.oldPrice && <span className="text-sm text-gray-400 line-through">{product.oldPrice.toFixed(2)}₺</span>}
         </div>
 
         <div className="flex items-center gap-2 text-xs text-gray-600 mb-4 pb-4 border-b border-gray-100">
