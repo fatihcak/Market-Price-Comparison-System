@@ -57,4 +57,14 @@ public class ProductRepository : Repository<Product>, IProductRepository
             .Include(p => p.Category)
             .FirstOrDefaultAsync(p => p.Id == id);
     }
+
+    public async Task<IEnumerable<Product>> GetAllWithDetailsAsync()
+    {
+        return await _context.Products
+            .Include(p => p.Category)
+            .Include(p => p.MarketProductPrices)
+            .ThenInclude(mpp => mpp.Market)
+            .OrderBy(p => p.ProductName)
+            .ToListAsync();
+    }
 }

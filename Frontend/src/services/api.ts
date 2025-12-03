@@ -1,4 +1,4 @@
-import { PriceResponseDTO, Product, ProductResponseDTO, ProductPriceHistoryDTO } from '../types';
+import { PriceResponseDTO, Product, ProductResponseDTO } from '../types';
 
 const API_BASE_URL = 'http://localhost:5000/api';
 
@@ -33,69 +33,10 @@ export const api = {
                 market: item.marketName, // Map marketName to market
                 discount: item.discount,
                 category: item.categoryName, // Map categoryName to category
-                image: item.imageUrl || 'https://placehold.co/200x200?text=No+Image' // Fallback image
+                image: item.imageUrl // Map imageUrl to image
             }));
         } catch (error) {
             console.error('Error fetching products:', error);
-            return [];
-        }
-    },
-
-    getProductHistory: async (productId: number, days: number = 30): Promise<ProductPriceHistoryDTO[]> => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/Products/${productId}/history?days=${days}`);
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return await response.json();
-        } catch (error) {
-            console.error('Error fetching product history:', error);
-            return [];
-        }
-    },
-
-    searchProducts: async (query: string): Promise<Product[]> => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/Products/search?name=${encodeURIComponent(query)}`);
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            const data: ProductResponseDTO[] = await response.json();
-            return data.map(item => ({
-                id: item.id,
-                name: item.productName,
-                price: item.price,
-                oldPrice: item.oldPrice || null,
-                market: item.marketName,
-                discount: item.discount,
-                category: item.categoryName,
-                image: item.imageUrl || 'https://placehold.co/200x200?text=No+Image'
-            }));
-        } catch (error) {
-            console.error('Error searching products:', error);
-            return [];
-        }
-    },
-
-    getProductsByCategory: async (categoryId: number): Promise<Product[]> => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/Products/category/${categoryId}`);
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            const data: ProductResponseDTO[] = await response.json();
-            return data.map(item => ({
-                id: item.id,
-                name: item.productName,
-                price: item.price,
-                oldPrice: item.oldPrice || null,
-                market: item.marketName,
-                discount: item.discount,
-                category: item.categoryName,
-                image: item.imageUrl || 'https://placehold.co/200x200?text=No+Image'
-            }));
-        } catch (error) {
-            console.error('Error fetching products by category:', error);
             return [];
         }
     }

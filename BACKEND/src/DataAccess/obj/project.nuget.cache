@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "CxQ3X0UXfDWh7r6MUYuqWsGLfochsh2JJf0QhByJ06BV0/tA8zVbJQ3IvIW4y4R3suQGW281MF/bK0NkBNzeHg==",
+  "dgSpecHash": "h89XPFOwvrEvR5C2LU3JDRrKItkw64O9s+Geb+px5RmqM5DDaO2WUGFLSiCjrzl2SZTXgk/XdX53Hi3dwxVusw==",
   "success": true,
   "projectFilePath": "C:\\Users\\DOU\\Documents\\GitHub\\Market-Price-Comparison-System\\BACKEND\\src\\DataAccess\\DataAccess.csproj",
   "expectedPackageFiles": [
@@ -20,6 +20,7 @@
     "C:\\Users\\DOU\\.nuget\\packages\\microsoft.entityframeworkcore.abstractions\\8.0.0\\microsoft.entityframeworkcore.abstractions.8.0.0.nupkg.sha512",
     "C:\\Users\\DOU\\.nuget\\packages\\microsoft.entityframeworkcore.analyzers\\8.0.0\\microsoft.entityframeworkcore.analyzers.8.0.0.nupkg.sha512",
     "C:\\Users\\DOU\\.nuget\\packages\\microsoft.entityframeworkcore.design\\8.0.0\\microsoft.entityframeworkcore.design.8.0.0.nupkg.sha512",
+    "C:\\Users\\DOU\\.nuget\\packages\\microsoft.entityframeworkcore.inmemory\\8.0.0\\microsoft.entityframeworkcore.inmemory.8.0.0.nupkg.sha512",
     "C:\\Users\\DOU\\.nuget\\packages\\microsoft.entityframeworkcore.relational\\8.0.0\\microsoft.entityframeworkcore.relational.8.0.0.nupkg.sha512",
     "C:\\Users\\DOU\\.nuget\\packages\\microsoft.entityframeworkcore.sqlserver\\8.0.0\\microsoft.entityframeworkcore.sqlserver.8.0.0.nupkg.sha512",
     "C:\\Users\\DOU\\.nuget\\packages\\microsoft.entityframeworkcore.tools\\8.0.0\\microsoft.entityframeworkcore.tools.8.0.0.nupkg.sha512",
