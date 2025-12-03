@@ -37,4 +37,18 @@ public class PriceRepository : Repository<MarketProductPrice>, IPriceRepository
             .Include(p => p.Market)
             .ToListAsync();
     }
+
+    public async Task<IEnumerable<MarketProductPrice>> GetPricesForProductsAsync(IEnumerable<int> productIds)
+    {
+        return await _context.MarketProductPrices
+            .Where(p => productIds.Contains(p.ProductId))
+            .Include(p => p.Market)
+            .ToListAsync();
+    }
+
+    public async Task AddPriceHistoryAsync(ProductPriceHistory history)
+    {
+        await _context.ProductPriceHistories.AddAsync(history);
+        await _context.SaveChangesAsync();
+    }
 }

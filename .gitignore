@@ -15,3 +15,16 @@
 # Unignore Frontend folder
 !Frontend/
 !Frontend/**
+
+# Re-ignore build artifacts
+**/bin/
+**/obj/
+**/.vs/
+**/.idea/
+**/*.user
+**/node_modules/
+**/.env
+**/.DS_Store
+**/dist/
+**/build/
+**/*.log

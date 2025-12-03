@@ -67,4 +67,13 @@ public class ProductRepository : Repository<Product>, IProductRepository
             .OrderBy(p => p.ProductName)
             .ToListAsync();
     }
+
+    public async Task<IEnumerable<ProductPriceHistory>> GetPriceHistoryByProductIdAsync(int productId)
+    {
+        return await _context.ProductPriceHistories
+            .Include(h => h.MarketProductPrice)
+            .Where(h => h.MarketProductPrice.ProductId == productId)
+            .OrderBy(h => h.ChangedDate)
+            .ToListAsync();
+    }
 }

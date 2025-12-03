@@ -19,11 +19,11 @@ public static class DbSeeder
         // 1. Categories
         var categories = new List<ProductCategory>
         {
-            new() { CategoryName = "Dairy Products", CreatedAt = DateTime.UtcNow },
-            new() { CategoryName = "Fruits", CreatedAt = DateTime.UtcNow },
-            new() { CategoryName = "Vegetables", CreatedAt = DateTime.UtcNow },
-            new() { CategoryName = "Bread & Grains", CreatedAt = DateTime.UtcNow },
-            new() { CategoryName = "Oils", CreatedAt = DateTime.UtcNow }
+            new() { CategoryName = "Dairy Products", Icon = "🥛", CreatedAt = DateTime.UtcNow },
+            new() { CategoryName = "Fruits", Icon = "🍎", CreatedAt = DateTime.UtcNow },
+            new() { CategoryName = "Vegetables", Icon = "🥦", CreatedAt = DateTime.UtcNow },
+            new() { CategoryName = "Bread & Grains", Icon = "🍞", CreatedAt = DateTime.UtcNow },
+            new() { CategoryName = "Oils", Icon = "🌻", CreatedAt = DateTime.UtcNow }
         };
         await context.ProductCategories.AddRangeAsync(categories);
         await context.SaveChangesAsync();
@@ -39,7 +39,7 @@ public static class DbSeeder
         {
             // Fruits & Vegetables & Others matching products.ts order for ID alignment
             // ID 1: Organik Süt 1L
-            new() { ProductName = "Organik Süt", Brand = "Sütaş", Unit = "1L", CategoryId = dairy.Id, CreatedAt = DateTime.UtcNow, LastUpdated = DateTime.UtcNow },
+            new() { ProductName = "Organik Süt", Brand = "Sütaş", Unit = "1L", CategoryId = dairy.Id, ImageUrl = "https://marketkarsilastirma.com/images/sutas-sut.png", CreatedAt = DateTime.UtcNow, LastUpdated = DateTime.UtcNow },
             // ID 2: Taze Ekmek
             new() { ProductName = "Taze Ekmek", Brand = "Halk Ekmek", Unit = "Adet", CategoryId = grains.Id, CreatedAt = DateTime.UtcNow, LastUpdated = DateTime.UtcNow },
             // ID 3: Yumurta 10lu
