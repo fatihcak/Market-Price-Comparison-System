@@ -1,39 +1,45 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\yusuf\\OneDrive\\Masaüstü\\Market-Price-Comparison-System\\BACKEND\\src\\API\\API.csproj": {}
+    "C:\\Users\\Doguk\\Market-Price-Comparison-System\\BACKEND\\src\\API\\API.csproj": {}
   },
   "projects": {
-    "C:\\Users\\yusuf\\OneDrive\\Masaüstü\\Market-Price-Comparison-System\\BACKEND\\src\\API\\API.csproj": {
+    "C:\\Users\\Doguk\\Market-Price-Comparison-System\\BACKEND\\src\\API\\API.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\yusuf\\OneDrive\\Masaüstü\\Market-Price-Comparison-System\\BACKEND\\src\\API\\API.csproj",
+        "projectUniqueName": "C:\\Users\\Doguk\\Market-Price-Comparison-System\\BACKEND\\src\\API\\API.csproj",
         "projectName": "API",
-        "projectPath": "C:\\Users\\yusuf\\OneDrive\\Masaüstü\\Market-Price-Comparison-System\\BACKEND\\src\\API\\API.csproj",
-        "packagesPath": "C:\\Users\\yusuf\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\yusuf\\OneDrive\\Masaüstü\\Market-Price-Comparison-System\\BACKEND\\src\\API\\obj\\",
+        "projectPath": "C:\\Users\\Doguk\\Market-Price-Comparison-System\\BACKEND\\src\\API\\API.csproj",
+        "packagesPath": "C:\\Users\\Doguk\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Doguk\\Market-Price-Comparison-System\\BACKEND\\src\\API\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\yusuf\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\Doguk\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\yusuf\\OneDrive\\Masaüstü\\Market-Price-Comparison-System\\BACKEND\\src\\DataAccess\\DataAccess.csproj": {
-                "projectPath": "C:\\Users\\yusuf\\OneDrive\\Masaüstü\\Market-Price-Comparison-System\\BACKEND\\src\\DataAccess\\DataAccess.csproj"
+              "C:\\Users\\Doguk\\Market-Price-Comparison-System\\BACKEND\\src\\DataAccess\\DataAccess.csproj": {
+                "projectPath": "C:\\Users\\Doguk\\Market-Price-Comparison-System\\BACKEND\\src\\DataAccess\\DataAccess.csproj"
               },
-              "C:\\Users\\yusuf\\OneDrive\\Masaüstü\\Market-Price-Comparison-System\\BACKEND\\src\\Domain\\Domain.csproj": {
-                "projectPath": "C:\\Users\\yusuf\\OneDrive\\Masaüstü\\Market-Price-Comparison-System\\BACKEND\\src\\Domain\\Domain.csproj"
+              "C:\\Users\\Doguk\\Market-Price-Comparison-System\\BACKEND\\src\\Domain\\Domain.csproj": {
+                "projectPath": "C:\\Users\\Doguk\\Market-Price-Comparison-System\\BACKEND\\src\\Domain\\Domain.csproj"
               },
-              "C:\\Users\\yusuf\\OneDrive\\Masaüstü\\Market-Price-Comparison-System\\BACKEND\\src\\DTOs\\DTOs.csproj": {
-                "projectPath": "C:\\Users\\yusuf\\OneDrive\\Masaüstü\\Market-Price-Comparison-System\\BACKEND\\src\\DTOs\\DTOs.csproj"
+              "C:\\Users\\Doguk\\Market-Price-Comparison-System\\BACKEND\\src\\DTOs\\DTOs.csproj": {
+                "projectPath": "C:\\Users\\Doguk\\Market-Price-Comparison-System\\BACKEND\\src\\DTOs\\DTOs.csproj"
               }
             }
           }
@@ -48,7 +54,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.300"
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
         "net8.0": {
@@ -96,24 +102,6 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
-          "downloadDependencies": [
-            {
-              "name": "Microsoft.AspNetCore.App.Ref",
-              "version": "[8.0.17, 8.0.17]"
-            },
-            {
-              "name": "Microsoft.NETCore.App.Host.win-x64",
-              "version": "[8.0.17, 8.0.17]"
-            },
-            {
-              "name": "Microsoft.NETCore.App.Ref",
-              "version": "[8.0.17, 8.0.17]"
-            },
-            {
-              "name": "Microsoft.WindowsDesktop.App.Ref",
-              "version": "[8.0.17, 8.0.17]"
-            }
-          ],
           "frameworkReferences": {
             "Microsoft.AspNetCore.App": {
               "privateAssets": "none"
@@ -122,34 +110,40 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.301/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.203/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\yusuf\\OneDrive\\Masaüstü\\Market-Price-Comparison-System\\BACKEND\\src\\DataAccess\\DataAccess.csproj": {
+    "C:\\Users\\Doguk\\Market-Price-Comparison-System\\BACKEND\\src\\DataAccess\\DataAccess.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\yusuf\\OneDrive\\Masaüstü\\Market-Price-Comparison-System\\BACKEND\\src\\DataAccess\\DataAccess.csproj",
+        "projectUniqueName": "C:\\Users\\Doguk\\Market-Price-Comparison-System\\BACKEND\\src\\DataAccess\\DataAccess.csproj",
         "projectName": "DataAccess",
-        "projectPath": "C:\\Users\\yusuf\\OneDrive\\Masaüstü\\Market-Price-Comparison-System\\BACKEND\\src\\DataAccess\\DataAccess.csproj",
-        "packagesPath": "C:\\Users\\yusuf\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\yusuf\\OneDrive\\Masaüstü\\Market-Price-Comparison-System\\BACKEND\\src\\DataAccess\\obj\\",
+        "projectPath": "C:\\Users\\Doguk\\Market-Price-Comparison-System\\BACKEND\\src\\DataAccess\\DataAccess.csproj",
+        "packagesPath": "C:\\Users\\Doguk\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Doguk\\Market-Price-Comparison-System\\BACKEND\\src\\DataAccess\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\yusuf\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\Doguk\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\yusuf\\OneDrive\\Masaüstü\\Market-Price-Comparison-System\\BACKEND\\src\\Domain\\Domain.csproj": {
-                "projectPath": "C:\\Users\\yusuf\\OneDrive\\Masaüstü\\Market-Price-Comparison-System\\BACKEND\\src\\Domain\\Domain.csproj"
+              "C:\\Users\\Doguk\\Market-Price-Comparison-System\\BACKEND\\src\\Domain\\Domain.csproj": {
+                "projectPath": "C:\\Users\\Doguk\\Market-Price-Comparison-System\\BACKEND\\src\\Domain\\Domain.csproj"
               }
             }
           }
@@ -164,7 +158,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.300"
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
         "net8.0": {
@@ -200,53 +194,45 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
-          "downloadDependencies": [
-            {
-              "name": "Microsoft.AspNetCore.App.Ref",
-              "version": "[8.0.17, 8.0.17]"
-            },
-            {
-              "name": "Microsoft.NETCore.App.Ref",
-              "version": "[8.0.17, 8.0.17]"
-            },
-            {
-              "name": "Microsoft.WindowsDesktop.App.Ref",
-              "version": "[8.0.17, 8.0.17]"
-            }
-          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.301/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.203/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\yusuf\\OneDrive\\Masaüstü\\Market-Price-Comparison-System\\BACKEND\\src\\Domain\\Domain.csproj": {
+    "C:\\Users\\Doguk\\Market-Price-Comparison-System\\BACKEND\\src\\Domain\\Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\yusuf\\OneDrive\\Masaüstü\\Market-Price-Comparison-System\\BACKEND\\src\\Domain\\Domain.csproj",
+        "projectUniqueName": "C:\\Users\\Doguk\\Market-Price-Comparison-System\\BACKEND\\src\\Domain\\Domain.csproj",
         "projectName": "Domain",
-        "projectPath": "C:\\Users\\yusuf\\OneDrive\\Masaüstü\\Market-Price-Comparison-System\\BACKEND\\src\\Domain\\Domain.csproj",
-        "packagesPath": "C:\\Users\\yusuf\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\yusuf\\OneDrive\\Masaüstü\\Market-Price-Comparison-System\\BACKEND\\src\\Domain\\obj\\",
+        "projectPath": "C:\\Users\\Doguk\\Market-Price-Comparison-System\\BACKEND\\src\\Domain\\Domain.csproj",
+        "packagesPath": "C:\\Users\\Doguk\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Doguk\\Market-Price-Comparison-System\\BACKEND\\src\\Domain\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\yusuf\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\Doguk\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\yusuf\\OneDrive\\Masaüstü\\Market-Price-Comparison-System\\BACKEND\\src\\DTOs\\DTOs.csproj": {
-                "projectPath": "C:\\Users\\yusuf\\OneDrive\\Masaüstü\\Market-Price-Comparison-System\\BACKEND\\src\\DTOs\\DTOs.csproj"
+              "C:\\Users\\Doguk\\Market-Price-Comparison-System\\BACKEND\\src\\DTOs\\DTOs.csproj": {
+                "projectPath": "C:\\Users\\Doguk\\Market-Price-Comparison-System\\BACKEND\\src\\DTOs\\DTOs.csproj"
               }
             }
           }
@@ -261,7 +247,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.300"
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
         "net8.0": {
@@ -295,45 +281,37 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
-          "downloadDependencies": [
-            {
-              "name": "Microsoft.AspNetCore.App.Ref",
-              "version": "[8.0.17, 8.0.17]"
-            },
-            {
-              "name": "Microsoft.NETCore.App.Ref",
-              "version": "[8.0.17, 8.0.17]"
-            },
-            {
-              "name": "Microsoft.WindowsDesktop.App.Ref",
-              "version": "[8.0.17, 8.0.17]"
-            }
-          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.301/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.203/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\yusuf\\OneDrive\\Masaüstü\\Market-Price-Comparison-System\\BACKEND\\src\\DTOs\\DTOs.csproj": {
+    "C:\\Users\\Doguk\\Market-Price-Comparison-System\\BACKEND\\src\\DTOs\\DTOs.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\yusuf\\OneDrive\\Masaüstü\\Market-Price-Comparison-System\\BACKEND\\src\\DTOs\\DTOs.csproj",
+        "projectUniqueName": "C:\\Users\\Doguk\\Market-Price-Comparison-System\\BACKEND\\src\\DTOs\\DTOs.csproj",
         "projectName": "DTOs",
-        "projectPath": "C:\\Users\\yusuf\\OneDrive\\Masaüstü\\Market-Price-Comparison-System\\BACKEND\\src\\DTOs\\DTOs.csproj",
-        "packagesPath": "C:\\Users\\yusuf\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\yusuf\\OneDrive\\Masaüstü\\Market-Price-Comparison-System\\BACKEND\\src\\DTOs\\obj\\",
+        "projectPath": "C:\\Users\\Doguk\\Market-Price-Comparison-System\\BACKEND\\src\\DTOs\\DTOs.csproj",
+        "packagesPath": "C:\\Users\\Doguk\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Doguk\\Market-Price-Comparison-System\\BACKEND\\src\\DTOs\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\yusuf\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\Doguk\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -352,7 +330,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.300"
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
         "net8.0": {
@@ -374,26 +352,12 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
-          "downloadDependencies": [
-            {
-              "name": "Microsoft.AspNetCore.App.Ref",
-              "version": "[8.0.17, 8.0.17]"
-            },
-            {
-              "name": "Microsoft.NETCore.App.Ref",
-              "version": "[8.0.17, 8.0.17]"
-            },
-            {
-              "name": "Microsoft.WindowsDesktop.App.Ref",
-              "version": "[8.0.17, 8.0.17]"
-            }
-          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.301/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.203/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
