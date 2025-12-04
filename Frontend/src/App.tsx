@@ -8,15 +8,18 @@ import CategorySection from './components/CategorySection';
 import FilterBar from './components/FilterBar';
 import Testimonials from './components/Testimonials';
 import PriceComparison from './components/PriceComparison';
+import BasketComparison from './components/BasketComparison';
 import ProductList from './components/ProductList';
-import { Product } from './types';
+import { Product, CartItem } from './types';
 import { api } from './services/api';
 
 function App() {
   const [comparisonOpen, setComparisonOpen] = useState(false);
+  const [basketComparisonOpen, setBasketComparisonOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState('Organik Süt 1L');
   const [selectedProductId, setSelectedProductId] = useState<number | undefined>(undefined);
-  const [shoppingList, setShoppingList] = useState<Product[]>([]);
+  const [selectedProductForComparison, setSelectedProductForComparison] = useState<Product | null>(null);
+  const [shoppingList, setShoppingList] = useState<CartItem[]>([]);
   const [listOpen, setListOpen] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
 
@@ -24,21 +27,41 @@ function App() {
     api.getProducts().then(setProducts);
   }, []);
 
-  const openComparison = (productName: string, productId: number) => {
-    setSelectedProduct(productName);
-    setSelectedProductId(productId);
+  const openComparison = (product: Product) => {
+    setSelectedProduct(product.name);
+    setSelectedProductId(product.id);
+    setSelectedProductForComparison(product);
     setComparisonOpen(true);
   };
 
   const addToShoppingList = (product: Product) => {
-    setShoppingList([...shoppingList, product]);
+    setShoppingList(prevList => {
+      const existingItem = prevList.find(item => item.id === product.id);
+      if (existingItem) {
+        return prevList.map(item =>
+          item.id === product.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+      }
+      return [...prevList, { ...product, quantity: 1 }];
+    });
     setListOpen(true);
   };
 
-  const removeFromShoppingList = (index: number) => {
-    const newList = [...shoppingList];
-    newList.splice(index, 1);
-    setShoppingList(newList);
+  const updateQuantity = (productId: number, delta: number) => {
+    setShoppingList(prevList => {
+      return prevList.map(item => {
+        if (item.id === productId) {
+          return { ...item, quantity: Math.max(0, item.quantity + delta) };
+        }
+        return item;
+      }).filter(item => item.quantity > 0);
+    });
+  };
+
+  const removeFromShoppingList = (productId: number) => {
+    setShoppingList(prevList => prevList.filter(item => item.id !== productId));
   };
 
   return (
@@ -134,11 +157,19 @@ function App() {
         </div>
       </footer>
 
-      <PriceComparison 
-        isOpen={comparisonOpen} 
-        onClose={() => setComparisonOpen(false)} 
-        productName={selectedProduct} 
+      <PriceComparison
+        isOpen={comparisonOpen}
+        onClose={() => setComparisonOpen(false)}
+        productName={selectedProduct}
         productId={selectedProductId}
+        productImage={selectedProductForComparison?.image}
+        onAdd={addToShoppingList}
+      />
+
+      <BasketComparison
+        isOpen={basketComparisonOpen}
+        onClose={() => setBasketComparisonOpen(false)}
+        products={shoppingList}
       />
 
       <ProductList
@@ -146,6 +177,11 @@ function App() {
         onClose={() => setListOpen(false)}
         products={shoppingList}
         onRemove={removeFromShoppingList}
+        onUpdateQuantity={updateQuantity}
+        onCompare={() => {
+          setListOpen(false);
+          setBasketComparisonOpen(true);
+        }}
       />
     </div>
   );
@@ -154,7 +190,7 @@ function App() {
 interface ProductGridProps {
   products: Product[];
   onAdd: (product: Product) => void;
-  onCompare: (name: string, id: number) => void;
+  onCompare: (product: Product) => void;
 }
 
 function ProductGrid({ products, onAdd, onCompare }: ProductGridProps) {
@@ -207,7 +243,7 @@ function ProductGrid({ products, onAdd, onCompare }: ProductGridProps) {
               <ProductCard
                 product={product}
                 onAdd={onAdd}
-                onCompare={(productId) => onCompare(product.name, productId)}
+                onCompare={onCompare}
               />
             </div>
           ))}
