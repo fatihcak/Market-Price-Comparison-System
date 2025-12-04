@@ -5,7 +5,7 @@ import { Product } from '../types';
 interface ProductCardProps {
   product: Product;
   onAdd?: (product: Product) => void;
-  onCompare?: (productId: number) => void;
+  onCompare?: (product: Product) => void;
 }
 
 export default function ProductCard({ product, onAdd, onCompare }: ProductCardProps) {
@@ -20,8 +20,7 @@ export default function ProductCard({ product, onAdd, onCompare }: ProductCardPr
 
   return (
     <div
-      onClick={() => onCompare && onCompare(product.id)}
-      className="group bg-white rounded-xl border border-gray-100 overflow-hidden hover:border-green-200 hover:shadow-lg transition-all duration-300 cursor-pointer"
+      className="group bg-white rounded-xl border border-gray-100 overflow-hidden hover:border-green-200 hover:shadow-lg transition-all duration-300 cursor-default"
     >
       <div className="relative bg-gray-100 h-48 overflow-hidden">
         <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
@@ -40,7 +39,7 @@ export default function ProductCard({ product, onAdd, onCompare }: ProductCardPr
               e.stopPropagation();
               setIsFavorite(!isFavorite);
             }}
-            className="bg-white rounded-full p-2 hover:bg-gray-100 transition-colors"
+            className="bg-white rounded-full p-2 hover:bg-gray-100 transition-colors cursor-pointer"
           >
             <Heart
               size={18}
@@ -52,7 +51,7 @@ export default function ProductCard({ product, onAdd, onCompare }: ProductCardPr
 
       <div className="p-4">
         <h3 className="font-semibold text-gray-900 text-sm mb-3 line-clamp-2 h-10">
-          {product.name}
+          <span className="font-bold text-lg text-green-600">{product.brand}</span> {product.name} <span className="text-sm text-gray-500">{product.unit}</span>
         </h3>
 
         <div className="flex items-center gap-2 mb-4">
@@ -68,13 +67,16 @@ export default function ProductCard({ product, onAdd, onCompare }: ProductCardPr
 
         <button
           onClick={handleAdd}
-          className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-2"
+          className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
         >
           <Plus size={16} />
           Add to List
         </button>
 
-        <button className="w-full mt-2 bg-gray-100 hover:bg-gray-200 text-gray-900 py-2 rounded-lg font-medium text-sm transition-colors">
+        <button
+          onClick={() => onCompare && onCompare(product)}
+          className="w-full mt-2 bg-gray-100 hover:bg-gray-200 text-gray-900 py-2 rounded-lg font-medium text-sm transition-colors cursor-pointer"
+        >
           Other Markets
         </button>
       </div>

@@ -4,14 +4,30 @@ import { useState } from 'react';
 export default function FilterBar() {
   const [sortBy, setSortBy] = useState('popular');
   const [showFilters, setShowFilters] = useState(false);
-  const [priceRange, setPriceRange] = useState([0, 100]);
+  const [minPrice, setMinPrice] = useState(0);
+  const [maxPrice, setMaxPrice] = useState(1000);
+  const min = 0;
+  const max = 2000;
+
+  const handleMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Math.min(Number(e.target.value), maxPrice - 10);
+    setMinPrice(value);
+  };
+
+  const handleMaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Math.max(Number(e.target.value), minPrice + 10);
+    setMaxPrice(value);
+  };
+
+  const minPercent = ((minPrice - min) / (max - min)) * 100;
+  const maxPercent = ((maxPrice - min) / (max - min)) * 100;
 
   return (
     <div className="bg-white rounded-xl border border-gray-100 p-4 mb-8">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="flex items-center gap-2">
-          <Filter size={20} className="text-gray-600" />
-          <span className="font-semibold text-gray-900">Filter</span>
+          <Filter size={20} className="text-green-600" />
+          <span className="font-semibold text-green-600">Filter</span>
         </div>
 
         <div className="flex flex-col md:flex-row gap-3 md:gap-4">
@@ -43,25 +59,42 @@ export default function FilterBar() {
       {showFilters && (
         <div className="mt-6 pt-6 border-t border-gray-100 space-y-6 animate-in fade-in slide-in-from-top-2">
           <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-3">Price Range</label>
-            <div className="flex items-center gap-4">
+            <label className="block text-sm font-semibold text-gray-900 mb-4">Price Range</label>
+            <div className="relative w-full h-12 flex items-center px-2">
+              {/* Visual Track */}
+              <div className="absolute w-[calc(100%-1rem)] h-2 bg-gray-200 rounded-full left-2"></div>
+              {/* Active Range */}
+              <div
+                className="absolute h-2 bg-green-500 rounded-full left-2"
+                style={{ left: `calc(${minPercent}% + 0.5rem)`, width: `calc(${maxPercent - minPercent}% + -1rem)` }}
+              ></div>
+
+              {/* Range Inputs */}
               <input
                 type="range"
-                min="0"
-                max="100"
-                value={priceRange[0]}
-                onChange={(e) => setPriceRange([Number(e.target.value), priceRange[1]])}
-                className="flex-1"
+                min={min}
+                max={max}
+                value={minPrice}
+                onChange={handleMinChange}
+                className="absolute w-[calc(100%-1rem)] h-2 appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-green-500 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:hover:scale-110 [&::-webkit-slider-thumb]:transition-transform z-30 left-2"
               />
               <input
                 type="range"
-                min="0"
-                max="100"
-                value={priceRange[1]}
-                onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
-                className="flex-1"
+                min={min}
+                max={max}
+                value={maxPrice}
+                onChange={handleMaxChange}
+                className="absolute w-[calc(100%-1rem)] h-2 appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-green-500 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:hover:scale-110 [&::-webkit-slider-thumb]:transition-transform z-40 left-2"
               />
-              <span className="text-sm font-medium text-gray-600 min-w-fit">{priceRange[0]}₺ - {priceRange[1]}₺</span>
+            </div>
+
+            <div className="flex justify-between items-center mt-[-10px]">
+              <div className="px-3 py-1 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 bg-white shadow-sm">
+                {minPrice} ₺
+              </div>
+              <div className="px-3 py-1 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 bg-white shadow-sm">
+                {maxPrice} ₺
+              </div>
             </div>
           </div>
 
@@ -69,20 +102,22 @@ export default function FilterBar() {
             <label className="block text-sm font-semibold text-gray-900 mb-3">Markets</label>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {['A101', 'Migros', 'Carrefour', 'Bim', 'Tesco', 'Metro'].map((market) => (
-                <label key={market} className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    defaultChecked
-                    className="w-4 h-4 rounded border-gray-300 text-green-600 cursor-pointer"
-                  />
-                  <span className="text-sm text-gray-700">{market}</span>
+                <label key={market} className="flex items-center gap-2 cursor-pointer group">
+                  <div className="relative flex items-center">
+                    <input
+                      type="checkbox"
+                      defaultChecked
+                      className="peer w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500 cursor-pointer"
+                    />
+                  </div>
+                  <span className="text-sm text-gray-700 group-hover:text-green-700 transition-colors">{market}</span>
                 </label>
               ))}
             </div>
           </div>
 
           <div className="flex gap-3 pt-4">
-            <button className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium text-sm transition-colors">
+            <button className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium text-sm transition-colors shadow-sm hover:shadow-md">
               Apply
             </button>
             <button className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-lg font-medium text-sm transition-colors">

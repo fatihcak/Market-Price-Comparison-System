@@ -24,7 +24,12 @@ export interface Product {
     categoryId?: number;
     categoryName?: string;
     productName?: string;
-    
+    marketName?: string;
+    districtName?: string;
+    brand?: string;
+    unit?: string;
+    lastUpdated?: string;
+
     // UI fields
     name: string;
     price: number;
@@ -33,6 +38,10 @@ export interface Product {
     discount: number;
     category: string;
     image: string;
+}
+
+export interface CartItem extends Product {
+    quantity: number;
 }
 
 export interface ProductResponseDTO {

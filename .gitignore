@@ -28,3 +28,4 @@
 **/dist/
 **/build/
 **/*.log
+BACKEND/src/API/Logs/
