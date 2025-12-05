@@ -54,9 +54,10 @@ public class ProductRepository : Repository<Product>, IProductRepository
 
         // EF Core might not translate validTerms.Any(term => p.ProductName.Contains(term)) correctly in all providers.
         // We use Union to build an OR query dynamically.
-        IQueryable<Product> query = null;
+        IQueryable<Product>? query = null;
         foreach (var term in validTerms)
         {
+            if (term == null) continue;
             var lowerTerm = term.ToLower();
             var subQuery = _context.Products.Where(p => p.ProductName.ToLower().Contains(lowerTerm));
             query = query == null ? subQuery : query.Union(subQuery);
