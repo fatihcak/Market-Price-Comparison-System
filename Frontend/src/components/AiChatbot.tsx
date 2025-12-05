@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { MessageSquare, X, Send, Bot, User, Minimize2, Maximize2 } from 'lucide-react';
+import { X, Send, Bot, User, /*Minimize2, Maximize2*/ } from 'lucide-react';
 import { api } from '../services/api';
 
 interface Message {
@@ -10,7 +10,7 @@ interface Message {
 }
 
 export default function AiChatbot() {
-    const [isOpen, setIsOpen] = useState(false);
+    const [isOpen, /*setIsOpen*/] = useState(true);
     const [isMinimized, setIsMinimized] = useState(false);
     const [inputText, setInputText] = useState('');
     const [messages, setMessages] = useState<Message[]>([
@@ -66,23 +66,10 @@ export default function AiChatbot() {
         }
     };
 
-    if (!isOpen) {
-        return (
-            <button
-                onClick={() => setIsOpen(true)}
-                className="fixed bottom-6 right-6 bg-gradient-to-r from-green-600 to-emerald-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300 z-50 group"
-            >
-                <MessageSquare size={28} className="group-hover:animate-bounce" />
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full border-2 border-white">
-                    1
-                </span>
-            </button>
-        );
-    }
 
     return (
         <div
-            className={`fixed bottom-6 right-6 bg-white rounded-2xl shadow-2xl z-50 transition-all duration-300 flex flex-col overflow-hidden border border-gray-100 ${isMinimized ? 'w-72 h-14' : 'w-80 sm:w-96 h-[500px] max-h-[80vh]'
+            className={`fixed bottom-6 left-6 bg-white rounded-2xl shadow-2xl z-50 transition-all duration-300 flex flex-col overflow-hidden border border-gray-100 ${isMinimized ? 'w-72 h-14' : 'w-80 sm:w-96 h-[500px] max-h-[80vh]'
                 }`}
         >
             {/* Header */}
@@ -91,7 +78,7 @@ export default function AiChatbot() {
                 onClick={() => setIsMinimized(!isMinimized)}
             >
                 <div className="flex items-center gap-3">
-                    <div className="bg-white/20 p-1.5 rounded-lg backdrop-blur-sm">
+                    <div className="bg-white/20 p-0.5 rounded-lg backdrop-blur-sm">
                         <Bot size={20} className="text-white" />
                     </div>
                     <div>
@@ -100,14 +87,9 @@ export default function AiChatbot() {
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
+
                     <button
-                        onClick={(e) => { e.stopPropagation(); setIsMinimized(!isMinimized); }}
-                        className="text-white/80 hover:text-white p-1 hover:bg-white/10 rounded transition-colors"
-                    >
-                        {isMinimized ? <Maximize2 size={16} /> : <Minimize2 size={16} />}
-                    </button>
-                    <button
-                        onClick={(e) => { e.stopPropagation(); setIsOpen(false); }}
+                        onClick={(e) => { e.stopPropagation(); setIsMinimized(true); }}
                         className="text-white/80 hover:text-white p-1 hover:bg-white/10 rounded transition-colors"
                     >
                         <X size={18} />
@@ -157,7 +139,7 @@ export default function AiChatbot() {
                                 value={inputText}
                                 onChange={(e) => setInputText(e.target.value)}
                                 placeholder="Ask about prices..."
-                                className="flex-1 bg-transparent border-none focus:ring-0 text-sm placeholder-gray-400"
+                                className="flex-1 bg-transparent border-none focus:ring-0 outline-none text-sm placeholder-gray-400"
                             />
                             <button
                                 type="submit"
