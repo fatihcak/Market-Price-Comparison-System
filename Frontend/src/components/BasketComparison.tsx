@@ -29,7 +29,6 @@ export default function BasketComparison({ isOpen, onClose, products }: BasketCo
         if (isOpen && products.length > 0) {
             setLoading(true);
 
-            // Fetch prices for all products
             const fetchPromises = products.map(product =>
                 api.getPricesByProduct(product.id).then(prices => ({
                     productName: product.name,
@@ -67,7 +66,6 @@ export default function BasketComparison({ isOpen, onClose, products }: BasketCo
                         });
                     });
 
-                    // Check for missing items in each market
                     const finalBaskets: MarketBasket[] = [];
 
                     marketMap.forEach(basket => {
@@ -76,7 +74,7 @@ export default function BasketComparison({ isOpen, onClose, products }: BasketCo
                         let currentBasketTotal = 0;
 
                         results.forEach(({ productName, quantity, prices }) => {
-                            // Find if this specific market (basket.marketName) has this product
+
                             const priceInMarket = prices.find(p =>
                                 p.marketName === basket.marketName && p.districtName === basket.districtName
                             );
@@ -106,12 +104,12 @@ export default function BasketComparison({ isOpen, onClose, products }: BasketCo
                         });
                     });
 
-                    // Sort: Complete baskets first (sorted by price), then partial baskets
+
                     finalBaskets.sort((a, b) => {
                         if (a.missingCount === 0 && b.missingCount > 0) return -1;
                         if (a.missingCount > 0 && b.missingCount === 0) return 1;
                         if (a.missingCount === 0 && b.missingCount === 0) return a.totalPrice - b.totalPrice;
-                        return 0; // Keep partials order undefined or sort by something else
+                        return 0;
                     });
 
                     setMarketBaskets(finalBaskets);
