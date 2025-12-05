@@ -110,11 +110,37 @@ builder.Services.AddSwaggerGen(c =>
         Version = "v1",
         Description = "API for comparing product prices across different markets and districts"
     });
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. Example: " +
+                      "Authorization: Bearer {token}",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                },
+                Scheme = "oauth2",
+                Name = "Bearer",
+                In = ParameterLocation.Header
+            },
+            new List<string>()
+        }
+    });
 });
 
 var app = builder.Build();
 
-// Seed Data
+//Seed Data
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;

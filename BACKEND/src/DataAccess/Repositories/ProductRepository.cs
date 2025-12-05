@@ -37,6 +37,39 @@ public class ProductRepository : Repository<Product>, IProductRepository
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<Product>> SearchByNamesAsync(IEnumerable<string> searchTerms)
+    {
+        if (searchTerms == null || !searchTerms.Any())
+        {
+            return new List<Product>();
+        }
+
+        // Filter out empty strings to avoid matching everything
+        var validTerms = searchTerms.Where(t => !string.IsNullOrWhiteSpace(t)).ToList();
+        
+        if (!validTerms.Any())
+        {
+             return new List<Product>();
+        }
+
+        // EF Core might not translate validTerms.Any(term => p.ProductName.Contains(term)) correctly in all providers.
+        // We use Union to build an OR query dynamically.
+        IQueryable<Product> query = null;
+        foreach (var term in validTerms)
+        {
+            var lowerTerm = term.ToLower();
+            var subQuery = _context.Products.Where(p => p.ProductName.ToLower().Contains(lowerTerm));
+            query = query == null ? subQuery : query.Union(subQuery);
+        }
+
+        if (query == null) return new List<Product>();
+
+        return await query
+            .Include(p => p.Category)
+            .OrderBy(p => p.ProductName)
+            .ToListAsync();
+    }
+
     public async Task<IEnumerable<Product>> SearchByBrandAsync(string brand)
     {
         if (string.IsNullOrWhiteSpace(brand))
