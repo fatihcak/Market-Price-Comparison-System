@@ -8,11 +8,11 @@ public class ProductResponseDTO
     public string ProductName { get; set; } = string.Empty;
     public string? Brand { get; set; }
     public string Unit { get; set; } = string.Empty;
-    public DateTime LastUpdated { get; set; }
-    public DateTime CreatedAt { get; set; }
     public decimal Price { get; set; }
     public decimal? OldPrice { get; set; }
     public int Discount { get; set; }
     public string MarketName { get; set; } = string.Empty;
-    public string ImageUrl { get; set; } = string.Empty;
+    public DateTime LastUpdated { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public string? ImageUrl { get; set; }
 }

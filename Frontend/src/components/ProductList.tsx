@@ -1,22 +1,19 @@
-import { X, Trash2, ShoppingCart } from 'lucide-react';
-
-interface Product {
-    name: string;
-    price: number;
-    market: string;
-}
+import { X, Trash2, ShoppingCart, Plus, Minus } from 'lucide-react';
+import { CartItem } from '../types';
 
 interface ProductListProps {
     isOpen: boolean;
     onClose: () => void;
-    products: Product[];
-    onRemove: (index: number) => void;
+    products: CartItem[];
+    onRemove: (id: number) => void;
+    onUpdateQuantity: (id: number, delta: number) => void;
+    onCompare: () => void;
 }
 
-export default function ProductList({ isOpen, onClose, products, onRemove }: ProductListProps) {
+export default function ProductList({ isOpen, onClose, products, onRemove, onUpdateQuantity, onCompare }: ProductListProps) {
     if (!isOpen) return null;
 
-    const totalPrice = products.reduce((sum, product) => sum + product.price, 0);
+    const totalPrice = products.reduce((sum, product) => sum + (product.price * product.quantity), 0);
 
     return (
         <div className="fixed inset-0 z-50 overflow-hidden">
@@ -47,22 +44,43 @@ export default function ProductList({ isOpen, onClose, products, onRemove }: Pro
                         </div>
                     ) : (
                         <div className="space-y-4">
-                            {products.map((product, index) => (
-                                <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-green-200 transition-colors">
-                                    <div>
-                                        <h3 className="font-medium text-gray-900">{product.name}</h3>
+                            {products.map((product) => (
+                                <div key={product.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-green-200 transition-colors">
+                                    <div className="flex-1">
+                                        <h3 className="font-medium text-gray-900">
+                                            <span className="font-bold text-lg text-green-600">{product.brand}</span> {product.name} <span className="text-sm text-gray-500">{product.unit}</span>
+                                        </h3>
                                         <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
                                             <span className="font-medium text-green-600">{product.market}</span>
                                             <span>•</span>
                                             <span>{product.price.toFixed(2)}₺</span>
                                         </div>
                                     </div>
-                                    <button
-                                        onClick={() => onRemove(index)}
-                                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                                    >
-                                        <Trash2 size={18} />
-                                    </button>
+
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex items-center bg-white rounded-lg border border-gray-200">
+                                            <button
+                                                onClick={() => onUpdateQuantity(product.id, -1)}
+                                                className="p-1 hover:bg-gray-100 rounded-l-lg text-gray-600"
+                                            >
+                                                <Minus size={16} />
+                                            </button>
+                                            <span className="w-8 text-center font-medium text-sm">{product.quantity}</span>
+                                            <button
+                                                onClick={() => onUpdateQuantity(product.id, 1)}
+                                                className="p-1 hover:bg-gray-100 rounded-r-lg text-gray-600"
+                                            >
+                                                <Plus size={16} />
+                                            </button>
+                                        </div>
+
+                                        <button
+                                            onClick={() => onRemove(product.id)}
+                                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -75,8 +93,11 @@ export default function ProductList({ isOpen, onClose, products, onRemove }: Pro
                             <span className="text-gray-600">Total Amount</span>
                             <span className="text-2xl font-bold text-green-600">{totalPrice.toFixed(2)}₺</span>
                         </div>
-                        <button className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-bold transition-colors shadow-lg shadow-green-200">
-                            Complete Shopping
+                        <button
+                            onClick={onCompare}
+                            className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-bold transition-colors shadow-lg shadow-green-200"
+                        >
+                            Compare Prices
                         </button>
                     </div>
                 )}

@@ -13,12 +13,13 @@ public class PriceRepository : Repository<MarketProductPrice>, IPriceRepository
 
     public async Task<IEnumerable<MarketProductPrice>> GetByProductIdAsync(int productId)
     {
-        return await _context.MarketProductPrices
+        var prices = await _context.MarketProductPrices
             .Where(p => p.ProductId == productId)
             .Include(p => p.Market)
             .Include(p => p.District)
-            .OrderBy(p => p.Price)
             .ToListAsync();
+
+        return prices.OrderBy(p => p.Price);
     }
 
     public async Task<IEnumerable<MarketProductPrice>> GetByMarketIdAsync(int marketId)
@@ -37,4 +38,18 @@ public class PriceRepository : Repository<MarketProductPrice>, IPriceRepository
             .Include(p => p.Market)
             .ToListAsync();
     }
+
+    public async Task<IEnumerable<MarketProductPrice>> GetPricesForProductsAsync(IEnumerable<int> productIds)
+    {
+        return await _context.MarketProductPrices
+            .Where(p => productIds.Contains(p.ProductId))
+            .Include(p => p.Market)
+            .ToListAsync();
+    }
+
+    public async Task AddPriceHistoryAsync(ProductPriceHistory history)
+    {
+        await _context.ProductPriceHistories.AddAsync(history);
+        await _context.SaveChangesAsync();
+}
 }

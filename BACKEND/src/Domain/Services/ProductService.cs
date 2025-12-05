@@ -23,51 +23,7 @@ public class ProductService : IProductService
 
     // ... (keep other methods)
 
-    private static ProductResponseDTO MapToResponseDTO(Product product)
-    {
-        var prices = product.MarketProductPrices;
-        var minPrice = prices.Any() ? prices.Min(p => p.Price) : 0;
-        var maxPrice = prices.Any() ? prices.Max(p => p.Price) : 0; // Use max as "old price" for demo
-        var cheapestMarket = prices.Any() ? prices.OrderBy(p => p.Price).First().Market.MarketName : "Unknown";
-        
-        // Calculate discount (fake logic for demo: if max > min, show discount)
-        var discount = maxPrice > minPrice ? (int)((maxPrice - minPrice) / maxPrice * 100) : 0;
 
-        // Format: Brand ProductName Unit (e.g., "Sütaş Organik Süt 1L")
-        var displayName = string.IsNullOrWhiteSpace(product.Brand) 
-            ? $"{product.ProductName} {product.Unit}"
-            : $"{product.Brand} {product.ProductName} {product.Unit}";
-
-        return new ProductResponseDTO
-        {
-            Id = product.Id,
-            CategoryId = product.CategoryId,
-            CategoryName = product.Category?.CategoryName ?? string.Empty,
-            ProductName = displayName,
-            Brand = product.Brand,
-            Unit = product.Unit,
-            LastUpdated = product.LastUpdated,
-            CreatedAt = product.CreatedAt,
-            Price = minPrice,
-            OldPrice = maxPrice > minPrice ? maxPrice : null,
-            Discount = discount,
-            MarketName = cheapestMarket,
-            ImageUrl = GetImageUrl(product.Category?.CategoryName ?? "")
-        };
-    }
-
-    private static string GetImageUrl(string categoryName)
-    {
-        return categoryName switch
-        {
-            "Dairy Products" => "🥛",
-            "Fruits" => "🍎",
-            "Vegetables" => "🥦",
-            "Bread & Grains" => "🍞",
-            "Oils" => "🌻",
-            _ => "📦"
-        };
-    }
 
     public async Task<ProductResponseDTO?> GetProductByIdAsync(int id)
     {
@@ -156,4 +112,101 @@ public class ProductService : IProductService
         return true;
     }
 
+    public async Task<IEnumerable<ProductPriceHistoryDTO>> GetProductPriceHistoryAsync(int productId, int days)
+    {
+        var product = await _productRepository.GetProductWithCategoryAsync(productId);
+        if (product == null) return Enumerable.Empty<ProductPriceHistoryDTO>();
+
+        var history = await _productRepository.GetPriceHistoryByProductIdAsync(productId);
+        var allProducts = await _productRepository.GetAllWithDetailsAsync();
+        var productWithDetails = allProducts.FirstOrDefault(p => p.Id == productId);
+        
+        if (productWithDetails == null) return Enumerable.Empty<ProductPriceHistoryDTO>();
+
+        var result = new List<ProductPriceHistoryDTO>();
+        var startDate = DateTime.UtcNow.Date.AddDays(-days);
+        var endDate = DateTime.UtcNow.Date;
+
+        var historyLookup = history.GroupBy(h => h.MarketProductPriceId).ToDictionary(g => g.Key, g => g.ToList());
+
+        for (var date = startDate; date <= endDate; date = date.AddDays(1))
+        {
+            var dailyPrices = new List<decimal>();
+
+            foreach (var mpp in productWithDetails.MarketProductPrices)
+            {
+                decimal priceOnDate = mpp.Price;
+
+                if (mpp.LastUpdated.Date > date)
+                {
+                    if (historyLookup.TryGetValue(mpp.Id, out var mppHistory))
+                    {
+                        var relevantHistory = mppHistory
+                            .Where(h => h.ChangedDate.Date > date)
+                            .OrderBy(h => h.ChangedDate)
+                            .FirstOrDefault();
+
+                        if (relevantHistory != null)
+                        {
+                            priceOnDate = relevantHistory.Price;
+                        }
+                        else if (mpp.CreatedAt.Date > date)
+                        {
+                            continue;
+                        }
+                    }
+                    else if (mpp.CreatedAt.Date > date)
+                    {
+                         continue;
+                    }
+                }
+                else if (mpp.CreatedAt.Date > date)
+                {
+                    continue;
+                }
+
+                dailyPrices.Add(priceOnDate);
+            }
+
+            if (dailyPrices.Any())
+            {
+                result.Add(new ProductPriceHistoryDTO
+                {
+                    Date = date,
+                    MinPrice = dailyPrices.Min(),
+                    MaxPrice = dailyPrices.Max(),
+                    AveragePrice = Math.Round(dailyPrices.Average(), 2)
+                });
+            }
+        }
+
+        return result;
+    }
+
+    private static ProductResponseDTO MapToResponseDTO(Product product)
+    {
+        var prices = product.MarketProductPrices;
+        var minPrice = prices.Any() ? prices.Min(p => p.Price) : 0;
+        var maxPrice = prices.Any() ? prices.Max(p => p.Price) : 0;
+        var cheapestMarket = prices.Any() ? prices.OrderBy(p => p.Price).First().Market.MarketName : "Unknown";
+        
+        var discount = maxPrice > minPrice ? (int)((maxPrice - minPrice) / maxPrice * 100) : 0;
+
+        return new ProductResponseDTO
+        {
+            Id = product.Id,
+            CategoryId = product.CategoryId,
+            CategoryName = product.Category?.CategoryName ?? string.Empty,
+            ProductName = product.ProductName,
+            Brand = product.Brand,
+            Unit = product.Unit,
+            Price = minPrice,
+            OldPrice = maxPrice > minPrice ? maxPrice : null,
+            Discount = discount,
+            MarketName = cheapestMarket,
+            LastUpdated = product.LastUpdated,
+            CreatedAt = product.CreatedAt,
+            ImageUrl = !string.IsNullOrWhiteSpace(product.ImageUrl) ? product.ImageUrl : product.Category?.Icon
+        };
+    }
 }

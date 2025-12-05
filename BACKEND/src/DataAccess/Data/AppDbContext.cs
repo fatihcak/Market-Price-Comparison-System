@@ -15,6 +15,7 @@ public class AppDbContext : DbContext
     public DbSet<District> Districts { get; set; }
     public DbSet<UserProductList> UserProductLists { get; set; }
     public DbSet<AdminUser> AdminUsers { get; set; }
+    public DbSet<ProductPriceHistory> ProductPriceHistories { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -182,6 +183,23 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Username).IsRequired().HasMaxLength(50);
             entity.Property(e => e.PasswordHash).IsRequired();
             entity.HasIndex(e => e.Username).IsUnique();
+        });
+
+        // ProductPriceHistory
+        modelBuilder.Entity<ProductPriceHistory>(entity =>
+        {
+            entity.ToTable("ProductPriceHistories");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Price).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.ChangedDate).HasColumnName("ChangedDate");
+
+            entity.HasOne(e => e.MarketProductPrice)
+                .WithMany() // One-to-many from Price to History
+                .HasForeignKey(e => e.MarketProductPriceId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            entity.HasIndex(e => e.MarketProductPriceId);
+            entity.HasIndex(e => e.ChangedDate);
         });
     }
 }

@@ -20,12 +20,16 @@ export interface MarketResponseDTO {
 
 export interface Product {
     id: number;
-    // Backend fields (optional for now to support UI transition)
     categoryId?: number;
     categoryName?: string;
     productName?: string;
-    
-    // UI fields
+    marketName?: string;
+    districtName?: string;
+    brand?: string;
+    unit?: string;
+    lastUpdated?: string;
+
+    // UI
     name: string;
     price: number;
     oldPrice: number | null;
@@ -33,6 +37,10 @@ export interface Product {
     discount: number;
     category: string;
     image: string;
+}
+
+export interface CartItem extends Product {
+    quantity: number;
 }
 
 export interface ProductResponseDTO {
@@ -49,4 +57,11 @@ export interface ProductResponseDTO {
     discount: number;
     marketName: string;
     imageUrl: string;
+}
+
+export interface ProductPriceHistoryDTO {
+    date: string;
+    minPrice: number;
+    maxPrice: number;
+    averagePrice: number;
 }

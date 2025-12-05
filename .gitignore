@@ -1,38 +1,42 @@
-# Ignore everything
-*
-
-# Unignore BACKEND folder and its contents
-!BACKEND/
-!BACKEND/**
-
-# Unignore .gitignore itself
-!.gitignore
-
-# Unignore compsys folder
-!compsys/
-!compsys/**
-
-# Unignore Frontend folder
-!Frontend/
-!Frontend/**
-
-# -------------------------------------------------------------------------
-# Re-ignore build output and dependency directories to prevent tracking them
-# even if they are inside unignored folders.
-# -------------------------------------------------------------------------
-
-# .NET Build Output
-**/bin/
-**/obj/
-
-# Node/Frontend Dependencies
+# Dependencies
+node_modules/
 **/node_modules/
 
-# IDE/Editor settings
+# .NET build artifacts
+bin/
+obj/
+**/bin/
+**/obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Environment variables
+.env
+.env.local
+
+# IDEs
+.vscode/
+.idea/
+.vs/
 **/.vs/
 **/.vscode/
 **/.idea/
-**/*.user
-**/*.suo
-**/*.userosscache
-**/*.sln.docstates
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Build outputs
+dist/
+build/
+
+# Logs
+*.log
+BACKEND/src/API/Logs/
+
+# SQLite
+*.db
+*.db-shm
+*.db-wal

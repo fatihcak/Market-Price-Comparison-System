@@ -1,16 +1,18 @@
 import { X, MapPin, AlertCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { api } from '../services/api';
-import { PriceResponseDTO } from '../types';
+import { PriceResponseDTO, Product } from '../types';
 
 interface PriceComparisonProps {
   isOpen: boolean;
   onClose: () => void;
   productName?: string;
   productId?: number;
+  productImage?: string;
+  onAdd?: (product: Product) => void;
 }
 
-export default function PriceComparison({ isOpen, onClose, productName = 'Product', productId }: PriceComparisonProps) {
+export default function PriceComparison({ isOpen, onClose, productName = 'Product', productId, productImage = '📦', onAdd }: PriceComparisonProps) {
   const [selectedMarket, setSelectedMarket] = useState(0);
   const [prices, setPrices] = useState<PriceResponseDTO[]>([]);
   const [loading, setLoading] = useState(false);
@@ -27,9 +29,31 @@ export default function PriceComparison({ isOpen, onClose, productName = 'Produc
     }
   }, [isOpen, productId]);
 
+  const handleAddToList = (priceItem: PriceResponseDTO) => {
+    if (onAdd && productId) {
+      const productToAdd: Product = {
+        id: productId,
+        name: productName,
+        price: priceItem.price,
+        oldPrice: null,
+        market: priceItem.marketName,
+        discount: 0,
+        category: 'General',
+        image: productImage,
+        // Backend fields
+        marketName: priceItem.marketName,
+        districtName: priceItem.districtName,
+        lastUpdated: priceItem.lastUpdated
+      };
+      onAdd(productToAdd);
+      // Optional: Show feedback or close modal
+      // onClose(); 
+    }
+  };
+
   if (!isOpen) return null;
 
-  const cheapest = prices.length > 0 
+  const cheapest = prices.length > 0
     ? prices.reduce((prev, curr) => (prev.price < curr.price ? prev : curr))
     : null;
 
@@ -37,7 +61,10 @@ export default function PriceComparison({ isOpen, onClose, productName = 'Produc
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-300">
         <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">{productName} Fiyatları</h2>
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">{productImage}</span>
+            <h2 className="text-2xl font-bold text-gray-900">{productName} Fiyatları</h2>
+          </div>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -80,7 +107,13 @@ export default function PriceComparison({ isOpen, onClose, productName = 'Produc
                 </div>
 
                 <div className="flex items-center gap-4 pt-3 border-t border-gray-100">
-                  <button className="ml-auto px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium text-sm transition-colors">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAddToList(item);
+                    }}
+                    className="ml-auto px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium text-sm transition-colors"
+                  >
                     Add to List
                   </button>
                 </div>
@@ -105,7 +138,10 @@ export default function PriceComparison({ isOpen, onClose, productName = 'Produc
           >
             Close
           </button>
-          <button className="flex-1 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+          >
             Okay
           </button>
         </div>
