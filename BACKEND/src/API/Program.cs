@@ -13,6 +13,7 @@ using System.Text;
 using Microsoft.OpenApi.Models;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
+using API.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,7 +23,7 @@ builder.Host.UseSerilog((context, configuration) =>
 
 // Database
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseInMemoryDatabase("MarketPriceComparisonDb"));
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // CORS
 builder.Services.AddCors(options =>
@@ -110,11 +111,22 @@ builder.Services.AddSwaggerGen(c =>
         Version = "v1",
         Description = "API for comparing product prices across different markets and districts"
     });
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+    
+    // Apply security requirement only to endpoints with [Authorize] attribute
+    c.OperationFilter<SecurityRequirementsOperationFilter>();
 });
 
 var app = builder.Build();
 
-// Seed Data
+//Seed Data
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;

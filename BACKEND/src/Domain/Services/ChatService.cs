@@ -75,17 +75,24 @@ namespace Domain.Services
 
         private async Task<ChatResponseDto> CalculateSmartBasketAsync(List<string> items)
         {
-            // 1. Find all relevant products for the requested items
+            // 1. Batch fetch all relevant products for the requested items
+            var allFoundProducts = await _productRepository.SearchByNamesAsync(items);
+            
             var productMap = new Dictionary<string, List<Product>>();
             var allProductIds = new List<int>();
 
+            // Map products back to the requested items (in-memory)
             foreach (var item in items)
             {
-                var products = await _productRepository.SearchByNameAsync(item);
-                if (products.Any())
+                // We use the same 'Contains' logic as the repository to ensure consistency
+                var matches = allFoundProducts
+                    .Where(p => p.ProductName.Contains(item, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+                if (matches.Any())
                 {
-                    productMap[item] = products.ToList();
-                    allProductIds.AddRange(products.Select(p => p.Id));
+                    productMap[item] = matches;
+                    allProductIds.AddRange(matches.Select(p => p.Id));
                 }
             }
 
@@ -112,8 +119,6 @@ namespace Domain.Services
                     TotalPrice = 0 
                 };
                 
-                var foundItemsForMarket = new List<string>();
-
                 foreach (var item in items)
                 {
                     if (!productMap.ContainsKey(item)) continue;
@@ -128,17 +133,17 @@ namespace Domain.Services
 
                     if (bestPrice != null)
                     {
-                        // We need the product name, which might be loaded via Include in GetPricesForProductsAsync
-                        // If not, we can look it up in possibleProducts
-                        var product = possibleProducts.First(p => p.Id == bestPrice.ProductId);
+                        // We need the product name
+                        // Try to find it in possibleProducts (which we have in memory)
+                        var product = possibleProducts.FirstOrDefault(p => p.Id == bestPrice.ProductId);
+                        var productName = product?.ProductName ?? "Unknown Product";
                         
                         basket.TotalPrice += bestPrice.Price;
                         basket.Items.Add(new ProductItemDto 
                         { 
-                            ProductName = product.ProductName, 
+                            ProductName = productName, 
                             Price = bestPrice.Price 
                         });
-                        foundItemsForMarket.Add(item);
                     }
                 }
 
@@ -158,35 +163,51 @@ namespace Domain.Services
 
             // 4. Determine best market
             var cheapestBasket = marketBaskets.Values.OrderBy(b => b.TotalPrice).First();
-            var missingItems = items.Where(i => !cheapestBasket.Items.Any(p => productMap.ContainsKey(i) && productMap[i].Any(prod => prod.ProductName == p.ProductName))).ToList(); 
-            // Note: The missing item logic above is a bit fuzzy because of product name matching. 
-            // A simpler way: check which 'item' keys from the input list resulted in a match in the basket.
+
+            // Calculate missing items for the cheapest basket
+            // An item is missing if we didn't add a product for it to the basket
+            // We can check this by seeing if any of the products in the basket "match" the item
+            // OR simpler: we know which items we found a price for in the loop above.
             
-            var foundItemKeys = new HashSet<string>();
+            // Let's re-verify missing items specifically for the cheapest basket
+            var missingItems = new List<string>();
             foreach(var item in items)
             {
-                if(productMap.ContainsKey(item))
+                // Did we find a price for this 'item' in 'cheapestBasket'?
+                // We can check if any product in the basket belongs to the 'productMap[item]' list.
+                if (productMap.ContainsKey(item))
                 {
-                    var productIds = productMap[item].Select(p => p.Id).ToHashSet();
-                    // If any product in the basket matches one of these IDs
-                    // But wait, MarketBasketDto only has Name and Price. 
-                    // We should rely on the loop construction where we added items.
-                    // Let's refine the missing item logic in the loop or post-process carefully.
+                    var possibleProductIds = productMap[item].Select(p => p.Id).ToHashSet();
+                    // We need to know the ProductIds in the basket. 
+                    // But ProductItemDto only has Name. 
+                    // However, we can infer it or check by name again.
+                    // Checking by name is safer if we trust the mapping.
+                    
+                    bool foundInBasket = cheapestBasket.Items.Any(basketItem => 
+                        productMap[item].Any(p => p.ProductName == basketItem.ProductName));
+                    
+                    if (!foundInBasket)
+                    {
+                        missingItems.Add(item);
+                    }
+                }
+                else
+                {
+                    // Item itself was not found in DB at all
+                    missingItems.Add(item);
                 }
             }
-            
-            // Re-calculating missing items properly
-            var actuallyFoundItems = new HashSet<string>();
-            // This requires mapping back from the specific product found to the generic item name requested.
-            // Since we iterate items in the outer loop, we know what we found.
-            // Let's simplify: The DTO logic above is solid. The missing items are just (All Items) - (Items found in cheapest basket).
-            // But 'Items found' are specific products.
-            
-            // Let's construct the reply message
+
             var sb = new StringBuilder();
-            sb.AppendLine($"The cheapest basket in **{cheapestBasket.MarketName}** market!");
+            sb.AppendLine($"The cheapest basket is in **{cheapestBasket.MarketName}**!");
             sb.AppendLine($"Total Price: **{cheapestBasket.TotalPrice:C2}**");
             
+            if (missingItems.Any())
+            {
+                sb.AppendLine();
+                sb.AppendLine("Missing items in this market: " + string.Join(", ", missingItems));
+            }
+
             return new ChatResponseDto
             {
                 Reply = sb.ToString(),
@@ -195,7 +216,7 @@ namespace Domain.Services
                     CheapestMarketName = cheapestBasket.MarketName,
                     TotalPrice = cheapestBasket.TotalPrice,
                     AlternativeMarkets = marketBaskets.Values.OrderBy(b => b.TotalPrice).Skip(1).Take(3).ToList(),
-                    MissingItems = items.Where(i => !cheapestBasket.Items.Any(p => p.ProductName.Contains(i, StringComparison.OrdinalIgnoreCase))).ToList() // Approximate check
+                    MissingItems = missingItems
                 }
             };
         }
