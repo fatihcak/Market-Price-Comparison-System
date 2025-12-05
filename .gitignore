@@ -28,3 +28,8 @@ build/
 *.log
 BACKEND/src/API/Logs/
 BACKEND/src/API/bin/Debug/
+
+# SQLite
+*.db
+*.db-shm
+*.db-wal
