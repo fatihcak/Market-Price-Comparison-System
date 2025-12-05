@@ -1,9 +1,0 @@
-﻿Response received successfully!
-Reply: The cheapest basket is in **CarrefourSA**!
-Total Price: **$40.00**
-
-Missing items in this market: domates, yumurta, ekmek
-
-Cheapest Market: CarrefourSA
-Total Price: 40.00
-Missing Items: domates, yumurta, ekmek
