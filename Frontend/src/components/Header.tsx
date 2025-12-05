@@ -3,9 +3,10 @@ import { useState } from 'react';
 
 interface HeaderProps {
   onOpenList?: () => void;
+  itemCount?: number;
 }
 
-export default function Header({ onOpenList }: HeaderProps) {
+export default function Header({ onOpenList, itemCount = 0 }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -49,10 +50,15 @@ export default function Header({ onOpenList }: HeaderProps) {
           </button>
           <button
             onClick={onOpenList}
-            className="hidden md:block bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-all hover:shadow-lg hover:scale-105 transform duration-200"
+            className="hidden md:block bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-all hover:shadow-lg hover:scale-105 transform duration-200 relative"
           >
             <ShoppingBasket size={16} className="inline-block mr-2" />
             List
+            {itemCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white">
+                {itemCount}
+              </span>
+            )}
           </button>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -71,10 +77,15 @@ export default function Header({ onOpenList }: HeaderProps) {
           <a href="#" className="block text-gray-600 hover:text-green-600 font-medium text-sm p-2">Blog</a>
           <button
             onClick={onOpenList}
-            className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors mt-2"
+            className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors mt-2 relative"
           >
             <ShoppingBasket size={16} className="inline-block mr-2" />
             List
+            {itemCount > 0 && (
+              <span className="ml-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                {itemCount}
+              </span>
+            )}
           </button>
         </div>
       )}

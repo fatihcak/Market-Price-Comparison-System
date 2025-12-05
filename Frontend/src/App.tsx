@@ -12,6 +12,7 @@ import BasketComparison from './components/BasketComparison';
 import ProductList from './components/ProductList';
 import { Product, CartItem } from './types';
 import { api } from './services/api';
+import AiChatbot from './components/AiChatbot';
 
 function App() {
   const [comparisonOpen, setComparisonOpen] = useState(false);
@@ -46,7 +47,7 @@ function App() {
       }
       return [...prevList, { ...product, quantity: 1 }];
     });
-    setListOpen(true);
+    // setListOpen(true); // Disabled auto-open
   };
 
   const updateQuantity = (productId: number, delta: number) => {
@@ -64,9 +65,11 @@ function App() {
     setShoppingList(prevList => prevList.filter(item => item.id !== productId));
   };
 
+  const totalItems = shoppingList.reduce((sum, item) => sum + item.quantity, 0);
+
   return (
     <div className="min-h-screen bg-white">
-      <Header onOpenList={() => setListOpen(true)} />
+      <Header onOpenList={() => setListOpen(true)} itemCount={totalItems} />
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         <SearchBar />
@@ -77,6 +80,8 @@ function App() {
           </div>
           <CategorySection />
         </section>
+
+
 
         <Routes>
           <Route path="/" element={<Navigate to="/products/All" replace />} />
@@ -183,6 +188,8 @@ function App() {
           setBasketComparisonOpen(true);
         }}
       />
+
+      <AiChatbot />
     </div>
   );
 }
