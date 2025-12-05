@@ -15,3 +15,24 @@
 # Unignore Frontend folder
 !Frontend/
 !Frontend/**
+
+# -------------------------------------------------------------------------
+# Re-ignore build output and dependency directories to prevent tracking them
+# even if they are inside unignored folders.
+# -------------------------------------------------------------------------
+
+# .NET Build Output
+**/bin/
+**/obj/
+
+# Node/Frontend Dependencies
+**/node_modules/
+
+# IDE/Editor settings
+**/.vs/
+**/.vscode/
+**/.idea/
+**/*.user
+**/*.suo
+**/*.userosscache
+**/*.sln.docstates
