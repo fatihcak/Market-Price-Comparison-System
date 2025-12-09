@@ -28,10 +28,8 @@ export default function SearchBar() {
             <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
             <select className="w-full pl-12 pr-4 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500 bg-white text-gray-900 appearance-none cursor-pointer">
               <option>All Cities</option>
-              <option>İstanbul</option>
-              <option>Antalya</option>
-              <option>Isparta</option>
-              <option>Bursa</option>
+              <option>Lefkoşa</option>
+              <option>Gazimağusa</option>
             </select>
           </div>
         </div>
