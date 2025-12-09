@@ -27,7 +27,7 @@ export default function Header({ onOpenList, itemCount = 0 }: HeaderProps) {
 
         <nav className="hidden md:flex items-center gap-8">
           <a href="#" className="text-gray-600 hover:text-green-600 font-medium text-sm transition-colors relative group">
-            Markets
+            <button > Markets </button>
             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-green-600 transition-all group-hover:w-full"></span>
           </a>
           <a href="#" className="text-gray-600 hover:text-green-600 font-medium text-sm transition-colors relative group">

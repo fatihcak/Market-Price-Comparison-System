@@ -11,7 +11,7 @@ interface Message {
 
 export default function AiChatbot() {
     const [isOpen, /*setIsOpen*/] = useState(true);
-    const [isMinimized, setIsMinimized] = useState(false);
+    const [isMinimized, setIsMinimized] = useState(true);
     const [inputText, setInputText] = useState('');
     const [messages, setMessages] = useState<Message[]>([
         {
@@ -69,7 +69,7 @@ export default function AiChatbot() {
 
     return (
         <div
-            className={`fixed bottom-6 left-6 bg-white rounded-2xl shadow-2xl z-50 transition-all duration-300 flex flex-col overflow-hidden border border-gray-100 ${isMinimized ? 'w-72 h-14' : 'w-80 sm:w-96 h-[500px] max-h-[80vh]'
+            className={`fixed bottom-3 left-2 bg-white rounded-2xl shadow-2xl z-50 transition-all duration-300 flex flex-col overflow-hidden border border-gray-100 ${isMinimized ? 'w-72 h-14' : 'w-80 sm:w-96 h-[500px] max-h-[80vh]'
                 }`}
         >
             {/* Header */}
