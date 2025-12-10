@@ -3,32 +3,32 @@ import { Star } from 'lucide-react';
 export default function Testimonials() {
   const testimonials = [
     {
-      name: 'Ayşe Yılmaz',
-      role: 'Ev Hanımı',
-      text: 'Market Fiyatı sayesinde haftalık alışveriş bütçemde %30 tasarruf ettim. Gerçekten harika bir uygulama!',
-      rating: 5,
-      avatar: '👩'
-    },
-    {
-      name: 'Mehmet Kaya',
-      role: 'Yüksek Memur',
-      text: 'Fiyat karşılaştırması yaparak en uygun marketleri buluyorum. Zamanımı ve parasını kazandırdı.',
+      name: 'John Doe',
+      role: 'Customer',
+      text: 'I can find the best prices for my products and compare them with other markets. It is a very useful app!',
       rating: 5,
       avatar: '👨'
     },
     {
-      name: 'Zeynep Demir',
-      role: 'Öğretmen',
-      text: 'Mobil uygulaması çok kullanışlı. Markete giderken listemi açıp fiyatları kontrol ediyorum.',
-      rating: 5,
-      avatar: '👩‍🏫'
+      name: 'Jane Smith',
+      role: 'Customer',
+      text: 'I can find the best prices for my products and compare them with other markets. It is a very useful app!',
+      rating: 4,
+      avatar: '👩'
     },
     {
-      name: 'İbrahim Saraçoğlu',
-      role: 'Girişimci',
-      text: 'Restoran malzemeleri için kullanıyorum. Toplu alışveriş fiyatlarında çok yardımcı oluyor.',
+      name: 'Mark Johnson',
+      role: 'Customer',
+      text: 'I can find the best prices for my products and compare them with other markets. It is a very useful app!',
       rating: 5,
-      avatar: '👨‍💼'
+      avatar: '👨'
+    },
+    {
+      name: 'Jane Smith',
+      role: 'Customer',
+      text: 'I can find the best prices for my products and compare them with other markets. It is a very useful app!',
+      rating: 5,
+      avatar: '👩'
     }
   ];
 

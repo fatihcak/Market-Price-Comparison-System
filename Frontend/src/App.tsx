@@ -17,19 +17,34 @@ import SubCategoryNavbar from './components/SubCategoryNavbar';
 import { CATEGORIES } from './constants/categories'; // Import categories
 
 
+
 function App() {
   const [comparisonOpen, setComparisonOpen] = useState(false);
   const [basketComparisonOpen, setBasketComparisonOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState('Organik Süt 1L');
   const [selectedProductId, setSelectedProductId] = useState<number | undefined>(undefined);
   const [selectedProductForComparison, setSelectedProductForComparison] = useState<Product | null>(null);
-  const [shoppingList, setShoppingList] = useState<CartItem[]>([]);
   const [listOpen, setListOpen] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
+  const [shoppingList, setShoppingList] = useState<CartItem[]>(() => {
+    const saved = localStorage.getItem('market_basket');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (error) {
+        console.error('Failed to parse basket:', error);
+      }
+    }
+    return [];
+  });
 
   useEffect(() => {
     api.getProducts().then(setProducts);
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem('market_basket', JSON.stringify(shoppingList));
+  }, [shoppingList]);
 
   const openComparison = (product: Product) => {
     setSelectedProduct(product.name);

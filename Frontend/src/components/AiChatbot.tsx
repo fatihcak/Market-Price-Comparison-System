@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { X, Send, Bot, User, /*Minimize2, Maximize2*/ } from 'lucide-react';
 import { api } from '../services/api';
 
+
 interface Message {
     id: number;
     text: string;
@@ -10,17 +11,30 @@ interface Message {
 }
 
 export default function AiChatbot() {
-    const [isOpen, /*setIsOpen*/] = useState(true);
+    const [/*isOpen/*, /*setIsOpen*/] = useState(true);
     const [isMinimized, setIsMinimized] = useState(true);
     const [inputText, setInputText] = useState('');
-    const [messages, setMessages] = useState<Message[]>([
-        {
+    const [isLoading, setIsLoading] = useState(false);
+    const [messages, setMessages] = useState<Message[]>(() => {
+        const saved = sessionStorage.getItem('chat_history');
+        if (saved) {
+            try {
+                const parsedMessages = JSON.parse(saved);
+                return parsedMessages.map((msg: any) => ({
+                    ...msg,
+                    timestamp: new Date(msg.timestamp)
+                }));
+            } catch (error) {
+                console.error('Error parsing chat history:', error);
+            }
+        }
+        return [{
             id: 1,
             text: "Hello! I'm your Market Price Assistant. I can help you find the best prices, compare markets, or suggest products. How can I help you today?",
             sender: 'bot',
             timestamp: new Date()
-        }
-    ]);
+        }];
+    });
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
@@ -29,7 +43,17 @@ export default function AiChatbot() {
 
     useEffect(() => {
         scrollToBottom();
-    }, [messages, isOpen]);
+        // If the chat is opening (not minimized), ensuring we scroll to bottom after animation
+        if (!isMinimized) {
+            const timer = setTimeout(scrollToBottom, 310);
+            return () => clearTimeout(timer);
+        }
+    }, [messages, isMinimized, isLoading]);
+
+    // Save messages to LocalStorage whenever the 'messages' array changes
+    useEffect(() => {
+        sessionStorage.setItem('chat_history', JSON.stringify(messages));
+    }, [messages]);
 
     const handleSendMessage = async (e?: React.FormEvent) => {
         e?.preventDefault();
@@ -44,6 +68,7 @@ export default function AiChatbot() {
 
         setMessages(prev => [...prev, newUserMessage]);
         setInputText('');
+        setIsLoading(true);
 
         try {
             const response = await api.sendMessage(newUserMessage.text);
@@ -63,6 +88,8 @@ export default function AiChatbot() {
                 timestamp: new Date()
             };
             setMessages(prev => [...prev, errorResponse]);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -128,6 +155,22 @@ export default function AiChatbot() {
                                 </div>
                             </div>
                         ))}
+
+                        {isLoading && (
+                            <div className="flex items-start gap-2.5">
+                                <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-green-100">
+                                    <Bot size={16} className="text-green-600" />
+                                </div>
+                                <div className="bg-white text-gray-800 shadow-sm border border-gray-100 rounded-2xl rounded-tl-none p-4">
+                                    <div className="flex gap-1.5 items-center h-4">
+                                        <div className="w-1 h-1 bg-gray-900 rounded-full animate-bounce animate-pulse [animation-delay:-0.3s]"></div>
+                                        <div className="w-1 h-1 bg-gray-900 rounded-full animate-bounce animate-pulse [animation-delay:-0.15s]"></div>
+                                        <div className="w-1 h-1 bg-gray-900 rounded-full animate-bounce animate-pulse"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         <div ref={messagesEndRef} />
                     </div>
 
@@ -143,7 +186,7 @@ export default function AiChatbot() {
                             />
                             <button
                                 type="submit"
-                                disabled={!inputText.trim()}
+                                disabled={!inputText.trim() || isLoading}
                                 className="p-1.5 bg-green-600 text-white rounded-full hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
                                 <Send size={14} />
