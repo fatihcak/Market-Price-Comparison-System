@@ -1,4 +1,4 @@
-import { X, MapPin, ShoppingCart, Check, AlertTriangle } from 'lucide-react';
+import { X, MapPin, ShoppingCart, Check, AlertTriangle, ExternalLink } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { CartItem } from '../types';
@@ -24,6 +24,11 @@ interface MarketBasket {
 export default function BasketComparison({ isOpen, onClose, products }: BasketComparisonProps) {
     const [marketBaskets, setMarketBaskets] = useState<MarketBasket[]>([]);
     const [loading, setLoading] = useState(false);
+
+    const openMap = (marketName: string, districtName: string) => {
+        const query = encodeURIComponent(`${marketName} ${districtName}`);
+        window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
+    };
 
     useEffect(() => {
         if (isOpen && products.length > 0) {
@@ -188,6 +193,13 @@ export default function BasketComparison({ isOpen, onClose, products }: BasketCo
                                                             <MapPin size={14} />
                                                             {basket.districtName}
                                                         </div>
+                                                        <button
+                                                            onClick={() => openMap(basket.marketName, basket.districtName)}
+                                                            className="inline-block px-2 py-1 bg-gray-300 rounded-full text-xs flex items-center gap-1 text-green-600 hover:text-green-700 mt-1 hover:bg-gray-200  font-medium"
+                                                        >
+                                                            <ExternalLink size={12} />
+                                                            See on Map
+                                                        </button>
                                                     </div>
                                                     <div className="text-right">
                                                         <span className="block text-2xl font-bold text-green-600">
@@ -239,6 +251,13 @@ export default function BasketComparison({ isOpen, onClose, products }: BasketCo
                                                             <MapPin size={14} />
                                                             {basket.districtName}
                                                         </div>
+                                                        <button
+                                                            onClick={() => openMap(basket.marketName, basket.districtName)}
+                                                            className="inline-block px-2 py-1 bg-gray-300 rounded-full hover:bg-gray-200 text-xs flex items-center gap-1 text-green-600 hover:text-green-700 mt-1  font-medium"
+                                                        >
+                                                            <ExternalLink size={12} />
+                                                            See on Map
+                                                        </button>
                                                     </div>
                                                     <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs font-bold rounded-full">
                                                         Missing {basket.missingCount} items
