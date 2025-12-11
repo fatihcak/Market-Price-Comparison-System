@@ -13,6 +13,10 @@ import ProductList from './components/ProductList';
 import { Product, CartItem } from './types';
 import { api } from './services/api';
 import AiChatbot from './components/AiChatbot';
+import SubCategoryNavbar from './components/SubCategoryNavbar';
+import { CATEGORIES } from './constants/categories'; // Import categories
+
+
 
 function App() {
   const [comparisonOpen, setComparisonOpen] = useState(false);
@@ -20,13 +24,27 @@ function App() {
   const [selectedProduct, setSelectedProduct] = useState('Organik Süt 1L');
   const [selectedProductId, setSelectedProductId] = useState<number | undefined>(undefined);
   const [selectedProductForComparison, setSelectedProductForComparison] = useState<Product | null>(null);
-  const [shoppingList, setShoppingList] = useState<CartItem[]>([]);
   const [listOpen, setListOpen] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
+  const [shoppingList, setShoppingList] = useState<CartItem[]>(() => {
+    const saved = localStorage.getItem('market_basket');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (error) {
+        console.error('Failed to parse basket:', error);
+      }
+    }
+    return [];
+  });
 
   useEffect(() => {
     api.getProducts().then(setProducts);
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem('market_basket', JSON.stringify(shoppingList));
+  }, [shoppingList]);
 
   const openComparison = (product: Product) => {
     setSelectedProduct(product.name);
@@ -79,14 +97,13 @@ function App() {
             <h2 className="text-3xl font-bold text-gray-900">Categories</h2>
           </div>
           <CategorySection />
+          <SubCategoryNavbar />
         </section>
-
-
 
         <Routes>
           <Route path="/" element={<Navigate to="/products/All" replace />} />
           <Route
-            path="/products/:category"
+            path="/products/:category/:subcategory?"
             element={
               <ProductGrid
                 products={products}
@@ -201,7 +218,7 @@ interface ProductGridProps {
 }
 
 function ProductGrid({ products, onAdd, onCompare }: ProductGridProps) {
-  const { category } = useParams<{ category: string }>();
+  const { category, subcategory } = useParams<{ category: string; subcategory?: string }>();
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 16;
@@ -210,11 +227,28 @@ function ProductGrid({ products, onAdd, onCompare }: ProductGridProps) {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedCategory]);
+  }, [selectedCategory, subcategory]);
 
-  const filteredProducts = selectedCategory === 'All'
-    ? products
-    : products.filter(product => product.category === selectedCategory);
+  const filteredProducts = products.filter(product => {
+    if (selectedCategory === 'All') return true;
+
+    // 1. Find the Main Category definition
+    const mainCatDef = CATEGORIES.find(c => c.slug === selectedCategory);
+    if (!mainCatDef) return false; // Unknown main category
+
+    // 2. If a specific subcategory is selected, filter by that EXACT subcategory match
+    if (subcategory) {
+      // Backend 'CategoryName' (e.g. 'Fruits') should match subcategory slug/name
+      // Assuming product.category (or product.categoryName) matches the subcategory name
+      return product.category === subcategory || product.categoryName === subcategory;
+    }
+
+    // 3. If only Main Category is selected, valid products must match ANY of its subcategories
+    // E.g. Main='Fruits and Vegetables', valid subs=['Fruits', 'Vegetables']
+    // Product category must be one of those.
+    const validSubNames = mainCatDef.subCategories.map(s => s.name);
+    return validSubNames.includes(product.category) || (product.categoryName && validSubNames.includes(product.categoryName));
+  });
 
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -233,7 +267,7 @@ function ProductGrid({ products, onAdd, onCompare }: ProductGridProps) {
 
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-3xl font-bold text-gray-900">
-          {selectedCategory === 'All' ? 'Popular Products' : selectedCategory}
+          {subcategory ? subcategory : (selectedCategory === 'All' ? 'All Products' : selectedCategory)}
         </h2>
         <button
           onClick={() => navigate('/products/All')}
