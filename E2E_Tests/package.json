@@ -1,0 +1,12 @@
+{
+  "name": "market-price-e2e-tests",
+  "version": "1.0.0",
+  "description": "Comprehensive E2E tests for Market Price Comparison System",
+  "main": "run_test.js",
+  "scripts": {
+    "test": "node run_test.js"
+  },
+  "dependencies": {
+    "playwright": "^1.40.0"
+  }
+}

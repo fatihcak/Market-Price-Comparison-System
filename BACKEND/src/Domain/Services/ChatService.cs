@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Domain.Entities;
 using DTOs.DTOs.Responses;
+using DTOs.DTOs.Requests;
 
 namespace Domain.Services
 {
@@ -50,6 +51,7 @@ namespace Domain.Services
             Analyze the following user message: '{message}'.
             Identify the user's intent. 
             If the user wants to buy products or asks for a price comparison for multiple items, set intent to 'smart_basket'. Extract the list of items. IMPORTANT: Keep the item names in the original language used by the user (e.g., if user says 'tomato', extract 'tomato'; if 'domates', extract 'domates').
+            
             If it's a general question, set intent to 'chat'.
             
             Return ONLY a JSON object in this format:
@@ -229,6 +231,7 @@ namespace Domain.Services
 
         private async Task<string> CallGeminiApiAsync(string prompt)
         {
+            // Simple content generation
             var requestBody = new
             {
                 contents = new[]
@@ -237,6 +240,11 @@ namespace Domain.Services
                 }
             };
 
+            return await ExecuteGeminiRequest(requestBody);
+        }
+
+        private async Task<string> ExecuteGeminiRequest(object requestBody)
+        {
             var jsonContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
             var response = await _httpClient.PostAsync($"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key={_apiKey}", jsonContent);
             

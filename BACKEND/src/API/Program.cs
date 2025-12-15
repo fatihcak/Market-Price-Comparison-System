@@ -158,3 +158,5 @@ app.MapHealthChecks("/health");
 app.MapGet("/", () => "Market Price Comparison API is running!");
 app.MapControllers();
 app.Run();
+
+public partial class Program { }

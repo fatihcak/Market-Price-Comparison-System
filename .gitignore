@@ -1,11 +1,16 @@
 # Dependencies
 node_modules/
+**/node_modules/
 
 # .NET build artifacts
 bin/
 obj/
+**/bin/
+**/obj/
 *.user
 *.suo
+*.userosscache
+*.sln.docstates
 
 # Environment variables
 .env
@@ -15,6 +20,9 @@ obj/
 .vscode/
 .idea/
 .vs/
+**/.vs/
+**/.vscode/
+**/.idea/
 
 # OS generated files
 .DS_Store
@@ -27,7 +35,6 @@ build/
 # Logs
 *.log
 BACKEND/src/API/Logs/
-BACKEND/src/API/bin/Debug/
 
 # SQLite
 *.db

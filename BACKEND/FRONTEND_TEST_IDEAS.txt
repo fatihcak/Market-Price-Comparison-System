@@ -1,0 +1,40 @@
+FRONTEND TEST IDEAS (DETAYLI PLAN)
+
+1. UI Components (Birim Testleri)
+   - ProductCard:
+     - Fiyat formatı (TL simgesi, ondalık) doğru mu?
+     - İndirim yüzdesi doğru hesaplanıp gösteriliyor mu?
+     - Market logosu veya ismi render oluyor mu?
+     - "Sepete Ekle" butonu çalışıyor mu?
+   - SearchBar:
+     - Yazarken anlık filtreleme yapıyor mu? (Debounce var mı?)
+     - Boş arama yapıldığında ne oluyor?
+   - BasketSummary (Sepet Özeti):
+     - Toplam fiyat doğru hesaplanıyor mu?
+     - Ürün silme butonu işlevsel mi?
+     - Sepet boşken "Sepetiniz boş" mesajı görünüyor mu?
+   - MarketComparisonModal:
+     - En ucuz market doğru işaretlenmiş mi?
+     - Eksik ürünler listesi doğru gösteriliyor mu?
+
+2. Servis Entegrasyonları (Mocking gerektirebilir)
+   - api.ts:
+     - getProducts() fonksiyonu backend'den doğru veriyi çekiyor mu?
+     - Hata durumunda (500, 404) frontend çöküyor mu yoksa kullanıcıya hata mesajı mı gösteriyor?
+     - getMarkets() fonksiyonu market listesini getiriyor mu?
+
+3. Kullanıcı Akışları (E2E - End to End) - (Playwright veya Cypress ile)
+   - Senaryo 1: Ürün Arama ve Karşılaştırma
+     1. Anasayfaya gir.
+     2. Arama çubuğuna "Süt" yaz.
+     3. Gelen sonuçlardan birini sepete ekle.
+     4. "En Uygun Marketleri Göster" butonuna tıkla.
+     5. Açılan modalda A marketinin B marketinden daha ucuz olduğunu doğrula.
+   - Senaryo 2: Akıllı Chatbot
+     1. Chatbot penceresini aç.
+     2. "Domates, Salatalık ve Biber için en ucuz market hangisi?" yaz.
+     3. Botun "Smart Basket" moduna geçip hesaplama yaptığını ve mantıklı bir cevap (X marketi daha ucuz) döndüğünü doğrula.
+
+4. Responsive Tasarım
+   - Mobil görünümde menü kapanıp açılıyor mu?
+   - Ürün kartları mobilde düzgün listeleniyor mu?
