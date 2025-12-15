@@ -16,13 +16,13 @@ A full-stack application designed to help users compare product prices across di
 - **Framework**: React (Vite)
 - **Language**: TypeScript
 - **Styling**: TailwindCSS
-- **Icons**: Lucide React
+- **Icons**: Lucide React + Icon Images
 - **Routing**: React Router DOM
 - **State Management**: React Hooks
 
 ### Backend
 - **Framework**: ASP.NET Core Web API
-- **Database**: SQLite (Entity Framework Core)
+- **Database**: MsSQL
 - **Language**: C#
 
 ## 📦 Project Structure
