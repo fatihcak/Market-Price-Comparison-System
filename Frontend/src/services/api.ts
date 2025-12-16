@@ -1,6 +1,8 @@
 import { PriceResponseDTO, Product, ProductResponseDTO, ProductPriceHistoryDTO } from '../types';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.PROD
+    ? '/api'
+    : 'http://localhost:5000/api';
 
 export const api = {
     getPricesByProduct: async (productId: number): Promise<PriceResponseDTO[]> => {
