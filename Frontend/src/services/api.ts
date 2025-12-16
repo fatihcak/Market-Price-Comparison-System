@@ -1,7 +1,7 @@
 import { PriceResponseDTO, Product, ProductResponseDTO, ProductPriceHistoryDTO } from '../types';
 
 const API_BASE_URL = import.meta.env.PROD
-    ? '/api'
+    ? 'https://marketcomparisonsystem.azurewebsites.net/api'
     : 'http://localhost:5000/api';
 
 export const api = {
