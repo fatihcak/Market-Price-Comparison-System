@@ -23,7 +23,8 @@ builder.Host.UseSerilog((context, configuration) =>
 
 // Database
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    // options.UseInMemoryDatabase("MarketDb"));
 
 // Caching
 builder.Services.AddMemoryCache();
