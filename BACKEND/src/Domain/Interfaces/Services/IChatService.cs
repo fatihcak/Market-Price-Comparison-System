@@ -5,6 +5,6 @@ namespace Domain.Services
 {
     public interface IChatService
     {
-        Task<ChatResponseDto> GetChatResponseAsync(string userMessage);
+        Task<ChatResponseDto> GetChatResponseAsync(string userMessage, string sessionId);
     }
 }

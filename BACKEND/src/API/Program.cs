@@ -25,6 +25,9 @@ builder.Host.UseSerilog((context, configuration) =>
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Caching
+builder.Services.AddMemoryCache();
+
 // CORS
 builder.Services.AddCors(options =>
 {
@@ -148,7 +151,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 app.UseRateLimiter();
 app.UseAuthentication();
@@ -158,5 +161,4 @@ app.MapHealthChecks("/health");
 app.MapGet("/", () => "Market Price Comparison API is running!");
 app.MapControllers();
 app.Run();
-
-public partial class Program { }
+//yorumsatiri

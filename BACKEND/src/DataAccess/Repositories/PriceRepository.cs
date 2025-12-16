@@ -51,5 +51,5 @@ public class PriceRepository : Repository<MarketProductPrice>, IPriceRepository
     {
         await _context.ProductPriceHistories.AddAsync(history);
         await _context.SaveChangesAsync();
-}
+    }
 }
