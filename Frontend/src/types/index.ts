@@ -20,7 +20,6 @@ export interface MarketResponseDTO {
 
 export interface Product {
     id: number;
-    // Backend fields (optional for now to support UI transition)
     categoryId?: number;
     categoryName?: string;
     productName?: string;
@@ -30,7 +29,7 @@ export interface Product {
     unit?: string;
     lastUpdated?: string;
 
-    // UI fields
+    // UI
     name: string;
     price: number;
     oldPrice: number | null;

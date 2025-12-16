@@ -256,6 +256,13 @@ public static class DbSeeder
         prices.Add(new MarketProductPrice { Product = ispanak, MarketId = migros.Id, DistrictId = besiktas.Id, Price = 35.00m, LastUpdated = DateTime.UtcNow });
         prices.Add(new MarketProductPrice { Product = ispanak, MarketId = carrefour.Id, DistrictId = besiktas.Id, Price = 38.00m, LastUpdated = DateTime.UtcNow });
 
+        // --- 17.5 Domates (Vegetables) - Added for Normalization Test ---
+        var domates = new Product { ProductName = "Domates", Brand = "Yerli", Unit = "1kg", CategoryId = vegetables.Id, CreatedAt = DateTime.UtcNow, LastUpdated = DateTime.UtcNow };
+        products.Add(domates);
+        prices.Add(new MarketProductPrice { Product = domates, MarketId = migros.Id, DistrictId = kadikoy.Id, Price = 25.00m, LastUpdated = DateTime.UtcNow });
+        prices.Add(new MarketProductPrice { Product = domates, MarketId = bim.Id, DistrictId = kadikoy.Id, Price = 19.90m, LastUpdated = DateTime.UtcNow });
+        prices.Add(new MarketProductPrice { Product = domates, MarketId = a101.Id, DistrictId = kadikoy.Id, Price = 22.50m, LastUpdated = DateTime.UtcNow });
+
         // --- 18. Portakal (Fruits) ---
         var portakal = new Product { ProductName = "Portakal", Brand = "Finike", Unit = "1kg", CategoryId = fruits.Id, CreatedAt = DateTime.UtcNow, LastUpdated = DateTime.UtcNow };
         products.Add(portakal);
