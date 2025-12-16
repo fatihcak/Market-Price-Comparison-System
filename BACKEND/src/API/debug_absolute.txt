@@ -1,0 +1,4 @@
+[DEBUG] ChatController.PostMessage called with: Test Pascal
+[DEBUG] GetChatResponseAsync called with: Test Pascal
+[DEBUG] Calling Gemini API for message: Test Pascal
+[DEBUG] Gemini API returned. Length: 162

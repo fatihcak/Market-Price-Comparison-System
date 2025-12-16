@@ -1,6 +1,7 @@
 using DTOs.DTOs.Requests;
 using DTOs.DTOs.Responses;
 using Domain.Services;
+using Domain.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
@@ -33,7 +34,8 @@ namespace API.Controllers
                 return BadRequest("The message cannot be empty.");
             }
 
-            var response = await _chatService.GetChatResponseAsync(request.Message);
+            var sessionId = request.SessionId ?? "default_session"; // Fallback to a default if not provided
+            var response = await _chatService.GetChatResponseAsync(request.Message, sessionId);
 
             return Ok(response);
         }
