@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Domain.Services;
+
 using DataAccess.Data;
 using DataAccess.Repositories;
 using Domain.Interfaces.Repositories;
@@ -23,16 +24,21 @@ builder.Host.UseSerilog((context, configuration) =>
 
 // Database
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    // options.UseInMemoryDatabase("MarketDb"));
+
+// Caching
+builder.Services.AddMemoryCache();
 
 // CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins("https://white-pebble-0773b3403.3.azurestaticapps.net", "http://localhost:5173")
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
 
@@ -126,21 +132,6 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-//Seed Data
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    try
-    {
-        var context = services.GetRequiredService<AppDbContext>();
-        await DbSeeder.SeedAsync(context);
-    }
-    catch (Exception ex)
-    {
-        Log.Error(ex, "An error occurred while seeding the database.");
-    }
-}
-
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -148,7 +139,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 app.UseRateLimiter();
 app.UseAuthentication();
@@ -158,5 +149,5 @@ app.MapHealthChecks("/health");
 app.MapGet("/", () => "Market Price Comparison API is running!");
 app.MapControllers();
 app.Run();
-
+//yorumsatiri
 public partial class Program { }

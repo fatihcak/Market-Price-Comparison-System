@@ -1,2 +1,52 @@
-# Market-Price-Comparison-System
-This repository is for Market Price Comparison System Project. This project is developed by Eastern Mediterranen Students Doğukan Bilal Örs, Doğukan Güler, Aleyna Yılmaz, Fatih Çakır. In this project our aim is make a system that helps the users for a better and optimized market price detection for shoping. Users can see the different prices of goods for different markets for making desicions about their daily, weekly, mothly or unusal market shopings.
+# Market Price Comparison System
+
+A full-stack application designed to help users compare product prices across different markets, manage shopping lists, and find the best deals.
+
+## 🚀 Features
+
+- **Price Comparison**: Compare prices of products across various markets to find the cheapest options.
+- **Smart Shopping List**: Create and manage shopping lists with automatic price calculation.
+- **AI Chatbot**: Intelligent assistant to help with product searches and recommendations.
+- **Basket Comparison**: Compare the total cost of your entire shopping basket across different markets.
+- **Real-time Data**: Up-to-date pricing information (simulated or scraped).
+
+## 🛠️ Technology Stack
+
+### Frontend
+- **Framework**: React (Vite)
+- **Language**: TypeScript
+- **Styling**: TailwindCSS
+- **Icons**: Lucide React + Icon Images
+- **Routing**: React Router DOM
+- **State Management**: React Hooks
+
+### Backend
+- **Framework**: ASP.NET Core Web API
+- **Database**: MsSQL
+- **Language**: C#
+
+## 📦 Project Structure
+
+- **Frontend/**: Contains the React application code.
+- **BACKEND/**: Contains the ASP.NET Core Web API project.
+- **compsys/**: System component documentation or assets.
+
+## 🏁 Getting Started
+
+### Prerequisites
+- Node.js (v18 or higher)
+- .NET SDK (v8.0 or higher)
+
+### Installation & Running
+
+#### 1. Backend Setup
+Navigate to the API directory and run the application:
+
+```bash
+cd BACKEND/src/API
+dotnet restore
+dotnet run
+
+cd Frontend
+npm install
+npm run dev

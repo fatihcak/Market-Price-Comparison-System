@@ -19,6 +19,7 @@ public class ChatServiceTests
     private readonly Mock<IMarketRepository> _mockMarketRepository;
     private readonly Mock<IPriceRepository> _mockPriceRepository;
     private readonly Mock<HttpMessageHandler> _mockHttpMessageHandler;
+    private readonly Mock<Microsoft.Extensions.Caching.Memory.IMemoryCache> _mockMemoryCache;
     private readonly ChatService _service;
 
     public ChatServiceTests()
@@ -28,8 +29,15 @@ public class ChatServiceTests
         _mockMarketRepository = new Mock<IMarketRepository>();
         _mockPriceRepository = new Mock<IPriceRepository>();
         _mockHttpMessageHandler = new Mock<HttpMessageHandler>();
+        _mockMemoryCache = new Mock<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
 
         _mockConfiguration.Setup(c => c["AiSettings:GoogleApiKey"]).Returns("test_api_key");
+        
+        // Mock Cache methods to return null (cache miss) or valid objects as needed
+        object outValue;
+        _mockMemoryCache.Setup(m => m.TryGetValue(It.IsAny<object>(), out outValue)).Returns(false);
+        var mockCacheEntry = new Mock<Microsoft.Extensions.Caching.Memory.ICacheEntry>();
+        _mockMemoryCache.Setup(m => m.CreateEntry(It.IsAny<object>())).Returns(mockCacheEntry.Object);
 
         var httpClient = new HttpClient(_mockHttpMessageHandler.Object);
         _service = new ChatService(
@@ -37,7 +45,8 @@ public class ChatServiceTests
             httpClient,
             _mockProductRepository.Object,
             _mockMarketRepository.Object,
-            _mockPriceRepository.Object);
+            _mockPriceRepository.Object,
+            _mockMemoryCache.Object);
     }
 
     [Fact]
@@ -45,6 +54,7 @@ public class ChatServiceTests
     {
         // Arrange
         var userMessage = "Hello";
+        var sessionId = "test-session";
         var analysisResponse = new
         {
             candidates = new[]
@@ -81,7 +91,7 @@ public class ChatServiceTests
             });
 
         // Act
-        var result = await _service.GetChatResponseAsync(userMessage);
+        var result = await _service.GetChatResponseAsync(userMessage, sessionId);
 
         // Assert
         Assert.Equal("Hello there!", result.Reply);
@@ -93,6 +103,7 @@ public class ChatServiceTests
     {
         // Arrange
         var userMessage = "Cheap apple";
+        var sessionId = "test-session";
         var items = new List<string> { "apple" };
         var analysisResponse = new
         {
@@ -136,7 +147,7 @@ public class ChatServiceTests
             });
 
         // Act
-        var result = await _service.GetChatResponseAsync(userMessage);
+        var result = await _service.GetChatResponseAsync(userMessage, sessionId);
 
         // Assert
         Assert.NotNull(result.BasketSuggestion);

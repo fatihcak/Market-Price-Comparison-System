@@ -174,6 +174,9 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<City>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<District>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<UserProductList>().HasQueryFilter(e => !e.IsDeleted);
+        
+        // Fix for "required end of a relationship with global query filter" warning
+        modelBuilder.Entity<ProductPriceHistory>().HasQueryFilter(e => !e.MarketProductPrice.IsDeleted);
 
         // AdminUser
         modelBuilder.Entity<AdminUser>(entity =>
