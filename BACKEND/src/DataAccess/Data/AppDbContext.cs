@@ -24,7 +24,7 @@ public class AppDbContext : DbContext
         // ProductCategory
         modelBuilder.Entity<ProductCategory>(entity =>
         {
-            entity.ToTable("ProductCategories");
+            entity.ToTable("ProductCategory");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("CategoryID");
             entity.Property(e => e.CategoryName).HasColumnName("CategoryName").HasMaxLength(100);
@@ -35,7 +35,7 @@ public class AppDbContext : DbContext
         // Product
         modelBuilder.Entity<Product>(entity =>
         {
-            entity.ToTable("Products");
+            entity.ToTable("Product");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("ProductID");
             entity.Property(e => e.CategoryId).HasColumnName("CategoryID");
@@ -60,7 +60,7 @@ public class AppDbContext : DbContext
         // Market
         modelBuilder.Entity<Market>(entity =>
         {
-            entity.ToTable("Markets");
+            entity.ToTable("Market");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("MarketID");
             entity.Property(e => e.MarketName).HasColumnName("MarketName").HasMaxLength(200);
@@ -76,7 +76,7 @@ public class AppDbContext : DbContext
         // City
         modelBuilder.Entity<City>(entity =>
         {
-            entity.ToTable("Cities");
+            entity.ToTable("City");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("CityID");
             entity.Property(e => e.CityName).HasColumnName("CityName").HasMaxLength(100);
@@ -87,7 +87,7 @@ public class AppDbContext : DbContext
         // District
         modelBuilder.Entity<District>(entity =>
         {
-            entity.ToTable("Districts");
+            entity.ToTable("District");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("DistrictID");
             entity.Property(e => e.CityId).HasColumnName("CityID");
@@ -108,7 +108,7 @@ public class AppDbContext : DbContext
         // MarketProductPrice
         modelBuilder.Entity<MarketProductPrice>(entity =>
         {
-            entity.ToTable("MarketProductPrices");
+            entity.ToTable("MarketProductPrice");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("PriceID");
             entity.Property(e => e.MarketId).HasColumnName("MarketID");
@@ -145,7 +145,7 @@ public class AppDbContext : DbContext
         // UserProductList
         modelBuilder.Entity<UserProductList>(entity =>
         {
-            entity.ToTable("UserProductLists");
+            entity.ToTable("UserProductList");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("ListID");
             entity.Property(e => e.SessionId).HasColumnName("SessionID").HasMaxLength(255);
