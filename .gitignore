@@ -35,6 +35,9 @@ build/
 # Logs
 *.log
 BACKEND/src/API/Logs/
+*_log*.txt
+build_errors.txt
+debug_absolute.txt
 
 # SQLite
 *.db
