@@ -47,12 +47,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: .net-app
+          path: published_app
       
       - name: Login to Azure
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_3C8AB4E6FCF7403090676A73359A459E }}
-        #   tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_66E87BBA8BFE43368822CE7B59C4CA34 }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_66E87BBA8BFE43368822CE7B59C4CA34 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_DE44D5B6353844B598086C2C0811D0D7 }}
 
@@ -62,4 +62,4 @@ jobs:
         with:
           app-name: 'marketcomparisonsystem'
           slot-name: 'Production'
-          package: .
+          package: published_app
