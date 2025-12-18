@@ -61,15 +61,26 @@ public class ProductsController : ControllerBase
     /// </summary>
     [HttpGet("search")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> Search([FromQuery] string term)
+    public async Task<IActionResult> Search([FromQuery] string name)
     {
-        if (string.IsNullOrWhiteSpace(term))
+        if (string.IsNullOrWhiteSpace(name))
         {
             return BadRequest(new { message = "Search term is required" });
         }
 
-        var products = await _productService.SearchProductsAsync(term);
+        var products = await _productService.SearchProductsAsync(name);
         return Ok(products);
+    }
+
+    /// <summary>
+    /// Get product price history
+    /// </summary>
+    [HttpGet("{id}/history")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetPriceHistory(int id, [FromQuery] int days = 30)
+    {
+        var history = await _productService.GetProductPriceHistoryAsync(id, days);
+        return Ok(history);
     }
 
     /// <summary>

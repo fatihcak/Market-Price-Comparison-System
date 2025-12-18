@@ -1,0 +1,6 @@
+  Geri yüklenecek projeler belirleniyor...
+  'https://api.nuget.org/v3-flatcontainer/microsoft.codecoverage/17.6.0/microsoft.codecoverage.17.6.0.nupkg' kaynağından paket indirme işlemi iptal edildi.
+  'https://api.nuget.org/v3-flatcontainer/microsoft.codecoverage/17.6.0/microsoft.codecoverage.17.6.0.nupkg' kaynağından paket indirme işlemi iptal edildi.
+  'https://api.nuget.org/v3-flatcontainer/microsoft.codecoverage/17.6.0/microsoft.codecoverage.17.6.0.nupkg' kaynağından paket indirme işlemi iptal edildi.
+  'https://api.nuget.org/v3-flatcontainer/microsoft.codecoverage/17.6.0/microsoft.codecoverage.17.6.0.nupkg' kaynağından paket indirme işlemi iptal edildi.
+  'https://api.nuget.org/v3-flatcontainer/microsoft.codecoverage/17.6.0/microsoft.codecoverage.17.6.0.nupkg' kaynağından paket indirme işlemi iptal edildi.
