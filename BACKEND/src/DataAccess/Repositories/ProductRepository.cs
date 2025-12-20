@@ -16,6 +16,8 @@ public class ProductRepository : Repository<Product>, IProductRepository
         return await _context.Product
             .Where(p => p.CategoryId == categoryId)
             .Include(p => p.Category)
+            .Include(p => p.MarketProductPrices)
+            .ThenInclude(mpp => mpp.Market)
             .OrderBy(p => p.ProductName)
             .ToListAsync();
     }
@@ -26,6 +28,8 @@ public class ProductRepository : Repository<Product>, IProductRepository
         {
             return await _context.Product
                 .Include(p => p.Category)
+                .Include(p => p.MarketProductPrices)
+                .ThenInclude(mpp => mpp.Market)
                 .OrderBy(p => p.ProductName)
                 .ToListAsync();
         }
@@ -33,6 +37,8 @@ public class ProductRepository : Repository<Product>, IProductRepository
         return await _context.Product
             .Where(p => p.ProductName.Contains(searchTerm))
             .Include(p => p.Category)
+            .Include(p => p.MarketProductPrices)
+            .ThenInclude(mpp => mpp.Market)
             .OrderBy(p => p.ProductName)
             .ToListAsync();
     }
@@ -67,6 +73,8 @@ public class ProductRepository : Repository<Product>, IProductRepository
 
         return await query
             .Include(p => p.Category)
+            .Include(p => p.MarketProductPrices)
+            .ThenInclude(mpp => mpp.Market)
             .OrderBy(p => p.ProductName)
             .ToListAsync();
     }
@@ -81,6 +89,8 @@ public class ProductRepository : Repository<Product>, IProductRepository
         return await _context.Product
             .Where(p => p.Brand != null && p.Brand.Contains(brand))
             .Include(p => p.Category)
+            .Include(p => p.MarketProductPrices)
+            .ThenInclude(mpp => mpp.Market)
             .OrderBy(p => p.ProductName)
             .ToListAsync();
     }
@@ -89,6 +99,8 @@ public class ProductRepository : Repository<Product>, IProductRepository
     {
         return await _context.Product
             .Include(p => p.Category)
+            .Include(p => p.MarketProductPrices)
+            .ThenInclude(mpp => mpp.Market)
             .FirstOrDefaultAsync(p => p.Id == id);
     }
 
@@ -134,6 +146,8 @@ public class ProductRepository : Repository<Product>, IProductRepository
         var term = categoryName.ToLower();
         return await _context.Product
             .Include(p => p.Category)
+            .Include(p => p.MarketProductPrices)
+            .ThenInclude(mpp => mpp.Market)
             .Where(p => p.Category.CategoryName.ToLower().Contains(term))
             .Take(5) // Limit results
             .ToListAsync();

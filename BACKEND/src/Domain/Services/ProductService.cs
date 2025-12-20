@@ -188,7 +188,7 @@ public class ProductService : IProductService
         var prices = product.MarketProductPrices;
         var minPrice = prices.Any() ? prices.Min(p => p.Price) : 0;
         var maxPrice = prices.Any() ? prices.Max(p => p.Price) : 0;
-        var cheapestMarket = prices.Any() ? prices.OrderBy(p => p.Price).First().Market.MarketName : "Unknown";
+        var cheapestMarket = prices.OrderBy(p => p.Price).FirstOrDefault()?.Market?.MarketName ?? "Unknown";
         
         var discount = maxPrice > minPrice ? (int)((maxPrice - minPrice) / maxPrice * 100) : 0;
 
