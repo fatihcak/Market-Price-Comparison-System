@@ -7,15 +7,15 @@ public class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
-    public DbSet<ProductCategory> ProductCategories { get; set; }
-    public DbSet<Product> Products { get; set; }
-    public DbSet<Market> Markets { get; set; }
-    public DbSet<MarketProductPrice> MarketProductPrices { get; set; }
-    public DbSet<City> Cities { get; set; }
-    public DbSet<District> Districts { get; set; }
-    public DbSet<UserProductList> UserProductLists { get; set; }
-    public DbSet<AdminUser> AdminUsers { get; set; }
-    public DbSet<ProductPriceHistory> ProductPriceHistories { get; set; }
+    public DbSet<ProductCategory> ProductCategory { get; set; }
+    public DbSet<Product> Product { get; set; }
+    public DbSet<Market> Market { get; set; }
+    public DbSet<MarketProductPrice> MarketProductPrice { get; set; }
+    public DbSet<City> City { get; set; }
+    public DbSet<District> District { get; set; }
+    public DbSet<UserProductList> UserProductList { get; set; }
+    public DbSet<AdminUser> AdminUser { get; set; }
+    public DbSet<ProductPriceHistory> ProductPriceHistory { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

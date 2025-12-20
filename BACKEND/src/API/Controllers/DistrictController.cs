@@ -5,11 +5,11 @@ namespace API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class DistrictsController : ControllerBase
+public class DistrictController : ControllerBase
 {
     private readonly IDistrictService _districtService;
 
-    public DistrictsController(IDistrictService districtService)
+    public DistrictController(IDistrictService districtService)
     {
         _districtService = districtService;
     }

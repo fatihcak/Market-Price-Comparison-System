@@ -7,11 +7,11 @@ namespace API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class MarketsController : ControllerBase
+public class MarketController : ControllerBase
 {
     private readonly IMarketService _marketService;
 
-    public MarketsController(IMarketService marketService)
+    public MarketController(IMarketService marketService)
     {
         _marketService = marketService;
     }

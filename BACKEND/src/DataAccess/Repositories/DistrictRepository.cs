@@ -13,7 +13,7 @@ public class DistrictRepository : Repository<District>, IDistrictRepository
 
     public async Task<IEnumerable<District>> GetByCityIdAsync(int cityId)
     {
-        return await _context.Districts
+        return await _context.District
             .Where(d => d.CityId == cityId)
             .OrderBy(d => d.DistrictName)
             .ToListAsync();

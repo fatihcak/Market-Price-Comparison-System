@@ -16,17 +16,17 @@ public class AdminUserRepository : IAdminUserRepository
 
     public async Task<AdminUser?> GetByUsernameAsync(string username)
     {
-        return await _context.AdminUsers.FirstOrDefaultAsync(u => u.Username == username);
+        return await _context.AdminUser.FirstOrDefaultAsync(u => u.Username == username);
     }
 
     public async Task AddAsync(AdminUser adminUser)
     {
-        await _context.AdminUsers.AddAsync(adminUser);
+        await _context.AdminUser.AddAsync(adminUser);
     }
 
     public async Task<bool> ExistsAsync(string username)
     {
-        return await _context.AdminUsers.AnyAsync(u => u.Username == username);
+        return await _context.AdminUser.AnyAsync(u => u.Username == username);
     }
 
     public async Task SaveChangesAsync()

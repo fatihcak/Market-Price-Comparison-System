@@ -13,7 +13,7 @@ public class PriceRepository : Repository<MarketProductPrice>, IPriceRepository
 
     public async Task<IEnumerable<MarketProductPrice>> GetByProductIdAsync(int productId)
     {
-        var prices = await _context.MarketProductPrices
+        var prices = await _context.MarketProductPrice
             .Where(p => p.ProductId == productId)
             .Include(p => p.Market)
             .Include(p => p.District)
@@ -24,7 +24,7 @@ public class PriceRepository : Repository<MarketProductPrice>, IPriceRepository
 
     public async Task<IEnumerable<MarketProductPrice>> GetByMarketIdAsync(int marketId)
     {
-        return await _context.MarketProductPrices
+        return await _context.MarketProductPrice
             .Where(p => p.MarketId == marketId)
             .Include(p => p.Product)
             .ToListAsync();
@@ -32,7 +32,7 @@ public class PriceRepository : Repository<MarketProductPrice>, IPriceRepository
 
     public async Task<IEnumerable<MarketProductPrice>> GetByDistrictIdAsync(int districtId)
     {
-         return await _context.MarketProductPrices
+         return await _context.MarketProductPrice
             .Where(p => p.DistrictId == districtId)
             .Include(p => p.Product)
             .Include(p => p.Market)
@@ -41,7 +41,7 @@ public class PriceRepository : Repository<MarketProductPrice>, IPriceRepository
 
     public async Task<IEnumerable<MarketProductPrice>> GetPricesForProductsAsync(IEnumerable<int> productIds)
     {
-        return await _context.MarketProductPrices
+        return await _context.MarketProductPrice
             .Where(p => productIds.Contains(p.ProductId))
             .Include(p => p.Market)
             .ToListAsync();
@@ -49,7 +49,7 @@ public class PriceRepository : Repository<MarketProductPrice>, IPriceRepository
 
     public async Task AddPriceHistoryAsync(ProductPriceHistory history)
     {
-        await _context.ProductPriceHistories.AddAsync(history);
+        await _context.ProductPriceHistory.AddAsync(history);
         await _context.SaveChangesAsync();
     }
 }

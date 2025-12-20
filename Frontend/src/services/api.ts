@@ -7,7 +7,7 @@ const API_BASE_URL = import.meta.env.PROD
 export const api = {
     getPricesByProduct: async (productId: number): Promise<PriceResponseDTO[]> => {
         try {
-            const response = await fetch(`${API_BASE_URL}/Prices/product/${productId}`);
+            const response = await fetch(`${API_BASE_URL}/Price/product/${productId}`);
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
@@ -20,7 +20,7 @@ export const api = {
 
     getProducts: async (): Promise<Product[]> => {
         try {
-            const response = await fetch(`${API_BASE_URL}/Products`);
+            const response = await fetch(`${API_BASE_URL}/Product`);
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
@@ -47,7 +47,7 @@ export const api = {
 
     getProductHistory: async (productId: number, days: number = 30): Promise<ProductPriceHistoryDTO[]> => {
         try {
-            const response = await fetch(`${API_BASE_URL}/Products/${productId}/history?days=${days}`);
+            const response = await fetch(`${API_BASE_URL}/Product/${productId}/history?days=${days}`);
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
@@ -60,7 +60,7 @@ export const api = {
 
     searchProducts: async (query: string): Promise<Product[]> => {
         try {
-            const response = await fetch(`${API_BASE_URL}/Products/search?name=${encodeURIComponent(query)}`);
+            const response = await fetch(`${API_BASE_URL}/Product/search?name=${encodeURIComponent(query)}`);
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
@@ -85,7 +85,7 @@ export const api = {
 
     getProductsByCategory: async (categoryId: number): Promise<Product[]> => {
         try {
-            const response = await fetch(`${API_BASE_URL}/Products/category/${categoryId}`);
+            const response = await fetch(`${API_BASE_URL}/Product/category/${categoryId}`);
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }

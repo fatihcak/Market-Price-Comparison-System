@@ -18,7 +18,7 @@ public class MarketRepository : Repository<Market>, IMarketRepository
             return await GetAllAsync();
         }
 
-        return await _context.Markets
+        return await _context.Market
             .Where(m => m.MarketName.Contains(searchTerm))
             .OrderBy(m => m.MarketName)
             .ToListAsync();

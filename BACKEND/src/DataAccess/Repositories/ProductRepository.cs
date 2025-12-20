@@ -13,7 +13,7 @@ public class ProductRepository : Repository<Product>, IProductRepository
 
     public async Task<IEnumerable<Product>> GetByCategoryIdAsync(int categoryId)
     {
-        return await _context.Products
+        return await _context.Product
             .Where(p => p.CategoryId == categoryId)
             .Include(p => p.Category)
             .OrderBy(p => p.ProductName)
@@ -24,13 +24,13 @@ public class ProductRepository : Repository<Product>, IProductRepository
     {
         if (string.IsNullOrWhiteSpace(searchTerm))
         {
-            return await _context.Products
+            return await _context.Product
                 .Include(p => p.Category)
                 .OrderBy(p => p.ProductName)
                 .ToListAsync();
         }
 
-        return await _context.Products
+        return await _context.Product
             .Where(p => p.ProductName.Contains(searchTerm))
             .Include(p => p.Category)
             .OrderBy(p => p.ProductName)
@@ -59,7 +59,7 @@ public class ProductRepository : Repository<Product>, IProductRepository
         {
             if (term == null) continue;
             var lowerTerm = term.ToLower();
-            var subQuery = _context.Products.Where(p => p.ProductName.ToLower().Contains(lowerTerm));
+            var subQuery = _context.Product.Where(p => p.ProductName.ToLower().Contains(lowerTerm));
             query = query == null ? subQuery : query.Union(subQuery);
         }
 
@@ -78,7 +78,7 @@ public class ProductRepository : Repository<Product>, IProductRepository
             return await GetAllAsync();
         }
 
-        return await _context.Products
+        return await _context.Product
             .Where(p => p.Brand != null && p.Brand.Contains(brand))
             .Include(p => p.Category)
             .OrderBy(p => p.ProductName)
@@ -87,14 +87,14 @@ public class ProductRepository : Repository<Product>, IProductRepository
 
     public async Task<Product?> GetProductWithCategoryAsync(int id)
     {
-        return await _context.Products
+        return await _context.Product
             .Include(p => p.Category)
             .FirstOrDefaultAsync(p => p.Id == id);
     }
 
     public async Task<IEnumerable<Product>> GetAllWithDetailsAsync()
     {
-        return await _context.Products
+        return await _context.Product
             .Include(p => p.Category)
             .Include(p => p.MarketProductPrices)
             .ThenInclude(mpp => mpp.Market)
@@ -104,7 +104,7 @@ public class ProductRepository : Repository<Product>, IProductRepository
 
     public async Task<IEnumerable<ProductPriceHistory>> GetPriceHistoryByProductIdAsync(int productId)
     {
-        return await _context.ProductPriceHistories
+        return await _context.ProductPriceHistory
             .Include(h => h.MarketProductPrice)
             .Where(h => h.MarketProductPrice.ProductId == productId)
             .OrderBy(h => h.ChangedDate)
@@ -115,7 +115,7 @@ public class ProductRepository : Repository<Product>, IProductRepository
     {
         // 1. Fetch all products (or a reasonable subset if DB is huge)
         // For a small-to-medium catalog, fetching names is fine.
-        var allProducts = await _context.Products.ToListAsync();
+        var allProducts = await _context.Product.ToListAsync();
 
         // 2. Perform Fuzzy Matching in Memory
         var matches = allProducts
@@ -132,7 +132,7 @@ public class ProductRepository : Repository<Product>, IProductRepository
     public async Task<IEnumerable<Product>> SearchByCategoryAsync(string categoryName)
     {
         var term = categoryName.ToLower();
-        return await _context.Products
+        return await _context.Product
             .Include(p => p.Category)
             .Where(p => p.Category.CategoryName.ToLower().Contains(term))
             .Take(5) // Limit results

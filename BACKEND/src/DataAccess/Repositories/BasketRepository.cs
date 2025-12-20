@@ -13,7 +13,7 @@ public class BasketRepository : Repository<UserProductList>, IBasketRepository
 
     public async Task<IEnumerable<UserProductList>> GetBySessionIdAsync(string sessionId)
     {
-        return await _context.UserProductLists
+        return await _context.UserProductList
             .Include(x => x.Product)
             .ThenInclude(p => p.Category)
             .Where(x => x.SessionId == sessionId)
@@ -22,17 +22,17 @@ public class BasketRepository : Repository<UserProductList>, IBasketRepository
 
     public async Task<UserProductList?> GetBySessionAndProductIdAsync(string sessionId, int productId)
     {
-        return await _context.UserProductLists
+        return await _context.UserProductList
             .FirstOrDefaultAsync(x => x.SessionId == sessionId && x.ProductId == productId);
     }
 
     public async Task DeleteBySessionIdAsync(string sessionId)
     {
-        var items = await _context.UserProductLists
+        var items = await _context.UserProductList
             .Where(x => x.SessionId == sessionId)
             .ToListAsync();
             
-        _context.UserProductLists.RemoveRange(items);
+        _context.UserProductList.RemoveRange(items);
         await _context.SaveChangesAsync();
     }
 }

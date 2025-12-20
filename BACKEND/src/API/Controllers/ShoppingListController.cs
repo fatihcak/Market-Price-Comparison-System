@@ -6,11 +6,11 @@ namespace API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class ShoppingListsController : ControllerBase
+public class ShoppingListController : ControllerBase
 {
     private readonly IShoppingListService _shoppingListService;
 
-    public ShoppingListsController(IShoppingListService shoppingListService)
+    public ShoppingListController(IShoppingListService shoppingListService)
     {
         _shoppingListService = shoppingListService;
     }

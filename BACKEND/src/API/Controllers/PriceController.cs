@@ -7,11 +7,11 @@ namespace API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class PricesController : ControllerBase
+public class PriceController : ControllerBase
 {
     private readonly IPriceService _priceService;
 
-    public PricesController(IPriceService priceService)
+    public PriceController(IPriceService priceService)
     {
         _priceService = priceService;
     }

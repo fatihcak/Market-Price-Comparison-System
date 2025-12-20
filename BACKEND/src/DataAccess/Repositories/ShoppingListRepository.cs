@@ -13,7 +13,7 @@ public class ShoppingListRepository : Repository<UserProductList>, IShoppingList
 
     public async Task<IEnumerable<UserProductList>> GetBySessionIdAsync(string sessionId)
     {
-        return await _context.UserProductLists
+        return await _context.UserProductList
             .Where(l => l.SessionId == sessionId)
             .Include(l => l.Product)
             .ThenInclude(p => p.Category)
@@ -22,7 +22,7 @@ public class ShoppingListRepository : Repository<UserProductList>, IShoppingList
 
     public async Task<UserProductList?> GetBySessionAndProductIdAsync(string sessionId, int productId)
     {
-        return await _context.UserProductLists
+        return await _context.UserProductList
             .FirstOrDefaultAsync(l => l.SessionId == sessionId && l.ProductId == productId);
     }
 }
