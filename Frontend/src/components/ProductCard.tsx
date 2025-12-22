@@ -23,12 +23,25 @@ export default function ProductCard({ product, onAdd, onCompare }: ProductCardPr
       className="group bg-white rounded-xl border border-gray-100 overflow-hidden hover:border-green-200 hover:shadow-lg transition-all duration-300 cursor-default"
     >
       <div className="relative bg-gray-100 h-48 overflow-hidden">
-        <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-4xl mb-2">{product.image}</div>
-            <p className="text-sm text-gray-600">{product.name}</p>
+        {product.image ? (
+          <img 
+            src={product.image} 
+            alt={product.name}
+            className="w-full h-full object-contain p-4"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.style.display = 'none';
+              target.parentElement!.innerHTML = `<div class="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center"><div class="text-center"><div class="text-4xl mb-2">📦</div><p class="text-sm text-gray-600">${product.name}</p></div></div>`;
+            }}
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-4xl mb-2">📦</div>
+              <p className="text-sm text-gray-600">{product.name}</p>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="absolute top-3 right-3 flex gap-2">
           <div className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">

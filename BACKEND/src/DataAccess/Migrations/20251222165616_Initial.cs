@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace DataAccess.Migrations
 {
     /// <inheritdoc />
-    public partial class AddAdminUser : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -184,6 +184,27 @@ namespace DataAccess.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "ProductPriceHistories",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    MarketProductPriceId = table.Column<int>(type: "int", nullable: false),
+                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    ChangedDate = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProductPriceHistories", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ProductPriceHistories_MarketProductPrices_MarketProductPriceId",
+                        column: x => x.MarketProductPriceId,
+                        principalTable: "MarketProductPrices",
+                        principalColumn: "PriceID",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_AdminUsers_Username",
                 table: "AdminUsers",
@@ -231,6 +252,16 @@ namespace DataAccess.Migrations
                 column: "MarketName");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ProductPriceHistories_ChangedDate",
+                table: "ProductPriceHistories",
+                column: "ChangedDate");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProductPriceHistories_MarketProductPriceId",
+                table: "ProductPriceHistories",
+                column: "MarketProductPriceId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Products_Brand",
                 table: "Products",
                 column: "Brand");
@@ -269,10 +300,13 @@ namespace DataAccess.Migrations
                 name: "AdminUsers");
 
             migrationBuilder.DropTable(
-                name: "MarketProductPrices");
+                name: "ProductPriceHistories");
 
             migrationBuilder.DropTable(
                 name: "UserProductLists");
+
+            migrationBuilder.DropTable(
+                name: "MarketProductPrices");
 
             migrationBuilder.DropTable(
                 name: "Districts");

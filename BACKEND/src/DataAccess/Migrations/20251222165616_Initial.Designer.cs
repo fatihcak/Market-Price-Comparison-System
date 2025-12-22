@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataAccess.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251127103720_AddAdminUser")]
-    partial class AddAdminUser
+    [Migration("20251222165616_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -300,6 +300,33 @@ namespace DataAccess.Migrations
                     b.ToTable("ProductCategories", (string)null);
                 });
 
+            modelBuilder.Entity("Domain.Entities.ProductPriceHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("ChangedDate")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("ChangedDate");
+
+                    b.Property<int>("MarketProductPriceId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChangedDate");
+
+                    b.HasIndex("MarketProductPriceId");
+
+                    b.ToTable("ProductPriceHistories", (string)null);
+                });
+
             modelBuilder.Entity("Domain.Entities.UserProductList", b =>
                 {
                     b.Property<int>("Id")
@@ -394,6 +421,17 @@ namespace DataAccess.Migrations
                         .IsRequired();
 
                     b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("Domain.Entities.ProductPriceHistory", b =>
+                {
+                    b.HasOne("Domain.Entities.MarketProductPrice", "MarketProductPrice")
+                        .WithMany()
+                        .HasForeignKey("MarketProductPriceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MarketProductPrice");
                 });
 
             modelBuilder.Entity("Domain.Entities.UserProductList", b =>
