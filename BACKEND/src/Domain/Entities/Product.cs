@@ -4,10 +4,8 @@ namespace Domain.Entities;
 
 public class Product : BaseEntity
 {
-    [Required]
     public int CategoryId { get; set; }
 
-    [Required]
     [MaxLength(200)]
     public string ProductName { get; set; } = string.Empty;
 
@@ -17,15 +15,13 @@ public class Product : BaseEntity
     [MaxLength(500)]
     public string? ImageUrl { get; set; }
 
-    [Required]
     [MaxLength(50)]
-    public string Unit { get; set; } = "piece";
+    public string? Unit { get; set; }
 
-    [Required]
-    public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
+    public DateTime? LastUpdated { get; set; }
 
     // Navigation Properties
-    public ProductCategory Category { get; set; } = null!;
+    public ProductCategory? Category { get; set; }
     public ICollection<MarketProductPrice> MarketProductPrices { get; set; } = new List<MarketProductPrice>();
     public ICollection<UserProductList> UserProductLists { get; set; } = new List<UserProductList>();
 }

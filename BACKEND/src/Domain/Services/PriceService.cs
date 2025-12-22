@@ -41,8 +41,7 @@ public class PriceService : IPriceService
             ProductId = dto.ProductId,
             DistrictId = dto.DistrictId,
             Price = dto.Price,
-            LastUpdated = DateTime.UtcNow,
-            CreatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
 
         await _priceRepository.AddAsync(price);

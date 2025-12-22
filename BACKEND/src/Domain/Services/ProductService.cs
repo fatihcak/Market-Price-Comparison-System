@@ -136,8 +136,9 @@ public class ProductService : IProductService
             foreach (var mpp in productWithDetails.MarketProductPrices)
             {
                 decimal priceOnDate = mpp.Price;
+                var mppLastUpdated = mpp.LastUpdated ?? DateTime.MinValue;
 
-                if (mpp.LastUpdated.Date > date)
+                if (mppLastUpdated.Date > date)
                 {
                     if (historyLookup.TryGetValue(mpp.Id, out var mppHistory))
                     {
@@ -150,19 +151,15 @@ public class ProductService : IProductService
                         {
                             priceOnDate = relevantHistory.Price;
                         }
-                        else if (mpp.CreatedAt.Date > date)
+                        else
                         {
                             continue;
                         }
                     }
-                    else if (mpp.CreatedAt.Date > date)
+                    else
                     {
                          continue;
                     }
-                }
-                else if (mpp.CreatedAt.Date > date)
-                {
-                    continue;
                 }
 
                 dailyPrices.Add(priceOnDate);
@@ -199,13 +196,13 @@ public class ProductService : IProductService
             CategoryName = product.Category?.CategoryName ?? string.Empty,
             ProductName = product.ProductName,
             Brand = product.Brand,
-            Unit = product.Unit,
+            Unit = product.Unit ?? string.Empty,
             Price = minPrice,
             OldPrice = maxPrice > minPrice ? maxPrice : null,
             Discount = discount,
             MarketName = cheapestMarket,
             LastUpdated = product.LastUpdated,
-            CreatedAt = product.CreatedAt,
+            CreatedAt = null, // BaseEntity.CreatedAt is ignored in AppDbContext
             ImageUrl = !string.IsNullOrWhiteSpace(product.ImageUrl) ? product.ImageUrl : product.Category?.Icon
         };
     }

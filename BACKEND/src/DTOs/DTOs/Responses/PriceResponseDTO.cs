@@ -10,5 +10,5 @@ public class PriceResponseDTO
     public int DistrictId { get; set; }
     public string DistrictName { get; set; } = string.Empty;
     public decimal Price { get; set; }
-    public DateTime LastUpdated { get; set; }
+    public DateTime? LastUpdated { get; set; }
 }

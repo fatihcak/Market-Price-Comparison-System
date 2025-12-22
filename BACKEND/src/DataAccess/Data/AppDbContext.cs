@@ -21,18 +21,21 @@ public class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // ProductCategory
+        // ProductCategory - DB Columns: CategoryID, CategoryName, ParentCategoryID
         modelBuilder.Entity<ProductCategory>(entity =>
         {
             entity.ToTable("ProductCategory");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("CategoryID");
             entity.Property(e => e.CategoryName).HasColumnName("CategoryName").HasMaxLength(100);
-            entity.Property(e => e.IsDeleted).HasColumnName("IsDeleted");
-            entity.Property(e => e.CreatedAt).HasColumnName("CreatedAt");
+            
+            // Ignore columns not in database
+            entity.Ignore(e => e.IsDeleted);
+            entity.Ignore(e => e.CreatedAt);
+            entity.Ignore(e => e.Icon);
         });
 
-        // Product
+        // Product - DB Columns: ProductID, CategoryID, ProductName, Brand, Unit, LastUpdated, ImageURL, MarketProductURL
         modelBuilder.Entity<Product>(entity =>
         {
             entity.ToTable("Product");
@@ -43,8 +46,11 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Brand).HasColumnName("Brand").HasMaxLength(100);
             entity.Property(e => e.Unit).HasColumnName("Unit").HasMaxLength(50);
             entity.Property(e => e.LastUpdated).HasColumnName("LastUpdated");
-            entity.Property(e => e.IsDeleted).HasColumnName("IsDeleted");
-            entity.Property(e => e.CreatedAt).HasColumnName("CreatedAt");
+            entity.Property(e => e.ImageUrl).HasColumnName("ImageURL").HasMaxLength(500);
+            
+            // Ignore columns not in database
+            entity.Ignore(e => e.IsDeleted);
+            entity.Ignore(e => e.CreatedAt);
 
             entity.HasOne(e => e.Category)
                 .WithMany(c => c.Products)
@@ -57,34 +63,38 @@ public class AppDbContext : DbContext
             entity.HasIndex(e => e.Brand);
         });
 
-        // Market
+        // Market - DB Columns: MarketID, MarketName, WebsiteURL
         modelBuilder.Entity<Market>(entity =>
         {
             entity.ToTable("Market");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("MarketID");
             entity.Property(e => e.MarketName).HasColumnName("MarketName").HasMaxLength(200);
-            entity.Property(e => e.LogoUrl).HasColumnName("LogoURL").HasMaxLength(500);
             entity.Property(e => e.Website).HasColumnName("WebsiteURL").HasMaxLength(500);
-            entity.Property(e => e.IsDeleted).HasColumnName("IsDeleted");
-            entity.Property(e => e.CreatedAt).HasColumnName("CreatedAt");
+            
+            // Ignore columns not in database
+            entity.Ignore(e => e.IsDeleted);
+            entity.Ignore(e => e.CreatedAt);
+            entity.Ignore(e => e.LogoUrl);
 
             // Indexes
             entity.HasIndex(e => e.MarketName);
         });
 
-        // City
+        // City - DB Columns: CityID, CityName
         modelBuilder.Entity<City>(entity =>
         {
             entity.ToTable("City");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("CityID");
             entity.Property(e => e.CityName).HasColumnName("CityName").HasMaxLength(100);
-            entity.Property(e => e.IsDeleted).HasColumnName("IsDeleted");
-            entity.Property(e => e.CreatedAt).HasColumnName("CreatedAt");
+            
+            // Ignore columns not in database
+            entity.Ignore(e => e.IsDeleted);
+            entity.Ignore(e => e.CreatedAt);
         });
 
-        // District
+        // District - DB Columns: DistrictID, CityID, DistrictName
         modelBuilder.Entity<District>(entity =>
         {
             entity.ToTable("District");
@@ -92,8 +102,10 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Id).HasColumnName("DistrictID");
             entity.Property(e => e.CityId).HasColumnName("CityID");
             entity.Property(e => e.DistrictName).HasColumnName("DistrictName").HasMaxLength(100);
-            entity.Property(e => e.IsDeleted).HasColumnName("IsDeleted");
-            entity.Property(e => e.CreatedAt).HasColumnName("CreatedAt");
+            
+            // Ignore columns not in database
+            entity.Ignore(e => e.IsDeleted);
+            entity.Ignore(e => e.CreatedAt);
 
             entity.HasOne(e => e.City)
                 .WithMany(c => c.Districts)
@@ -105,7 +117,7 @@ public class AppDbContext : DbContext
             entity.HasIndex(e => e.DistrictName);
         });
 
-        // MarketProductPrice
+        // MarketProductPrice - DB Columns: PriceID, MarketID, ProductID, DistrictID, Price, LastUpdated
         modelBuilder.Entity<MarketProductPrice>(entity =>
         {
             entity.ToTable("MarketProductPrice");
@@ -116,8 +128,10 @@ public class AppDbContext : DbContext
             entity.Property(e => e.DistrictId).HasColumnName("DistrictID");
             entity.Property(e => e.Price).HasColumnName("Price").HasColumnType("decimal(18,2)");
             entity.Property(e => e.LastUpdated).HasColumnName("LastUpdated");
-            entity.Property(e => e.IsDeleted).HasColumnName("IsDeleted");
-            entity.Property(e => e.CreatedAt).HasColumnName("CreatedAt");
+            
+            // Ignore columns not in database
+            entity.Ignore(e => e.IsDeleted);
+            entity.Ignore(e => e.CreatedAt);
 
             entity.HasOne(e => e.Market)
                 .WithMany(m => m.MarketProductPrices)
@@ -142,7 +156,7 @@ public class AppDbContext : DbContext
             entity.HasIndex(e => e.LastUpdated);
         });
 
-        // UserProductList
+        // UserProductList - (Keep for future use, ignore DB fields)
         modelBuilder.Entity<UserProductList>(entity =>
         {
             entity.ToTable("UserProductList");
@@ -152,8 +166,10 @@ public class AppDbContext : DbContext
             entity.Property(e => e.ProductId).HasColumnName("ProductID");
             entity.Property(e => e.Quantity).HasColumnName("Quantity");
             entity.Property(e => e.AddedDate).HasColumnName("AddedDate");
-            entity.Property(e => e.IsDeleted).HasColumnName("IsDeleted");
-            entity.Property(e => e.CreatedAt).HasColumnName("CreatedAt");
+            
+            // Ignore columns not in database
+            entity.Ignore(e => e.IsDeleted);
+            entity.Ignore(e => e.CreatedAt);
 
             entity.HasOne(e => e.Product)
                 .WithMany(p => p.UserProductLists)
@@ -166,19 +182,9 @@ public class AppDbContext : DbContext
             entity.HasIndex(e => new { e.SessionId, e.ProductId }).IsUnique();
         });
 
-        // Global query filters for soft delete
-        modelBuilder.Entity<ProductCategory>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<Product>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<Market>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<MarketProductPrice>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<City>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<District>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<UserProductList>().HasQueryFilter(e => !e.IsDeleted);
-        
-        // Fix for "required end of a relationship with global query filter" warning
-        modelBuilder.Entity<ProductPriceHistory>().HasQueryFilter(e => !e.MarketProductPrice.IsDeleted);
+        // NO SOFT DELETE FILTERS - Database doesn't have IsDeleted column
 
-        // AdminUser
+        // AdminUser (separate table, keep as is)
         modelBuilder.Entity<AdminUser>(entity =>
         {
             entity.ToTable("AdminUsers");
@@ -188,7 +194,7 @@ public class AppDbContext : DbContext
             entity.HasIndex(e => e.Username).IsUnique();
         });
 
-        // ProductPriceHistory
+        // ProductPriceHistory (keep for future use)
         modelBuilder.Entity<ProductPriceHistory>(entity =>
         {
             entity.ToTable("ProductPriceHistories");
@@ -197,7 +203,7 @@ public class AppDbContext : DbContext
             entity.Property(e => e.ChangedDate).HasColumnName("ChangedDate");
 
             entity.HasOne(e => e.MarketProductPrice)
-                .WithMany() // One-to-many from Price to History
+                .WithMany()
                 .HasForeignKey(e => e.MarketProductPriceId)
                 .OnDelete(DeleteBehavior.Cascade);
                 

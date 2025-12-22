@@ -14,6 +14,8 @@ public class ProductRepository : Repository<Product>, IProductRepository
     public async Task<IEnumerable<Product>> GetByCategoryIdAsync(int categoryId)
     {
         return await _context.Product
+            .AsNoTracking()
+            .AsSplitQuery()
             .Where(p => p.CategoryId == categoryId)
             .Include(p => p.Category)
             .Include(p => p.MarketProductPrices)
@@ -106,10 +108,13 @@ public class ProductRepository : Repository<Product>, IProductRepository
 
     public async Task<IEnumerable<Product>> GetAllWithDetailsAsync()
     {
+        // AsNoTracking for read-only queries, AsSplitQuery to avoid Cartesian explosion
         return await _context.Product
+            .AsNoTracking()
+            .AsSplitQuery()
             .Include(p => p.Category)
             .Include(p => p.MarketProductPrices)
-            .ThenInclude(mpp => mpp.Market)
+                .ThenInclude(mpp => mpp.Market)
             .OrderBy(p => p.ProductName)
             .ToListAsync();
     }
