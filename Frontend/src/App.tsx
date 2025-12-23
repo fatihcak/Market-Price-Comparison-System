@@ -26,6 +26,7 @@ function App() {
   const [selectedProductForComparison, setSelectedProductForComparison] = useState<Product | null>(null);
   const [listOpen, setListOpen] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [shoppingList, setShoppingList] = useState<CartItem[]>(() => {
     const saved = localStorage.getItem('market_basket');
     if (saved) {
@@ -85,12 +86,53 @@ function App() {
 
   const totalItems = shoppingList.reduce((sum, item) => sum + item.quantity, 0);
 
+  // Normalize Turkish characters for search
+  const normalizeTurkish = (text: string): string => {
+    return text
+      .toLowerCase()
+      .replace(/ğ/g, 'g')
+      .replace(/ü/g, 'u')
+      .replace(/ş/g, 's')
+      .replace(/ı/g, 'i')
+      .replace(/ö/g, 'o')
+      .replace(/ç/g, 'c')
+      .replace(/İ/g, 'i')
+      .replace(/Ğ/g, 'g')
+      .replace(/Ü/g, 'u')
+      .replace(/Ş/g, 's')
+      .replace(/Ö/g, 'o')
+      .replace(/Ç/g, 'c');
+  };
+
+  // Check if text contains all query words (supports multi-word search)
+  const matchesSearch = (text: string, query: string): boolean => {
+    const normalizedText = normalizeTurkish(text || '');
+    const queryWords = normalizeTurkish(query).split(/\s+/).filter(w => w.length > 0);
+
+    // All query words must be found in the text
+    return queryWords.every(queryWord =>
+      normalizedText.includes(queryWord)
+    );
+  };
+
+  // Filter products based on search query
+  const filteredProducts = searchQuery.trim()
+    ? products.filter(p => {
+      const combinedText = `${p.name || ''} ${p.brand || ''} ${p.category || ''}`;
+      return matchesSearch(combinedText, searchQuery);
+    })
+    : products;
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+  };
+
   return (
     <div className="min-h-screen bg-white">
       <Header onOpenList={() => setListOpen(true)} itemCount={totalItems} />
 
       <main className="max-w-7xl mx-auto px-4 py-8">
-        <SearchBar />
+        <SearchBar onSearch={handleSearch} />
 
         <section className="mt-12">
           <div className="flex items-center justify-between mb-8">
@@ -106,7 +148,7 @@ function App() {
             path="/products/:category/:subcategory?"
             element={
               <ProductGrid
-                products={products}
+                products={filteredProducts}
                 onAdd={addToShoppingList}
                 onCompare={openComparison}
               />
@@ -307,51 +349,65 @@ function ProductGrid({ products, onAdd, onCompare }: ProductGridProps) {
             <ChevronLeft size={20} />
           </button>
 
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-1 items-center">
             {(() => {
               const pages: (number | string)[] = [];
-              const showEllipsisStart = currentPage > 4;
-              const showEllipsisEnd = currentPage < totalPages - 3;
+              const maxMiddlePages = 7; // Middle pages to show
 
-              // Always show first page
+              // Always add first page
               pages.push(1);
 
-              // Show ellipsis after first page if needed
-              if (showEllipsisStart) {
-                pages.push('...');
-              }
-
-              // Show pages around current page
-              for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
-                if (!pages.includes(i)) {
+              if (totalPages <= 10) {
+                // If total pages <= 10, show all
+                for (let i = 2; i <= totalPages; i++) {
                   pages.push(i);
                 }
-              }
+              } else {
+                // Calculate middle range centered on current page
+                const half = Math.floor(maxMiddlePages / 2);
+                let start = Math.max(2, currentPage - half);
+                let end = Math.min(totalPages - 1, currentPage + half);
 
-              // Show ellipsis before last page if needed
-              if (showEllipsisEnd && !pages.includes('...') || (showEllipsisEnd && pages.filter(p => p === '...').length < 2)) {
-                if (currentPage + 1 < totalPages - 1) {
+                // Adjust if at edges
+                if (currentPage <= half + 2) {
+                  start = 2;
+                  end = maxMiddlePages + 1;
+                } else if (currentPage >= totalPages - half - 1) {
+                  start = totalPages - maxMiddlePages;
+                  end = totalPages - 1;
+                }
+
+                // Add ellipsis after first page if needed
+                if (start > 2) {
                   pages.push('...');
                 }
-              }
 
-              // Always show last page
-              if (totalPages > 1 && !pages.includes(totalPages)) {
+                // Add middle pages
+                for (let i = start; i <= end; i++) {
+                  pages.push(i);
+                }
+
+                // Add ellipsis before last page if needed
+                if (end < totalPages - 1) {
+                  pages.push('...');
+                }
+
+                // Always add last page
                 pages.push(totalPages);
               }
 
               return pages.map((page, index) => (
                 page === '...' ? (
-                  <span key={`ellipsis-${index}`} className="w-10 h-10 flex items-center justify-center text-gray-400">
+                  <span key={`ellipsis-${index}`} className="w-8 h-10 flex items-center justify-center text-gray-400">
                     ...
                   </span>
                 ) : (
                   <button
                     key={page}
                     onClick={() => handlePageChange(page as number)}
-                    className={`w-10 h-10 rounded-lg font-medium transition-colors ${currentPage === page
-                      ? 'bg-green-600 text-white'
-                      : 'hover:bg-gray-50 text-gray-600'
+                    className={`w-10 h-10 rounded-lg font-medium transition-all ${currentPage === page
+                      ? 'bg-blue-600 text-white shadow-lg scale-110'
+                      : 'hover:bg-gray-100 text-gray-600 border border-gray-200'
                       }`}
                   >
                     {page}
