@@ -6,7 +6,7 @@ import SearchBar from './components/SearchBar';
 import ProductCard from './components/ProductCard';
 import CategorySection from './components/CategorySection';
 import FilterBar from './components/FilterBar';
-import Testimonials from './components/Testimonials';
+//import Testimonials from './components/Testimonials';
 import PriceComparison from './components/PriceComparison';
 import BasketComparison from './components/BasketComparison';
 import ProductList from './components/ProductList';
@@ -143,7 +143,7 @@ function App() {
         </section>
       </main>
 
-      <Testimonials />
+
 
       <footer className="bg-gray-900 text-gray-300 py-12">
         <div className="max-w-7xl mx-auto px-4">
@@ -185,6 +185,7 @@ function App() {
         productName={selectedProduct}
         productId={selectedProductId}
         productImage={selectedProductForComparison?.image}
+        variantIds={selectedProductForComparison?.variantIds}
         onAdd={addToShoppingList}
       />
 
@@ -306,19 +307,58 @@ function ProductGrid({ products, onAdd, onCompare }: ProductGridProps) {
             <ChevronLeft size={20} />
           </button>
 
-          <div className="flex gap-2">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                onClick={() => handlePageChange(page)}
-                className={`w-10 h-10 rounded-lg font-medium transition-colors ${currentPage === page
-                  ? 'bg-green-600 text-white'
-                  : 'hover:bg-gray-50 text-gray-600'
-                  }`}
-              >
-                {page}
-              </button>
-            ))}
+          <div className="flex gap-2 items-center">
+            {(() => {
+              const pages: (number | string)[] = [];
+              const showEllipsisStart = currentPage > 4;
+              const showEllipsisEnd = currentPage < totalPages - 3;
+
+              // Always show first page
+              pages.push(1);
+
+              // Show ellipsis after first page if needed
+              if (showEllipsisStart) {
+                pages.push('...');
+              }
+
+              // Show pages around current page
+              for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+                if (!pages.includes(i)) {
+                  pages.push(i);
+                }
+              }
+
+              // Show ellipsis before last page if needed
+              if (showEllipsisEnd && !pages.includes('...') || (showEllipsisEnd && pages.filter(p => p === '...').length < 2)) {
+                if (currentPage + 1 < totalPages - 1) {
+                  pages.push('...');
+                }
+              }
+
+              // Always show last page
+              if (totalPages > 1 && !pages.includes(totalPages)) {
+                pages.push(totalPages);
+              }
+
+              return pages.map((page, index) => (
+                page === '...' ? (
+                  <span key={`ellipsis-${index}`} className="w-10 h-10 flex items-center justify-center text-gray-400">
+                    ...
+                  </span>
+                ) : (
+                  <button
+                    key={page}
+                    onClick={() => handlePageChange(page as number)}
+                    className={`w-10 h-10 rounded-lg font-medium transition-colors ${currentPage === page
+                      ? 'bg-green-600 text-white'
+                      : 'hover:bg-gray-50 text-gray-600'
+                      }`}
+                  >
+                    {page}
+                  </button>
+                )
+              ));
+            })()}
           </div>
 
           <button
