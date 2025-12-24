@@ -37,6 +37,10 @@ export interface Product {
     discount: number;
     category: string;
     image: string;
+
+    // For consolidated products (same product from different markets)
+    variantIds?: number[];
+    marketCount?: number;
 }
 
 export interface CartItem extends Product {

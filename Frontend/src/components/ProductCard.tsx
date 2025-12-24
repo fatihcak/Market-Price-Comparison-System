@@ -24,8 +24,8 @@ export default function ProductCard({ product, onAdd, onCompare }: ProductCardPr
     >
       <div className="relative bg-gray-100 h-48 overflow-hidden">
         {product.image ? (
-          <img 
-            src={product.image} 
+          <img
+            src={product.image}
             alt={product.name}
             className="w-full h-full object-contain p-4"
             onError={(e) => {
@@ -60,14 +60,26 @@ export default function ProductCard({ product, onAdd, onCompare }: ProductCardPr
             />
           </button>
         </div>
+
+        {/* Market count badge */}
+        {product.marketCount && product.marketCount > 1 && (
+          <div className="absolute top-3 left-3">
+            <div className="bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+              {product.marketCount} markets
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="p-4">
-        <h3 className="font-semibold text-gray-900 text-sm mb-3 line-clamp-2 h-10">
+        <h3 className="font-semibold text-gray-900 text-sm mb-3 line-clamp-3 min-h-14">
           <span className="font-bold text-lg text-green-600">{product.brand}</span> {product.name} <span className="text-sm text-gray-500">{product.unit}</span>
         </h3>
 
         <div className="flex items-center gap-2 mb-4">
+          {product.marketCount && product.marketCount > 1 && (
+            <span className="text-sm text-gray-500">from</span>
+          )}
           <span className="text-2xl font-bold text-green-600">{product.price.toFixed(2)}₺</span>
           {product.oldPrice && <span className="text-sm text-gray-400 line-through">{product.oldPrice.toFixed(2)}₺</span>}
         </div>
@@ -75,6 +87,9 @@ export default function ProductCard({ product, onAdd, onCompare }: ProductCardPr
         <div className="flex items-center gap-2 text-xs text-gray-600 mb-4 pb-4 border-b border-gray-100">
           <MapPin size={14} />
           <span className="font-medium">{product.market}</span>
+          {product.marketCount && product.marketCount > 1 && (
+            <span className="text-blue-500">+{product.marketCount - 1} more</span>
+          )}
           <TrendingDown size={14} className="ml-auto text-green-600" />
         </div>
 
