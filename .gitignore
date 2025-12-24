@@ -72,3 +72,86 @@ build_errors.txt
 debug_absolute.txt
 build_log_new.txt
 *_log.txt
+# =========================================================================
+# OPERATING SYSTEM FILES
+# =========================================================================
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# =========================================================================
+# IDE & EDITOR FILES
+# =========================================================================
+# Visual Studio
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+# VS Code
+.vscode/
+*.code-workspace
+# Rider / IntelliJ
+.idea/
+
+# =========================================================================
+# .NET CORE / ASP.NET CORE
+# =========================================================================
+bin/
+obj/
+**/bin/
+**/obj/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+var/
+
+# Test Results
+TestResults/
+*.trdx
+*.visualstudio_test_results
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.tooling
+
+# =========================================================================
+# NODE.JS / FRONTEND (React)
+# =========================================================================
+node_modules/
+**/node_modules/
+npm-debug.log
+yarn-error.log
+dist/
+build/
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+coverage/
+
+# =========================================================================
+# LOGS & DEBUG FILES
+# =========================================================================
+*.log
+logs/
+BACKEND/src/API/Logs/
+
+# Identified problematic debug files in root
+build_errors.txt
+debug_absolute.txt
+build_log_new.txt
+*_log.txt
+
+# AI Agents
+.agent/
+
+# Local Documentation
+AI_ASSIST.md
+GEMINI.md
+custom-agents-documentation.md
+Project_Documents/
