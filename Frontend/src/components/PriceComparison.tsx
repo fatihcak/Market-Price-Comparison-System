@@ -1,4 +1,4 @@
-import { X, MapPin, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { MapPin, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { api } from '../services/api';
 import { PriceResponseDTO, Product } from '../types';
@@ -30,6 +30,18 @@ export default function PriceComparison({ isOpen, onClose, productName = 'Produc
   const [prices, setPrices] = useState<PriceResponseDTO[]>([]);
   const [loading, setLoading] = useState(false);
   const [expandedMarkets, setExpandedMarkets] = useState<Set<number>>(new Set());
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen && (variantIds?.length || productId)) {
@@ -136,20 +148,52 @@ export default function PriceComparison({ isOpen, onClose, productName = 'Produc
 
   const cheapest = marketGroups.length > 0 ? marketGroups[0] : null;
 
+  // Handle click outside to close
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-300">
-        <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between z-10">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">{productImage}</span>
+    <div
+      className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]"
+      onClick={handleBackdropClick}
+      style={{
+        animation: 'fadeIn 0.2s ease-out'
+      }}
+    >
+      <div
+        className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+        style={{
+          animation: 'slideUp 0.3s ease-out'
+        }}
+      >
+        <style>{`
+          @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+          @keyframes slideUp {
+            from { 
+              opacity: 0;
+              transform: translateY(30px) scale(0.95);
+            }
+            to { 
+              opacity: 1;
+              transform: translateY(0) scale(1);
+            }
+          }
+        `}</style>
+        <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 z-10">
+          <div className="flex items-center gap-4">
+            {productImage && productImage.startsWith('http') ? (
+              <img src={productImage} alt={productName} className="w-20 h-20 rounded-lg object-cover" />
+            ) : (
+              <span className="text-3xl">{productImage || '📦'}</span>
+            )}
             <h2 className="text-2xl font-bold text-gray-900">{productName} Prices</h2>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <X size={24} className="text-gray-600" />
-          </button>
         </div>
 
         <div className="p-6 space-y-4">
@@ -244,18 +288,12 @@ export default function PriceComparison({ isOpen, onClose, productName = 'Produc
           </div>
         )}
 
-        <div className="bg-gray-50 border-t border-gray-100 px-6 py-4 flex gap-3">
+        <div className="sticky bottom-0 bg-white border-t border-gray-100 px-6 py-4">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-3 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-lg font-medium transition-colors"
+            className="w-full px-4 py-3 bg-gray-800 hover:bg-gray-900 text-white rounded-lg font-medium transition-colors"
           >
             Close
-          </button>
-          <button
-            onClick={onClose}
-            className="flex-1 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
-          >
-            Okay
           </button>
         </div>
       </div>
