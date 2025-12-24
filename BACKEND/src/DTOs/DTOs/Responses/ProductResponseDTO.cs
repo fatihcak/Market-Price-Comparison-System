@@ -12,6 +12,7 @@ public class ProductResponseDTO
     public decimal? OldPrice { get; set; }
     public int Discount { get; set; }
     public string MarketName { get; set; } = string.Empty;
+    public int MarketCount { get; set; } // Number of unique markets selling this product
     public DateTime? LastUpdated { get; set; }
     public DateTime? CreatedAt { get; set; }
     public string? ImageUrl { get; set; }

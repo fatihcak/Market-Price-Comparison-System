@@ -60,6 +60,7 @@ export interface ProductResponseDTO {
     oldPrice?: number;
     discount: number;
     marketName: string;
+    marketCount: number;
     imageUrl: string;
 }
 

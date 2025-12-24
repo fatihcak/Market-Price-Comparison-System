@@ -185,6 +185,9 @@ public class ProductService : IProductService
         var maxPrice = prices.Any() ? prices.Max(p => p.Price) : 0;
         var cheapestMarket = prices.OrderBy(p => p.Price).FirstOrDefault()?.Market?.MarketName ?? "Unknown";
         
+        // Count unique markets
+        var marketCount = prices.Select(p => p.MarketId).Distinct().Count();
+        
         var discount = maxPrice > minPrice ? (int)((maxPrice - minPrice) / maxPrice * 100) : 0;
 
         return new ProductResponseDTO
@@ -199,6 +202,7 @@ public class ProductService : IProductService
             OldPrice = maxPrice > minPrice ? maxPrice : null,
             Discount = discount,
             MarketName = cheapestMarket,
+            MarketCount = marketCount,
             LastUpdated = product.LastUpdated,
             CreatedAt = null, // BaseEntity.CreatedAt is ignored in AppDbContext
             ImageUrl = !string.IsNullOrWhiteSpace(product.ImageUrl) ? product.ImageUrl : product.Category?.Icon
