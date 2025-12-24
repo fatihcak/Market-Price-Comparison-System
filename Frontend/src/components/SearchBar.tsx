@@ -1,8 +1,23 @@
 import { Search, Mic, MapPin } from 'lucide-react';
 import { useState } from 'react';
 
-export default function SearchBar() {
+interface SearchBarProps {
+  onSearch: (query: string) => void;
+}
+
+export default function SearchBar({ onSearch }: SearchBarProps) {
   const [searchFocus, setSearchFocus] = useState(false);
+  const [query, setQuery] = useState('');
+
+  const handleSearch = (value: string) => {
+    setQuery(value);
+    onSearch(value);
+  };
+
+  const handleQuickSearch = (term: string) => {
+    setQuery(term);
+    onSearch(term);
+  };
 
   return (
     <div className="relative">
@@ -16,11 +31,21 @@ export default function SearchBar() {
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
             <input
               type="text"
+              value={query}
+              onChange={(e) => handleSearch(e.target.value)}
               placeholder="Enter the name of the product you are looking for..."
               onFocus={() => setSearchFocus(true)}
               onBlur={() => setSearchFocus(false)}
               className="w-full pl-12 pr-12 py-4 rounded-xl border border-gray-200 focus:outline-none bg-white text-gray-900 placeholder:text-gray-400"
             />
+            {query && (
+              <button
+                onClick={() => handleSearch('')}
+                className="absolute right-12 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            )}
             <Mic className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 cursor-pointer hover:text-gray-600" size={20} />
           </div>
 
@@ -36,16 +61,28 @@ export default function SearchBar() {
 
         <div className="mt-6 flex flex-wrap gap-3">
           <span className="text-sm text-gray-600">Popular searches:</span>
-          <button className="px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 text-sm rounded-full border border-gray-200 transition-colors">
+          <button
+            onClick={() => handleQuickSearch('Süt')}
+            className="px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 text-sm rounded-full border border-gray-200 transition-colors"
+          >
             Milk
           </button>
-          <button className="px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 text-sm rounded-full border border-gray-200 transition-colors">
+          <button
+            onClick={() => handleQuickSearch('Ekmek')}
+            className="px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 text-sm rounded-full border border-gray-200 transition-colors"
+          >
             Bread
           </button>
-          <button className="px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 text-sm rounded-full border border-gray-200 transition-colors">
+          <button
+            onClick={() => handleQuickSearch('Yumurta')}
+            className="px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 text-sm rounded-full border border-gray-200 transition-colors"
+          >
             Egg
           </button>
-          <button className="px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 text-sm rounded-full border border-gray-200 transition-colors">
+          <button
+            onClick={() => handleQuickSearch('Zeytinyağı')}
+            className="px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 text-sm rounded-full border border-gray-200 transition-colors"
+          >
             Olive Oil
           </button>
         </div>

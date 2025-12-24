@@ -24,7 +24,8 @@ builder.Host.UseSerilog((context, configuration) =>
 
 // Database
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
+        sqlOptions => sqlOptions.CommandTimeout(120))); // 2 minute timeout
     
 // Caching
 builder.Services.AddMemoryCache();

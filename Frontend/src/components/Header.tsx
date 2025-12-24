@@ -73,8 +73,7 @@ export default function Header({ onOpenList, itemCount = 0 }: HeaderProps) {
         <div className="md:hidden border-t border-gray-100 p-4 space-y-3 animate-in fade-in slide-in-from-top">
           <a href="#" className="block text-gray-600 hover:text-green-600 font-medium text-sm p-2">Markets</a>
           <a href="#" className="block text-gray-600 hover:text-green-600 font-medium text-sm p-2">Products</a>
-          <a href="#" className="block text-gray-600 hover:text-green-600 font-medium text-sm p-2">About</a>
-          <a href="#" className="block text-gray-600 hover:text-green-600 font-medium text-sm p-2">Blog</a>
+          <a href="#" className="block text-gray-600 hover:text-green-600 font-medium text-sm p-2">Map</a>
           <button
             onClick={onOpenList}
             className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors mt-2 relative"
