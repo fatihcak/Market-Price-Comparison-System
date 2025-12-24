@@ -34,7 +34,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.WithOrigins("https://white-pebble-0773b3403.3.azurestaticapps.net", "http://localhost:5173", "http://localhost:5000")
+        policy.WithOrigins("http://localhost:5173", "http://localhost:5000")
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();

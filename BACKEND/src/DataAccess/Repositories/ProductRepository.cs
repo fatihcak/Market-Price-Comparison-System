@@ -153,7 +153,7 @@ public class ProductRepository : Repository<Product>, IProductRepository
             .Include(p => p.Category)
             .Include(p => p.MarketProductPrices)
             .ThenInclude(mpp => mpp.Market)
-            .Where(p => p.Category.CategoryName.ToLower().Contains(term))
+            .Where(p => p.Category != null && p.Category.CategoryName.ToLower().Contains(term))
             .Take(5) // Limit results
             .ToListAsync();
     }
