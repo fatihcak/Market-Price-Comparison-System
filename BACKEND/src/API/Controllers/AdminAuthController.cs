@@ -1,8 +1,12 @@
 using Domain.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Asp.Versioning;
 
 namespace API.Controllers;
 
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/admin")]
 [Route("api/admin")]
 [ApiController]
 public class AdminAuthController : ControllerBase
@@ -26,19 +30,25 @@ public class AdminAuthController : ControllerBase
         return Ok(new { Token = token });
     }
 
+    /// <summary>
+    /// Create a new admin user (requires existing admin authentication)
+    /// </summary>
     [HttpPost("create")]
+    [Authorize]
     public async Task<IActionResult> CreateAdmin([FromBody] LoginRequest request)
     {
-        // This endpoint should be protected or removed in production!
-        // For now, we allow creating the first admin.
         try
         {
             var admin = await _authService.CreateAdminAsync(request.Username, request.Password);
             return Ok(new { admin.Username, admin.CreatedAt });
         }
-        catch (Exception ex)
+        catch (ArgumentException ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (Exception)
+        {
+            return BadRequest(new { error = "Failed to create admin" });
         }
     }
 }

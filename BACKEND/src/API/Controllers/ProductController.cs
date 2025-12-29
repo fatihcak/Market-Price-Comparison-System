@@ -1,12 +1,16 @@
 using Microsoft.AspNetCore.Mvc;
 using Domain.Interfaces.Services;
+using Domain.Constants;
 using DTOs.DTOs.Requests;
 using Microsoft.AspNetCore.Authorization;
+using Asp.Versioning;
 
 namespace API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
+[Route("api/[controller]")] // Backward compatibility
 public class ProductController : ControllerBase
 {
     private readonly IProductService _productService;
@@ -17,13 +21,24 @@ public class ProductController : ControllerBase
     }
 
     /// <summary>
-    /// Get all products
+    /// Get all products with optional pagination
     /// </summary>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll(
+        [FromQuery] int page = 1, 
+        [FromQuery] int pageSize = AppConstants.Pagination.DefaultPageSize)
     {
-        var products = await _productService.GetAllProductsAsync();
+        if (page < 1) page = 1;
+        if (pageSize < AppConstants.Pagination.MinPageSize) pageSize = AppConstants.Pagination.DefaultPageSize;
+        if (pageSize > AppConstants.Pagination.MaxPageSize) pageSize = AppConstants.Pagination.MaxPageSize;
+        
+        var (products, totalCount) = await _productService.GetProductsWithPaginationAsync(page, pageSize);
+        
+        Response.Headers.Append("X-Total-Count", totalCount.ToString());
+        Response.Headers.Append("X-Page", page.ToString());
+        Response.Headers.Append("X-Page-Size", pageSize.ToString());
+        
         return Ok(products);
     }
 

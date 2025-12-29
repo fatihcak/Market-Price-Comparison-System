@@ -1,10 +1,13 @@
 using Domain.Interfaces.Services;
 using DTOs.DTOs.Requests;
 using Microsoft.AspNetCore.Mvc;
+using Asp.Versioning;
 
 namespace API.Controllers;
 
 [ApiController]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Route("api/[controller]")]
 public class BasketController : ControllerBase
 {

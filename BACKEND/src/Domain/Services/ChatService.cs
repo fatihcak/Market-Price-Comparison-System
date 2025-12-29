@@ -1,6 +1,8 @@
 using Domain.Interfaces.Repositories;
 using Domain.Interfaces.Services;
+using Domain.Utilities;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -18,6 +20,7 @@ namespace Domain.Services
         private readonly IMarketRepository _marketRepository;
         private readonly IPriceRepository _priceRepository;
         private readonly IMemoryCache _memoryCache;
+        private readonly ILogger<ChatService> _logger;
 
         public ChatService(
             IConfiguration configuration, 
@@ -25,7 +28,8 @@ namespace Domain.Services
             IProductRepository productRepository,
             IMarketRepository marketRepository,
             IPriceRepository priceRepository,
-            IMemoryCache memoryCache)
+            IMemoryCache memoryCache,
+            ILogger<ChatService> logger)
         {
             _apiKey = configuration["AiSettings:GoogleApiKey"]!;
             _httpClient = httpClient;
@@ -33,6 +37,7 @@ namespace Domain.Services
             _marketRepository = marketRepository;
             _priceRepository = priceRepository;
             _memoryCache = memoryCache;
+            _logger = logger;
         }
 
         public async Task<ChatResponseDto> GetChatResponseAsync(string userMessage, string sessionId)
@@ -111,7 +116,7 @@ namespace Domain.Services
                                 {
                                     // Simple Levenshtein implementation for list matching
                                     itemToRemove = shoppingList
-                                        .Select(i => new { Item = i, Distance = ComputeLevenshteinDistance(item.ToLower(), i.ToLower()) })
+                                        .Select(i => new { Item = i, Distance = StringUtilities.ComputeLevenshteinDistance(item.ToLower(), i.ToLower()) })
                                         .Where(x => x.Distance <= 3)
                                         .OrderBy(x => x.Distance)
                                         .FirstOrDefault()?.Item;
@@ -385,7 +390,7 @@ namespace Domain.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[DEBUG] Error parsing AI response: {ex.Message}");
+                _logger.LogWarning(ex, "Error parsing AI response");
                 return new List<MessageAnalysisResult> { new MessageAnalysisResult { Intent = "chat", Reply = $"Error parsing AI response. Raw: {response.Substring(0, Math.Min(response.Length, 50))}..." } };
             }
         }
@@ -555,7 +560,7 @@ namespace Domain.Services
 
         private async Task<string> CallGeminiApiAsync(string prompt)
         {
-            Console.WriteLine("[DEBUG] Sending request to Google API...");
+            _logger.LogDebug("Sending request to Google API");
             var requestBody = new
             {
                 contents = new[]
@@ -571,12 +576,12 @@ namespace Domain.Services
             var jsonContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
             var response = await _httpClient.PostAsync($"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key={_apiKey}", jsonContent);
             
-            Console.WriteLine($"[DEBUG] Google API Status: {response.StatusCode}");
+            _logger.LogDebug("Google API Status: {StatusCode}", response.StatusCode);
 
             if (!response.IsSuccessStatusCode)
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"Google API Error: {response.StatusCode} - {errorContent}");
+                _logger.LogError("Google API Error: {StatusCode} - {ErrorContent}", response.StatusCode, errorContent);
                 return "AI service is not available at the moment.";
             }
 
@@ -593,35 +598,9 @@ namespace Domain.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Gemini Parsing Error: {ex.Message}");
-                Console.WriteLine($"Raw Response: {responseString}");
+                _logger.LogError(ex, "Gemini Parsing Error. Raw Response: {RawResponse}", responseString);
                 return "AI Error";
             }
-        }
-
-        private int ComputeLevenshteinDistance(string s, string t)
-        {
-            int n = s.Length;
-            int m = t.Length;
-            int[,] d = new int[n + 1, m + 1];
-
-            if (n == 0) return m;
-            if (m == 0) return n;
-
-            for (int i = 0; i <= n; d[i, 0] = i++) { }
-            for (int j = 0; j <= m; d[0, j] = j++) { }
-
-            for (int i = 1; i <= n; i++)
-            {
-                for (int j = 1; j <= m; j++)
-                {
-                    int cost = (t[j - 1] == s[i - 1]) ? 0 : 1;
-                    d[i, j] = Math.Min(
-                        Math.Min(d[i - 1, j] + 1, d[i, j - 1] + 1),
-                        d[i - 1, j - 1] + cost);
-                }
-            }
-            return d[n, m];
         }
 
         private class MessageAnalysisResult

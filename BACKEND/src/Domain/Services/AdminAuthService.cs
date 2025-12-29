@@ -36,6 +36,9 @@ public class AdminAuthService
 
     public async Task<AdminUser> CreateAdminAsync(string username, string password)
     {
+        // Validate password complexity
+        ValidatePassword(password);
+        
         if (await _repository.ExistsAsync(username))
         {
             throw new Exception("Username already exists");
@@ -52,6 +55,30 @@ public class AdminAuthService
         await _repository.SaveChangesAsync();
 
         return admin;
+    }
+
+    private static void ValidatePassword(string password)
+    {
+        var errors = new List<string>();
+
+        if (string.IsNullOrWhiteSpace(password))
+            errors.Add("Password cannot be empty");
+        else
+        {
+            if (password.Length < 8)
+                errors.Add("Password must be at least 8 characters");
+            if (!password.Any(char.IsUpper))
+                errors.Add("Password must contain at least one uppercase letter");
+            if (!password.Any(char.IsLower))
+                errors.Add("Password must contain at least one lowercase letter");
+            if (!password.Any(char.IsDigit))
+                errors.Add("Password must contain at least one digit");
+            if (!password.Any(c => !char.IsLetterOrDigit(c)))
+                errors.Add("Password must contain at least one special character");
+        }
+
+        if (errors.Any())
+            throw new ArgumentException(string.Join("; ", errors));
     }
 
     private string GenerateJwtToken(AdminUser user)

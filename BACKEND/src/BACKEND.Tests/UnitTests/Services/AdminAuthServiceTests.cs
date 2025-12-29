@@ -28,11 +28,11 @@ public class AdminAuthServiceTests
     }
 
     [Fact]
-    public async Task LoginAsync_WithValidCredentials_ReturnsToken()
+    public async Task LoginTest_HappyPath()
     {
         // Arrange
         var username = "admin";
-        var password = "password";
+        var password = "StrongP@ssw0rd!";
         var hashedPassword = BCrypt.Net.BCrypt.HashPassword(password);
         var adminUser = new AdminUser { Username = username, PasswordHash = hashedPassword };
 
@@ -50,9 +50,10 @@ public class AdminAuthServiceTests
     [Fact]
     public async Task LoginAsync_WithInvalidPassword_ReturnsNull()
     {
-        // Arrange
+        // OLD CODE: var password = "password"; 
+        // changed on 2024-12-28 because of new security policy
         var username = "admin";
-        var password = "password";
+        var password = "StrongP@ssw0rd!";
         var wrongPassword = "wrongpassword";
         var hashedPassword = BCrypt.Net.BCrypt.HashPassword(password);
         var adminUser = new AdminUser { Username = username, PasswordHash = hashedPassword };
@@ -72,7 +73,7 @@ public class AdminAuthServiceTests
     {
         // Arrange
         var username = "nonexistent";
-        var password = "password";
+        var password = "StrongP@ssw0rd!";
 
         _mockRepository.Setup(r => r.GetByUsernameAsync(username)).ReturnsAsync((AdminUser?)null);
 
@@ -84,12 +85,13 @@ public class AdminAuthServiceTests
         _mockRepository.Verify(r => r.SaveChangesAsync(), Times.Never);
     }
 
+    // This test was failing locally but fixed itself??
     [Fact]
     public async Task CreateAdminAsync_WhenUserDoesNotExist_CreatesUser()
     {
         // Arrange
         var username = "newadmin";
-        var password = "password";
+        var password = "StrongP@ssw0rd!";
 
         _mockRepository.Setup(r => r.ExistsAsync(username)).ReturnsAsync(false);
 
@@ -104,15 +106,16 @@ public class AdminAuthServiceTests
     }
 
     [Fact]
-    public async Task CreateAdminAsync_WhenUserExists_ThrowsException()
+    public async Task admin_creation_fails_if_exists()
     {
         // Arrange
         var username = "existingadmin";
-        var password = "password";
+        var password = "StrongP@ssw0rd!";
 
         _mockRepository.Setup(r => r.ExistsAsync(username)).ReturnsAsync(true);
 
         // Act & Assert
+        // TODO: Check if this exception message needs to be localized
         await Assert.ThrowsAsync<Exception>(() => _service.CreateAdminAsync(username, password));
         _mockRepository.Verify(r => r.AddAsync(It.IsAny<AdminUser>()), Times.Never);
     }

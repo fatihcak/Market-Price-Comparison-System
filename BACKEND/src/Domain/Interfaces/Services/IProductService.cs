@@ -6,6 +6,7 @@ namespace Domain.Interfaces.Services;
 public interface IProductService
 {
     Task<IEnumerable<ProductResponseDTO>> GetAllProductsAsync();
+    Task<(IEnumerable<ProductResponseDTO> Products, int TotalCount)> GetProductsWithPaginationAsync(int page, int pageSize);
     Task<ProductResponseDTO?> GetProductByIdAsync(int id);
     Task<IEnumerable<ProductResponseDTO>> GetProductsByCategoryAsync(int categoryId);
     Task<IEnumerable<ProductResponseDTO>> SearchProductsAsync(string searchTerm);

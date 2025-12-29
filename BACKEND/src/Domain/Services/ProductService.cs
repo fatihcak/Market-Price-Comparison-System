@@ -21,8 +21,12 @@ public class ProductService : IProductService
         return products.Select(p => MapToResponseDTO(p));
     }
 
-    // ... (keep other methods)
-
+    public async Task<(IEnumerable<ProductResponseDTO> Products, int TotalCount)> GetProductsWithPaginationAsync(int page, int pageSize)
+    {
+        var (products, totalCount) = await _productRepository.SearchByNameWithPaginationAsync("", page, pageSize);
+        var dtos = products.Select(p => MapToResponseDTO(p));
+        return (dtos, totalCount);
+    }
 
 
     public async Task<ProductResponseDTO?> GetProductByIdAsync(int id)
