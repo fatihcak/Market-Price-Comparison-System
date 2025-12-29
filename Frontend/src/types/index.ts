@@ -18,6 +18,12 @@ export interface MarketResponseDTO {
     createdAt: string;
 }
 
+export interface Market {
+    id: number;
+    name: string;
+    logoUrl?: string;
+}
+
 export interface Product {
     id: number;
     categoryId?: number;

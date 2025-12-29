@@ -73,7 +73,7 @@ export default function ProductCard({ product, onAdd, onCompare }: ProductCardPr
 
       <div className="p-4">
         <h3 className="font-semibold text-gray-900 text-sm mb-3 line-clamp-3 min-h-14">
-          <span className="font-bold text-lg text-green-600">{product.brand}</span> {product.name} <span className="text-sm text-gray-500">{product.unit}</span>
+          <span className="font-bold text-lg text-green-600"></span> {product.name} <span className="text-sm text-gray-500"></span>
         </h3>
 
         <div className="flex items-center gap-2 mb-4">
