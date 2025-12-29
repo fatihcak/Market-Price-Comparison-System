@@ -5,7 +5,7 @@ import Header from './components/Header';
 import SearchBar from './components/SearchBar';
 import ProductCard from './components/ProductCard';
 import CategorySection from './components/CategorySection';
-import FilterBar from './components/FilterBar';
+import FilterBar, { FilterState } from './components/FilterBar';
 //import Testimonials from './components/Testimonials';
 import PriceComparison from './components/PriceComparison';
 import BasketComparison from './components/BasketComparison';
@@ -264,38 +264,78 @@ function ProductGrid({ products, onAdd, onCompare }: ProductGridProps) {
   const { category, subcategory } = useParams<{ category: string; subcategory?: string }>();
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
+  const [filters, setFilters] = useState<FilterState>({
+    sortBy: 'popular',
+    minPrice: 0,
+    maxPrice: 1000,
+    selectedMarkets: []
+  });
   const itemsPerPage = 16;
 
   const selectedCategory = category || 'All';
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedCategory, subcategory]);
+  }, [selectedCategory, subcategory, filters]);
 
+  const handleFilterChange = (newFilters: FilterState) => {
+    setFilters(newFilters);
+  };
+
+  // Apply category, market, and price filters
   const filteredProducts = products.filter(product => {
-    if (selectedCategory === 'All') return true;
+    // Category filtering
+    if (selectedCategory !== 'All') {
+      const mainCatDef = CATEGORIES.find(c => c.slug === selectedCategory);
+      if (!mainCatDef) return false;
 
-    // 1. Find the Main Category definition
-    const mainCatDef = CATEGORIES.find(c => c.slug === selectedCategory);
-    if (!mainCatDef) return false; // Unknown main category
-
-    // 2. If a specific subcategory is selected, filter by that EXACT subcategory match
-    if (subcategory) {
-      // Backend 'CategoryName' (e.g. 'Fruits') should match subcategory slug/name
-      // Assuming product.category (or product.categoryName) matches the subcategory name
-      return product.category === subcategory || product.categoryName === subcategory;
+      if (subcategory) {
+        if (product.category !== subcategory && product.categoryName !== subcategory) {
+          return false;
+        }
+      } else {
+        const validSubNames = mainCatDef.subCategories.map(s => s.name);
+        if (!validSubNames.includes(product.category) && !(product.categoryName && validSubNames.includes(product.categoryName))) {
+          return false;
+        }
+      }
     }
 
-    // 3. If only Main Category is selected, valid products must match ANY of its subcategories
-    // E.g. Main='Fruits and Vegetables', valid subs=['Fruits', 'Vegetables']
-    // Product category must be one of those.
-    const validSubNames = mainCatDef.subCategories.map(s => s.name);
-    return validSubNames.includes(product.category) || (product.categoryName && validSubNames.includes(product.categoryName));
+    // Market filtering (only if markets are selected)
+    if (filters.selectedMarkets.length > 0) {
+      if (!filters.selectedMarkets.includes(product.market)) {
+        return false;
+      }
+    }
+
+    // Price filtering
+    if (product.price < filters.minPrice || product.price > filters.maxPrice) {
+      return false;
+    }
+
+    return true;
   });
 
-  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  // Apply sorting
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    switch (filters.sortBy) {
+      case 'price-low':
+        return a.price - b.price;
+      case 'price-high':
+        return b.price - a.price;
+      case 'discount':
+        return (b.discount || 0) - (a.discount || 0);
+      case 'newest':
+        return (b.id || 0) - (a.id || 0);
+      case 'popular':
+      default:
+        return (b.marketCount || 1) - (a.marketCount || 1);
+    }
+  });
+
+  const totalPages = Math.ceil(sortedProducts.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const displayedProducts = filteredProducts.slice(startIndex, startIndex + itemsPerPage);
+  const displayedProducts = sortedProducts.slice(startIndex, startIndex + itemsPerPage);
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -306,7 +346,7 @@ function ProductGrid({ products, onAdd, onCompare }: ProductGridProps) {
 
   return (
     <section className="mt-16">
-      <FilterBar />
+      <FilterBar onFilterChange={handleFilterChange} />
 
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-3xl font-bold text-gray-900">
