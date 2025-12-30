@@ -9,6 +9,9 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using Xunit;
+using FluentAssertions;
+
+using Microsoft.Extensions.Logging;
 
 namespace BACKEND.Tests.UnitTests.Services;
 
@@ -20,6 +23,7 @@ public class ChatServiceTests
     private readonly Mock<IPriceRepository> _mockPriceRepository;
     private readonly Mock<HttpMessageHandler> _mockHttpMessageHandler;
     private readonly Mock<Microsoft.Extensions.Caching.Memory.IMemoryCache> _mockMemoryCache;
+    private readonly Mock<ILogger<ChatService>> _mockLogger;
     private readonly ChatService _service;
 
     public ChatServiceTests()
@@ -30,6 +34,7 @@ public class ChatServiceTests
         _mockPriceRepository = new Mock<IPriceRepository>();
         _mockHttpMessageHandler = new Mock<HttpMessageHandler>();
         _mockMemoryCache = new Mock<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
+        _mockLogger = new Mock<ILogger<ChatService>>();
 
         _mockConfiguration.Setup(c => c["AiSettings:GoogleApiKey"]).Returns("test_api_key");
         
@@ -46,20 +51,24 @@ public class ChatServiceTests
             _mockProductRepository.Object,
             _mockMarketRepository.Object,
             _mockPriceRepository.Object,
-            _mockMemoryCache.Object);
+            _mockMemoryCache.Object,
+            _mockLogger.Object);
     }
 
+    // this checks if the chat works correctly
     [Fact]
-    public async Task GetChatResponseAsync_WhenIntentIsChat_ReturnsSimpleReply()
+    public async Task when_intent_is_chat_return_simple_reply()
     {
         // Arrange
         var userMessage = "Hello";
         var sessionId = "test-session";
+        
+        // mocked response from python service
         var analysisResponse = new
         {
             candidates = new[]
             {
-                new { content = new { parts = new[] { new { text = "{\"intent\": \"chat\"}" } } } }
+                new { content = new { parts = new[] { new { text = "{\"intent\": \"chat\", \"reply\": \"Hello there!\"}" } } } }
             }
         };
 
@@ -71,10 +80,9 @@ public class ChatServiceTests
             }
         };
 
-        // Setup Mock Handler to return Analysis first, then Chat Response
         _mockHttpMessageHandler
             .Protected()
-            .SetupSequence<Task<HttpResponseMessage>>(
+            .Setup<Task<HttpResponseMessage>>(
                 "SendAsync",
                 ItExpr.IsAny<HttpRequestMessage>(),
                 ItExpr.IsAny<CancellationToken>()
@@ -83,18 +91,14 @@ public class ChatServiceTests
             {
                 StatusCode = HttpStatusCode.OK,
                 Content = new StringContent(JsonSerializer.Serialize(analysisResponse))
-            })
-            .ReturnsAsync(new HttpResponseMessage
-            {
-                StatusCode = HttpStatusCode.OK,
-                Content = new StringContent(JsonSerializer.Serialize(chatResponse))
             });
 
         // Act
         var result = await _service.GetChatResponseAsync(userMessage, sessionId);
 
         // Assert
-        Assert.Equal("Hello there!", result.Reply);
+        // Assert.Equal("Hello there!", result.Reply);
+        result.Reply.Should().Be("Hello there!"); // switching to fluent assertions
         Assert.Null(result.BasketSuggestion);
     }
 

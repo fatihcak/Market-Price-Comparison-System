@@ -1,8 +1,13 @@
 using Domain.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Asp.Versioning;
+using API.Extensions;
 
 namespace API.Controllers;
 
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/admin")]
 [Route("api/admin")]
 [ApiController]
 public class AdminAuthController : ControllerBase
@@ -17,28 +22,42 @@ public class AdminAuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        var token = await _authService.LoginAsync(request.Username, request.Password);
-        if (token == null)
+        try
         {
-            return Unauthorized("Invalid username or password");
-        }
+            var token = await _authService.LoginAsync(request.Username, request.Password);
+            if (token == null)
+            {
+                return this.ApiUnauthorized("Invalid username or password");
+            }
 
-        return Ok(new { Token = token });
+            return this.ApiOk(new { Token = token });
+        }
+        catch (InvalidOperationException ex)
+        {
+            // Account locked or too many failed attempts
+            return this.ApiBadRequest(ex.Message);
+        }
     }
 
+    /// <summary>
+    /// Create a new admin user (requires existing admin authentication)
+    /// </summary>
     [HttpPost("create")]
+    [Authorize]
     public async Task<IActionResult> CreateAdmin([FromBody] LoginRequest request)
     {
-        // This endpoint should be protected or removed in production!
-        // For now, we allow creating the first admin.
         try
         {
             var admin = await _authService.CreateAdminAsync(request.Username, request.Password);
-            return Ok(new { admin.Username, admin.CreatedAt });
+            return this.ApiOk(new { admin.Username, admin.CreatedAt });
         }
-        catch (Exception ex)
+        catch (ArgumentException ex)
         {
-            return BadRequest(ex.Message);
+            return this.ApiBadRequest(ex.Message);
+        }
+        catch (Exception)
+        {
+            return this.ApiBadRequest("Failed to create admin");
         }
     }
 }
@@ -48,3 +67,4 @@ public class LoginRequest
     public string Username { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
 }
+

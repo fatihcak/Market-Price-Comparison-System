@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using DataAccess.Data;
 using Domain.Entities;
 using Domain.Interfaces.Repositories;
+using Domain.Utilities;
+using Domain.Constants;
 
 namespace DataAccess.Repositories;
 
@@ -26,22 +28,27 @@ public class ProductRepository : Repository<Product>, IProductRepository
 
     public async Task<IEnumerable<Product>> SearchByNameAsync(string searchTerm)
     {
+        // OPTIMIZATION: Added limit to prevent loading all products
         if (string.IsNullOrWhiteSpace(searchTerm))
         {
             return await _context.Product
+                .AsNoTracking()
                 .Include(p => p.Category)
                 .Include(p => p.MarketProductPrices)
                 .ThenInclude(mpp => mpp.Market)
                 .OrderBy(p => p.ProductName)
+                .Take(50) // Limit to 50 products when no search term
                 .ToListAsync();
         }
 
         return await _context.Product
+            .AsNoTracking()
             .Where(p => p.ProductName.Contains(searchTerm))
             .Include(p => p.Category)
             .Include(p => p.MarketProductPrices)
             .ThenInclude(mpp => mpp.Market)
             .OrderBy(p => p.ProductName)
+            .Take(50) // Limit to 50 results
             .ToListAsync();
     }
 
@@ -83,17 +90,27 @@ public class ProductRepository : Repository<Product>, IProductRepository
 
     public async Task<IEnumerable<Product>> SearchByBrandAsync(string brand)
     {
+        // OPTIMIZATION: Added limit to prevent loading all products
         if (string.IsNullOrWhiteSpace(brand))
         {
-            return await GetAllAsync();
+            return await _context.Product
+                .AsNoTracking()
+                .Include(p => p.Category)
+                .Include(p => p.MarketProductPrices)
+                .ThenInclude(mpp => mpp.Market)
+                .OrderBy(p => p.ProductName)
+                .Take(50)
+                .ToListAsync();
         }
 
         return await _context.Product
+            .AsNoTracking()
             .Where(p => p.Brand != null && p.Brand.Contains(brand))
             .Include(p => p.Category)
             .Include(p => p.MarketProductPrices)
             .ThenInclude(mpp => mpp.Market)
             .OrderBy(p => p.ProductName)
+            .Take(50) // Limit to 50 results
             .ToListAsync();
     }
 
@@ -130,20 +147,62 @@ public class ProductRepository : Repository<Product>, IProductRepository
 
     public async Task<IEnumerable<Product>> SearchWithFuzzyAsync(string searchTerm)
     {
-        // 1. Fetch all products (or a reasonable subset if DB is huge)
-        // For a small-to-medium catalog, fetching names is fine.
-        var allProducts = await _context.Product.ToListAsync();
+        if (string.IsNullOrWhiteSpace(searchTerm))
+            return new List<Product>();
 
-        // 2. Perform Fuzzy Matching in Memory
-        var matches = allProducts
-            .Select(p => new { Product = p, Distance = ComputeLevenshteinDistance(searchTerm.ToLower(), p.ProductName.ToLower()) })
-            .Where(x => x.Distance <= 3) // Allow up to 3 edits
+        searchTerm = searchTerm.Trim().ToLower();
+
+        // OPTIMIZATION 1: Try exact/contains match first (database-level, very fast)
+        var exactMatches = await _context.Product
+            .AsNoTracking()
+            .Where(p => p.ProductName.ToLower().Contains(searchTerm))
+            .Include(p => p.Category)
+            .Include(p => p.MarketProductPrices)
+                .ThenInclude(mpp => mpp.Market)
+            .OrderBy(p => p.ProductName)
+            .Take(10)
+            .ToListAsync();
+
+        if (exactMatches.Any())
+            return exactMatches;
+
+        // OPTIMIZATION 2: Only fetch IDs and names for fuzzy matching (much lighter than full products)
+        var productNamesOnly = await _context.Product
+            .AsNoTracking()
+            .Select(p => new { p.Id, p.ProductName })
+            .ToListAsync();
+
+        // OPTIMIZATION 3: Perform fuzzy matching in memory on lightweight data
+        var fuzzyMatchIds = productNamesOnly
+            .Select(p => new {
+                p.Id,
+                Distance = StringUtilities.ComputeLevenshteinDistance(searchTerm, p.ProductName.ToLower())
+            })
+            .Where(x => x.Distance <= 3) // Allow up to 3 character edits
             .OrderBy(x => x.Distance)
-            .Take(5)
-            .Select(x => x.Product)
+            .Take(10)
+            .Select(x => x.Id)
             .ToList();
 
-        return matches;
+        if (!fuzzyMatchIds.Any())
+            return new List<Product>();
+
+        // OPTIMIZATION 4: Only fetch full details for matched products
+        var matchedProducts = await _context.Product
+            .AsNoTracking()
+            .Where(p => fuzzyMatchIds.Contains(p.Id))
+            .Include(p => p.Category)
+            .Include(p => p.MarketProductPrices)
+                .ThenInclude(mpp => mpp.Market)
+            .ToListAsync();
+
+        // Preserve distance ordering
+        var orderedResults = fuzzyMatchIds
+            .Select(id => matchedProducts.FirstOrDefault(p => p.Id == id))
+            .Where(p => p != null)
+            .ToList();
+
+        return orderedResults!;
     }
 
     public async Task<IEnumerable<Product>> SearchByCategoryAsync(string categoryName)
@@ -158,28 +217,83 @@ public class ProductRepository : Repository<Product>, IProductRepository
             .ToListAsync();
     }
 
-    private int ComputeLevenshteinDistance(string s, string t)
+    // PAGINATION METHODS - For better performance and user experience
+    public async Task<(IEnumerable<Product> Items, int TotalCount)> SearchByNameWithPaginationAsync(
+        string searchTerm,
+        int pageNumber,
+        int pageSize)
     {
-        int n = s.Length;
-        int m = t.Length;
-        int[,] d = new int[n + 1, m + 1];
+        // Ensure valid pagination parameters
+        pageNumber = pageNumber < 1 ? 1 : pageNumber;
+        pageSize = pageSize < AppConstants.Pagination.MinPageSize ? AppConstants.Pagination.DefaultPageSize : (pageSize > AppConstants.Pagination.MaxPageSize ? AppConstants.Pagination.MaxPageSize : pageSize);
 
-        if (n == 0) return m;
-        if (m == 0) return n;
+        var query = string.IsNullOrWhiteSpace(searchTerm)
+            ? _context.Product.AsNoTracking()
+            : _context.Product.AsNoTracking().Where(p => p.ProductName.Contains(searchTerm));
 
-        for (int i = 0; i <= n; d[i, 0] = i++) { }
-        for (int j = 0; j <= m; d[0, j] = j++) { }
+        var totalCount = await query.CountAsync();
 
-        for (int i = 1; i <= n; i++)
-        {
-            for (int j = 1; j <= m; j++)
-            {
-                int cost = (t[j - 1] == s[i - 1]) ? 0 : 1;
-                d[i, j] = Math.Min(
-                    Math.Min(d[i - 1, j] + 1, d[i, j - 1] + 1),
-                    d[i - 1, j - 1] + cost);
-            }
-        }
-        return d[n, m];
+        var items = await query
+            .Include(p => p.Category)
+            .Include(p => p.MarketProductPrices)
+                .ThenInclude(mpp => mpp.Market)
+            .OrderBy(p => p.ProductName)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (items, totalCount);
+    }
+
+    public async Task<(IEnumerable<Product> Items, int TotalCount)> GetByCategoryIdWithPaginationAsync(
+        int categoryId,
+        int pageNumber,
+        int pageSize)
+    {
+        pageNumber = pageNumber < 1 ? 1 : pageNumber;
+        pageSize = pageSize < AppConstants.Pagination.MinPageSize ? AppConstants.Pagination.DefaultPageSize : (pageSize > AppConstants.Pagination.MaxPageSize ? AppConstants.Pagination.MaxPageSize : pageSize);
+
+        var query = _context.Product
+            .AsNoTracking()
+            .Where(p => p.CategoryId == categoryId);
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .Include(p => p.Category)
+            .Include(p => p.MarketProductPrices)
+                .ThenInclude(mpp => mpp.Market)
+            .OrderBy(p => p.ProductName)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (items, totalCount);
+    }
+
+    public async Task<(IEnumerable<Product> Items, int TotalCount)> SearchByBrandWithPaginationAsync(
+        string brand,
+        int pageNumber,
+        int pageSize)
+    {
+        pageNumber = pageNumber < 1 ? 1 : pageNumber;
+        pageSize = pageSize < AppConstants.Pagination.MinPageSize ? AppConstants.Pagination.DefaultPageSize : (pageSize > AppConstants.Pagination.MaxPageSize ? AppConstants.Pagination.MaxPageSize : pageSize);
+
+        var query = string.IsNullOrWhiteSpace(brand)
+            ? _context.Product.AsNoTracking()
+            : _context.Product.AsNoTracking().Where(p => p.Brand != null && p.Brand.Contains(brand));
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .Include(p => p.Category)
+            .Include(p => p.MarketProductPrices)
+                .ThenInclude(mpp => mpp.Market)
+            .OrderBy(p => p.ProductName)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (items, totalCount);
     }
 }

@@ -21,8 +21,12 @@ public class ProductService : IProductService
         return products.Select(p => MapToResponseDTO(p));
     }
 
-    // ... (keep other methods)
-
+    public async Task<(IEnumerable<ProductResponseDTO> Products, int TotalCount)> GetProductsWithPaginationAsync(int page, int pageSize)
+    {
+        var (products, totalCount) = await _productRepository.SearchByNameWithPaginationAsync("", page, pageSize);
+        var dtos = products.Select(p => MapToResponseDTO(p));
+        return (dtos, totalCount);
+    }
 
 
     public async Task<ProductResponseDTO?> GetProductByIdAsync(int id)
@@ -114,15 +118,13 @@ public class ProductService : IProductService
 
     public async Task<IEnumerable<ProductPriceHistoryDTO>> GetProductPriceHistoryAsync(int productId, int days)
     {
+        // FIXED: Removed N+1 query - using the already loaded product instead of fetching all products
         var product = await _productRepository.GetProductWithCategoryAsync(productId);
         if (product == null) return Enumerable.Empty<ProductPriceHistoryDTO>();
 
         var history = await _productRepository.GetPriceHistoryByProductIdAsync(productId);
-        var allProducts = await _productRepository.GetAllWithDetailsAsync();
-        var productWithDetails = allProducts.FirstOrDefault(p => p.Id == productId);
-        
-        if (productWithDetails == null) return Enumerable.Empty<ProductPriceHistoryDTO>();
 
+        // OPTIMIZATION: No longer loading all products - using the already fetched 'product'
         var result = new List<ProductPriceHistoryDTO>();
         var startDate = DateTime.UtcNow.Date.AddDays(-days);
         var endDate = DateTime.UtcNow.Date;
@@ -133,7 +135,7 @@ public class ProductService : IProductService
         {
             var dailyPrices = new List<decimal>();
 
-            foreach (var mpp in productWithDetails.MarketProductPrices)
+            foreach (var mpp in product.MarketProductPrices)
             {
                 decimal priceOnDate = mpp.Price;
                 var mppLastUpdated = mpp.LastUpdated ?? DateTime.MinValue;

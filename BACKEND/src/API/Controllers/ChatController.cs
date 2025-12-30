@@ -4,18 +4,24 @@ using Domain.Services;
 using Domain.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
+using Asp.Versioning;
+using API.Extensions;
 
 namespace API.Controllers
 {
     [ApiController]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     [Route("api/[controller]")]
     public class ChatController : ControllerBase
     {
         private readonly IChatService _chatService;
+        private readonly ILogger<ChatController> _logger;
 
-        public ChatController(IChatService chatService)
+        public ChatController(IChatService chatService, ILogger<ChatController> logger)
         {
             _chatService = chatService;
+            _logger = logger;
         }
 
         [HttpPost]
@@ -24,20 +30,21 @@ namespace API.Controllers
             if (!ModelState.IsValid)
             {
                 var errors = string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
-                Console.WriteLine($"Model State Error: {errors}");
-                return BadRequest(ModelState);
+                _logger.LogWarning("Model State Error: {Errors}", errors);
+                return this.ApiBadRequest(ModelState);
             }
 
             if (string.IsNullOrWhiteSpace(request.Message))
             {
-                Console.WriteLine("Message is null or empty");
-                return BadRequest("The message cannot be empty.");
+                _logger.LogWarning("Chat request received with empty message");
+                return this.ApiBadRequest("The message cannot be empty.");
             }
 
-            var sessionId = request.SessionId ?? "default_session"; // Fallback to a default if not provided
+            var sessionId = request.SessionId ?? "default_session";
             var response = await _chatService.GetChatResponseAsync(request.Message, sessionId);
 
-            return Ok(response);
+            return this.ApiOk(response);
         }
     }
 }
+

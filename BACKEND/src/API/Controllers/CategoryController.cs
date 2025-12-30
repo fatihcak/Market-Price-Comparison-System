@@ -2,10 +2,14 @@ using Microsoft.AspNetCore.Mvc;
 using Domain.Interfaces.Services;
 using DTOs.DTOs.Requests;
 using Microsoft.AspNetCore.Authorization;
+using Asp.Versioning;
+using API.Extensions;
 
 namespace API.Controllers;
 
 [ApiController]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Route("api/[controller]")]
 public class CategoryController : ControllerBase
 {
@@ -21,7 +25,7 @@ public class CategoryController : ControllerBase
     public async Task<IActionResult> GetAll()
     {
         var categories = await _categoryService.GetAllCategoriesAsync();
-        return Ok(categories);
+        return this.ApiOk(categories);
     }
 
     [HttpGet("{id}")]
@@ -30,8 +34,8 @@ public class CategoryController : ControllerBase
     public async Task<IActionResult> GetById(int id)
     {
         var category = await _categoryService.GetCategoryByIdAsync(id);
-        if (category == null) return NotFound(new { message = $"Category with ID {id} not found" });
-        return Ok(category);
+        if (category == null) return this.ApiNotFound($"Category with ID {id} not found");
+        return this.ApiOk(category);
     }
 
     [HttpPost]
@@ -40,9 +44,9 @@ public class CategoryController : ControllerBase
     [Authorize]
     public async Task<IActionResult> CreateCategory([FromBody] CreateCategoryDTO dto)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) return this.ApiBadRequest(ModelState);
         var category = await _categoryService.CreateCategoryAsync(dto);
-        return CreatedAtAction(nameof(GetById), new { id = category.Id }, category);
+        return this.ApiCreated(nameof(GetById), new { id = category.Id }, category);
     }
 
     [HttpPut("{id}")]
@@ -52,10 +56,10 @@ public class CategoryController : ControllerBase
     [Authorize]
     public async Task<IActionResult> UpdateCategory(int id, [FromBody] UpdateCategoryDTO dto)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) return this.ApiBadRequest(ModelState);
         var category = await _categoryService.UpdateCategoryAsync(id, dto);
-        if (category == null) return NotFound(new { message = $"Category with ID {id} not found" });
-        return Ok(category);
+        if (category == null) return this.ApiNotFound($"Category with ID {id} not found");
+        return this.ApiOk(category);
     }
 
     [HttpDelete("{id}")]
@@ -65,7 +69,8 @@ public class CategoryController : ControllerBase
     public async Task<IActionResult> DeleteCategory(int id)
     {
         var result = await _categoryService.DeleteCategoryAsync(id);
-        if (!result) return NotFound(new { message = $"Category with ID {id} not found" });
+        if (!result) return this.ApiNotFound($"Category with ID {id} not found");
         return NoContent();
     }
 }
+

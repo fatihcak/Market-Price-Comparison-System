@@ -153,6 +153,7 @@ public class AppDbContext : DbContext
             entity.HasIndex(e => e.ProductId);
             entity.HasIndex(e => e.DistrictId);
             entity.HasIndex(e => new { e.ProductId, e.DistrictId });
+            entity.HasIndex(e => new { e.MarketId, e.ProductId }); // O2: Added for price lookups
             entity.HasIndex(e => e.LastUpdated);
         });
 

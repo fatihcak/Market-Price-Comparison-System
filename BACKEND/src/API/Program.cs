@@ -7,14 +7,18 @@ using DataAccess.Repositories;
 using Domain.Interfaces.Repositories;
 using Domain.Interfaces.Services;
 using API.Middleware;
+using API.HealthChecks;
 using Serilog;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Text;
+using System.Text.Json;
 using Microsoft.OpenApi.Models;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
 using API.Filters;
+using Asp.Versioning;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,32 +26,41 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog((context, configuration) =>
     configuration.ReadFrom.Configuration(context.Configuration));
 
-// Database
+// Configuration Validation (O23)
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrEmpty(connectionString))
+{
+    throw new InvalidOperationException("Database connection string 'DefaultConnection' is not configured. Set it in appsettings.json or environment variables.");
+}
+
+// Database (O5: Increased timeout to 180s for large initial loads)
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
-        sqlOptions => sqlOptions.CommandTimeout(120))); // 2 minute timeout
+    options.UseSqlServer(connectionString,
+        sqlOptions => sqlOptions.CommandTimeout(180)));
     
 // Caching
 builder.Services.AddMemoryCache();
 
-// CORS
+// CORS - Restricted policy for security
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("DefaultCorsPolicy", policy =>
     {
         policy.WithOrigins("http://localhost:5173", "http://localhost:5000")
-              .AllowAnyMethod()
-              .AllowAnyHeader()
+              .WithMethods("GET", "POST", "PUT", "DELETE")
+              .WithHeaders("Content-Type", "Authorization")
               .AllowCredentials();
     });
 });
 
-// Rate Limiting
+// Rate Limiting - Per-user/IP based
 builder.Services.AddRateLimiter(options =>
 {
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
         RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey: context.User.Identity?.Name ?? context.Request.Headers.Host.ToString(),
+            partitionKey: context.User.Identity?.Name ?? 
+                          context.Connection.RemoteIpAddress?.ToString() ?? 
+                          "anonymous",
             factory: partition => new FixedWindowRateLimiterOptions
             {
                 AutoReplenishment = true,
@@ -57,9 +70,11 @@ builder.Services.AddRateLimiter(options =>
             }));
 });
 
-// Health Checks
+// Health Checks (O25 - Detailed)
 builder.Services.AddHealthChecks()
-    .AddDbContextCheck<AppDbContext>();
+    .AddDbContextCheck<AppDbContext>("database", tags: new[] { "db", "sql" })
+    .AddCheck<MemoryHealthCheck>("memory", tags: new[] { "memory" })
+    .AddCheck<ExternalApiHealthCheck>("external-api", tags: new[] { "api", "external" });
 
 
 
@@ -69,11 +84,6 @@ builder.Services.AddScoped<IMarketRepository, MarketRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IPriceRepository, PriceRepository>();
-builder.Services.AddScoped<IShoppingListRepository, ShoppingListRepository>();
-builder.Services.AddScoped<ICityRepository, CityRepository>();
-builder.Services.AddScoped<ICityRepository, CityRepository>();
-builder.Services.AddScoped<IDistrictRepository, DistrictRepository>();
-builder.Services.AddScoped<IBasketRepository, BasketRepository>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
 // Services
@@ -81,10 +91,10 @@ builder.Services.AddScoped<IMarketService, MarketService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IPriceService, PriceService>();
-builder.Services.AddScoped<IShoppingListService, ShoppingListService>();
 builder.Services.AddScoped<IAdminUserRepository, AdminUserRepository>();
+builder.Services.AddSingleton<LoginThrottlingService>(); // Login throttling (D10)
 builder.Services.AddScoped<AdminAuthService>();
-builder.Services.AddScoped<IBasketService, BasketService>();
+
 
 // Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -101,10 +111,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKey"]!))
         };
     });
-builder.Services.AddScoped<ICityService, CityService>();
-builder.Services.AddScoped<IDistrictService, DistrictService>();
 builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddHttpClient<IChatService, ChatService>();
+
+// API Versioning
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ReportApiVersions = true;
+    options.ApiVersionReader = new UrlSegmentApiVersionReader();
+}).AddMvc();
 
 // Controllers
 builder.Services.AddControllers();
@@ -132,6 +149,8 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
+// SECURITY: Swagger is ONLY enabled in Development environment
+// Ensure ASPNETCORE_ENVIRONMENT is set to "Production" in production deployments
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -140,14 +159,51 @@ if (app.Environment.IsDevelopment())
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 // app.UseHttpsRedirection();
-app.UseCors("AllowAll");
+app.UseCors("DefaultCorsPolicy");
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Basic health endpoint
 app.MapHealthChecks("/health");
+
+// Detailed health endpoint with JSON response
+app.MapHealthChecks("/health/detail", new HealthCheckOptions
+{
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+        var result = new
+        {
+            status = report.Status.ToString(),
+            totalDuration = report.TotalDuration.TotalMilliseconds + "ms",
+            checks = report.Entries.Select(e => new
+            {
+                name = e.Key,
+                status = e.Value.Status.ToString(),
+                duration = e.Value.Duration.TotalMilliseconds + "ms",
+                description = e.Value.Description,
+                data = e.Value.Data,
+                exception = e.Value.Exception?.Message
+            })
+        };
+        await context.Response.WriteAsync(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true }));
+    }
+});
+
+// Ready endpoint (all checks must pass)
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("db")
+});
+
+// Live endpoint (just confirms app is running)
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = _ => false
+});
 app.MapGet("/", () => "Market Price Comparison API is running!");
 app.MapControllers();
 app.Run();
-//yorumsatiri
+
 public partial class Program { }

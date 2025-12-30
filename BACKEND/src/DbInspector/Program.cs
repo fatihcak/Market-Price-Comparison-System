@@ -8,12 +8,79 @@ using Microsoft.Data.SqlClient;
 class Program
 {
     static string connectionString = "Server=database-compsys.cl0806yimqf2.eu-central-1.rds.amazonaws.com,1433;Database=compsys;User Id=admin;Password=admin-0-0;TrustServerCertificate=True;";
-    static string CatalogPath = @"c:\Users\Doguk\Market-Price-Comparison-System\Frontend\src\constants\corrected_full_catalog.md";
+    static string CatalogPath = @"c:\Users\DOU\Documents\GitHub\Market-Price-Comparison-System\Frontend\src\constants\corrected_full_catalog.md";
 
     static void Main(string[] args)
     {
-        Console.WriteLine("STARTING DATABASE SYNC FROM CATALOG...");
+        // Show database stats first
+        Console.WriteLine("=== DATABASE STATISTICS ===");
+        ShowDatabaseStats();
+        
+        if (args.Length > 0 && args[0] == "--sync")
+        {
+            Console.WriteLine("\n=== STARTING DATABASE SYNC FROM CATALOG ===");
+            SyncFromCatalog();
+        }
+        else
+        {
+            Console.WriteLine("\nTo sync from catalog, run: dotnet run -- --sync");
+        }
+    }
 
+    static void ShowDatabaseStats()
+    {
+        try
+        {
+            using var connection = new SqlConnection(connectionString);
+            connection.Open();
+
+            // Product count
+            using (var cmd = new SqlCommand("SELECT COUNT(*) FROM Product", connection))
+            {
+                var count = (int)cmd.ExecuteScalar();
+                Console.WriteLine($"Total Products: {count}");
+            }
+
+            // Category count
+            using (var cmd = new SqlCommand("SELECT COUNT(*) FROM ProductCategory", connection))
+            {
+                var count = (int)cmd.ExecuteScalar();
+                Console.WriteLine($"Total Categories: {count}");
+            }
+
+            // Market count
+            using (var cmd = new SqlCommand("SELECT COUNT(*) FROM Market", connection))
+            {
+                var count = (int)cmd.ExecuteScalar();
+                Console.WriteLine($"Total Markets: {count}");
+            }
+
+            // Price count
+            using (var cmd = new SqlCommand("SELECT COUNT(*) FROM MarketProductPrice", connection))
+            {
+                var count = (int)cmd.ExecuteScalar();
+                Console.WriteLine($"Total Prices: {count}");
+            }
+
+            // Sample products
+            Console.WriteLine("\n=== SAMPLE PRODUCTS (First 10) ===");
+            using (var cmd = new SqlCommand("SELECT TOP 10 ProductID, ProductName, Brand, Unit FROM Product ORDER BY ProductID", connection))
+            using (var reader = cmd.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    Console.WriteLine($"  [{reader.GetInt32(0)}] {reader.GetString(1)} - {(reader.IsDBNull(2) ? "N/A" : reader.GetString(2))} ({(reader.IsDBNull(3) ? "N/A" : reader.GetString(3))})");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error connecting to database: " + ex.Message);
+        }
+    }
+
+    static void SyncFromCatalog()
+    {
         if (!File.Exists(CatalogPath))
         {
             Console.WriteLine($"Error: File not found at {CatalogPath}");
@@ -54,7 +121,6 @@ class Program
                     if (categoryMap.ContainsKey(catName))
                     {
                         currentSubCategory = catName;
-                        // Console.WriteLine($"Switched to Category: {currentSubCategory}");
                     }
                     else
                     {
@@ -71,7 +137,6 @@ class Program
                     int targetCatId = categoryMap[currentSubCategory];
 
                     // Update Product
-                    // We match by ProductName. Note: This updates ALL products with this exact name.
                     var updateSql = "UPDATE Product SET CategoryId = @catId WHERE ProductName = @name AND CategoryId != @catId";
                     using var upCmd = new SqlCommand(updateSql, connection);
                     upCmd.Parameters.AddWithValue("@catId", targetCatId);
@@ -91,3 +156,4 @@ class Program
         }
     }
 }
+
