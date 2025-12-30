@@ -9,24 +9,61 @@ using BCrypt.Net;
 
 namespace Domain.Services;
 
+/// <summary>
+/// Service for admin authentication with JWT token generation
+/// </summary>
 public class AdminAuthService
 {
     private readonly IAdminUserRepository _repository;
     private readonly IConfiguration _configuration;
+    private readonly LoginThrottlingService _throttlingService;
 
-    public AdminAuthService(IAdminUserRepository repository, IConfiguration configuration)
+    public AdminAuthService(
+        IAdminUserRepository repository, 
+        IConfiguration configuration,
+        LoginThrottlingService throttlingService)
     {
         _repository = repository;
         _configuration = configuration;
+        _throttlingService = throttlingService;
     }
 
+    /// <summary>
+    /// Authenticates admin user and returns JWT token
+    /// </summary>
+    /// <param name="username">Admin username</param>
+    /// <param name="password">Admin password</param>
+    /// <returns>JWT token if successful, null if failed</returns>
+    /// <exception cref="InvalidOperationException">Thrown when account is locked out</exception>
     public async Task<string?> LoginAsync(string username, string password)
     {
+        // Check if user is locked out
+        if (_throttlingService.IsLockedOut(username))
+        {
+            var remainingTime = _throttlingService.GetRemainingLockoutTime(username);
+            throw new InvalidOperationException(
+                $"Account is locked. Try again in {remainingTime?.Minutes ?? 0} minutes.");
+        }
+
         var admin = await _repository.GetByUsernameAsync(username);
         if (admin == null || !BCrypt.Net.BCrypt.Verify(password, admin.PasswordHash))
         {
+            // Record failed attempt
+            _throttlingService.RecordFailedAttempt(username);
+            
+            var attempts = _throttlingService.GetFailedAttemptCount(username);
+            if (attempts >= 3)
+            {
+                // Warn user about remaining attempts
+                throw new InvalidOperationException(
+                    $"Invalid credentials. {5 - attempts} attempts remaining before lockout.");
+            }
+            
             return null;
         }
+
+        // Clear failed attempts on successful login
+        _throttlingService.ClearFailedAttempts(username);
 
         admin.LastLogin = DateTime.UtcNow;
         await _repository.SaveChangesAsync();
@@ -34,6 +71,12 @@ public class AdminAuthService
         return GenerateJwtToken(admin);
     }
 
+    /// <summary>
+    /// Creates a new admin user
+    /// </summary>
+    /// <param name="username">Admin username</param>
+    /// <param name="password">Admin password (must meet complexity requirements)</param>
+    /// <returns>Created admin user</returns>
     public async Task<AdminUser> CreateAdminAsync(string username, string password)
     {
         // Validate password complexity
@@ -41,7 +84,7 @@ public class AdminAuthService
         
         if (await _repository.ExistsAsync(username))
         {
-            throw new Exception("Username already exists");
+            throw new ArgumentException("Username already exists");
         }
 
         var admin = new AdminUser
@@ -104,3 +147,4 @@ public class AdminAuthService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }
+

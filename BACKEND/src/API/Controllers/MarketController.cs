@@ -3,6 +3,7 @@ using Domain.Interfaces.Services;
 using DTOs.DTOs.Requests;
 using Microsoft.AspNetCore.Authorization;
 using Asp.Versioning;
+using API.Extensions;
 
 namespace API.Controllers;
 
@@ -27,7 +28,7 @@ public class MarketController : ControllerBase
     public async Task<IActionResult> GetAll()
     {
         var markets = await _marketService.GetAllMarketsAsync();
-        return Ok(markets);
+        return this.ApiOk(markets);
     }
 
     /// <summary>
@@ -42,10 +43,10 @@ public class MarketController : ControllerBase
 
         if (market == null)
         {
-            return NotFound(new { message = $"Market with ID {id} not found" });
+            return this.ApiNotFound($"Market with ID {id} not found");
         }
 
-        return Ok(market);
+        return this.ApiOk(market);
     }
 
     /// <summary>
@@ -57,11 +58,11 @@ public class MarketController : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(term))
         {
-            return BadRequest(new { message = "Search term is required" });
+            return this.ApiBadRequest("Search term is required");
         }
 
         var markets = await _marketService.SearchMarketsAsync(term);
-        return Ok(markets);
+        return this.ApiOk(markets);
     }
 
     /// <summary>
@@ -75,11 +76,11 @@ public class MarketController : ControllerBase
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(ModelState);
+            return this.ApiBadRequest(ModelState);
         }
 
         var market = await _marketService.CreateMarketAsync(dto);
-        return CreatedAtAction(nameof(GetById), new { id = market.Id }, market);
+        return this.ApiCreated(nameof(GetById), new { id = market.Id }, market);
     }
 
     /// <summary>
@@ -94,17 +95,17 @@ public class MarketController : ControllerBase
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(ModelState);
+            return this.ApiBadRequest(ModelState);
         }
 
         var market = await _marketService.UpdateMarketAsync(id, dto);
 
         if (market == null)
         {
-            return NotFound(new { message = $"Market with ID {id} not found" });
+            return this.ApiNotFound($"Market with ID {id} not found");
         }
 
-        return Ok(market);
+        return this.ApiOk(market);
     }
 
     /// <summary>
@@ -120,9 +121,10 @@ public class MarketController : ControllerBase
 
         if (!result)
         {
-            return NotFound(new { message = $"Market with ID {id} not found" });
+            return this.ApiNotFound($"Market with ID {id} not found");
         }
 
         return NoContent();
     }
 }
+

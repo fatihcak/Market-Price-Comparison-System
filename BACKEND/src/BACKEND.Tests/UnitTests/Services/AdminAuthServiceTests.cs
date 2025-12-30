@@ -1,6 +1,7 @@
 using Domain.Entities;
 using Domain.Interfaces.Repositories;
 using Domain.Services;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Moq;
 using Xunit;
@@ -11,6 +12,7 @@ public class AdminAuthServiceTests
 {
     private readonly Mock<IAdminUserRepository> _mockRepository;
     private readonly Mock<IConfiguration> _mockConfiguration;
+    private readonly LoginThrottlingService _throttlingService;
     private readonly AdminAuthService _service;
 
     public AdminAuthServiceTests()
@@ -24,7 +26,11 @@ public class AdminAuthServiceTests
         _mockConfiguration.Setup(c => c["JwtSettings:Audience"]).Returns("TestAudience");
         _mockConfiguration.Setup(c => c["JwtSettings:ExpirationInMinutes"]).Returns("60");
 
-        _service = new AdminAuthService(_mockRepository.Object, _mockConfiguration.Object);
+        // Create real throttling service with in-memory cache for testing
+        var memoryCache = new MemoryCache(new MemoryCacheOptions());
+        _throttlingService = new LoginThrottlingService(memoryCache);
+
+        _service = new AdminAuthService(_mockRepository.Object, _mockConfiguration.Object, _throttlingService);
     }
 
     [Fact]
@@ -115,8 +121,7 @@ public class AdminAuthServiceTests
         _mockRepository.Setup(r => r.ExistsAsync(username)).ReturnsAsync(true);
 
         // Act & Assert
-        // TODO: Check if this exception message needs to be localized
-        await Assert.ThrowsAsync<Exception>(() => _service.CreateAdminAsync(username, password));
+        await Assert.ThrowsAsync<ArgumentException>(() => _service.CreateAdminAsync(username, password));
         _mockRepository.Verify(r => r.AddAsync(It.IsAny<AdminUser>()), Times.Never);
     }
 }

@@ -7,10 +7,13 @@ using DataAccess.Repositories;
 using Domain.Interfaces.Repositories;
 using Domain.Interfaces.Services;
 using API.Middleware;
+using API.HealthChecks;
 using Serilog;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Text;
+using System.Text.Json;
 using Microsoft.OpenApi.Models;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
@@ -67,9 +70,11 @@ builder.Services.AddRateLimiter(options =>
             }));
 });
 
-// Health Checks
+// Health Checks (O25 - Detailed)
 builder.Services.AddHealthChecks()
-    .AddDbContextCheck<AppDbContext>();
+    .AddDbContextCheck<AppDbContext>("database", tags: new[] { "db", "sql" })
+    .AddCheck<MemoryHealthCheck>("memory", tags: new[] { "memory" })
+    .AddCheck<ExternalApiHealthCheck>("external-api", tags: new[] { "api", "external" });
 
 
 
@@ -92,6 +97,9 @@ builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IPriceService, PriceService>();
 builder.Services.AddScoped<IShoppingListService, ShoppingListService>();
 builder.Services.AddScoped<IAdminUserRepository, AdminUserRepository>();
+builder.Services.AddSingleton<LoginThrottlingService>(); // Login throttling (D10)
+builder.Services.AddSingleton<RefreshTokenService>(); // Refresh tokens (D9)
+builder.Services.AddSingleton<PasswordHistoryService>(); // Password history (D11)
 builder.Services.AddScoped<AdminAuthService>();
 builder.Services.AddScoped<IBasketService, BasketService>();
 
@@ -165,7 +173,44 @@ app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Basic health endpoint
 app.MapHealthChecks("/health");
+
+// Detailed health endpoint with JSON response
+app.MapHealthChecks("/health/detail", new HealthCheckOptions
+{
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+        var result = new
+        {
+            status = report.Status.ToString(),
+            totalDuration = report.TotalDuration.TotalMilliseconds + "ms",
+            checks = report.Entries.Select(e => new
+            {
+                name = e.Key,
+                status = e.Value.Status.ToString(),
+                duration = e.Value.Duration.TotalMilliseconds + "ms",
+                description = e.Value.Description,
+                data = e.Value.Data,
+                exception = e.Value.Exception?.Message
+            })
+        };
+        await context.Response.WriteAsync(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true }));
+    }
+});
+
+// Ready endpoint (all checks must pass)
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("db")
+});
+
+// Live endpoint (just confirms app is running)
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = _ => false
+});
 app.MapGet("/", () => "Market Price Comparison API is running!");
 app.MapControllers();
 app.Run();

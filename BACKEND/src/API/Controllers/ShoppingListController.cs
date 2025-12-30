@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Domain.Interfaces.Services;
 using DTOs.DTOs.Requests;
 using Asp.Versioning;
+using API.Extensions;
 
 namespace API.Controllers;
 
@@ -23,7 +24,7 @@ public class ShoppingListController : ControllerBase
     public async Task<IActionResult> GetBySessionId(string sessionId)
     {
         var items = await _shoppingListService.GetShoppingListBySessionIdAsync(sessionId);
-        return Ok(items);
+        return this.ApiOk(items);
     }
 
     [HttpPost]
@@ -31,9 +32,9 @@ public class ShoppingListController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> AddItem([FromBody] CreateShoppingListDTO dto)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) return this.ApiBadRequest(ModelState);
         var item = await _shoppingListService.AddItemToShoppingListAsync(dto);
-        return StatusCode(StatusCodes.Status201Created, item);
+        return this.ApiCreated(item);
     }
 
     [HttpPut("{id}")]
@@ -42,10 +43,10 @@ public class ShoppingListController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> UpdateItem(int id, [FromBody] UpdateShoppingListDTO dto)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) return this.ApiBadRequest(ModelState);
         var item = await _shoppingListService.UpdateShoppingListItemAsync(id, dto);
-        if (item == null) return NotFound(new { message = $"Item with ID {id} not found" });
-        return Ok(item);
+        if (item == null) return this.ApiNotFound($"Item with ID {id} not found");
+        return this.ApiOk(item);
     }
 
     [HttpDelete("{id}")]
@@ -54,7 +55,7 @@ public class ShoppingListController : ControllerBase
     public async Task<IActionResult> RemoveItem(int id)
     {
         var result = await _shoppingListService.RemoveItemFromShoppingListAsync(id);
-        if (!result) return NotFound(new { message = $"Item with ID {id} not found" });
+        if (!result) return this.ApiNotFound($"Item with ID {id} not found");
         return NoContent();
     }
 
@@ -64,7 +65,8 @@ public class ShoppingListController : ControllerBase
     public async Task<IActionResult> ClearList(string sessionId)
     {
         var result = await _shoppingListService.ClearShoppingListAsync(sessionId);
-        if (!result) return NotFound(new { message = $"Shopping list for session {sessionId} not found or empty" });
+        if (!result) return this.ApiNotFound($"Shopping list for session {sessionId} not found or empty");
         return NoContent();
     }
 }
+

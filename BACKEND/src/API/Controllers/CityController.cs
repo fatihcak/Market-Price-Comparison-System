@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Domain.Interfaces.Services;
 using Asp.Versioning;
+using API.Extensions;
 
 namespace API.Controllers;
 
@@ -22,7 +23,7 @@ public class CityController : ControllerBase
     public async Task<IActionResult> GetAll()
     {
         var cities = await _cityService.GetAllCitiesAsync();
-        return Ok(cities);
+        return this.ApiOk(cities);
     }
 
     [HttpGet("{id}")]
@@ -31,7 +32,8 @@ public class CityController : ControllerBase
     public async Task<IActionResult> GetById(int id)
     {
         var city = await _cityService.GetCityByIdAsync(id);
-        if (city == null) return NotFound(new { message = $"City with ID {id} not found" });
-        return Ok(city);
+        if (city == null) return this.ApiNotFound($"City with ID {id} not found");
+        return this.ApiOk(city);
     }
 }
+

@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using DataAccess.Data;
 using Domain.Entities;
+using DTOs.DTOs.Common;
 using DTOs.DTOs.Responses;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
@@ -47,9 +48,11 @@ public class ProductIntegrationTests : IClassFixture<ApiWebApplicationFactory>
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var products = await response.Content.ReadFromJsonAsync<List<ProductResponseDTO>>();
-        products.Should().NotBeNull();
-        products!.Should().Contain(p => p.ProductName == "IntegrationTestProduct");
+        var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<List<ProductResponseDTO>>>();
+        apiResponse.Should().NotBeNull();
+        apiResponse!.Success.Should().BeTrue();
+        apiResponse.Data.Should().NotBeNull();
+        apiResponse.Data!.Should().Contain(p => p.ProductName == "IntegrationTestProduct");
     }
 
     [Fact]
@@ -75,8 +78,11 @@ public class ProductIntegrationTests : IClassFixture<ApiWebApplicationFactory>
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var productDto = await response.Content.ReadFromJsonAsync<ProductResponseDTO>();
-        productDto.Should().NotBeNull();
-        productDto!.ProductName.Should().Be("SpecificProduct");
+        var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<ProductResponseDTO>>();
+        apiResponse.Should().NotBeNull();
+        apiResponse!.Success.Should().BeTrue();
+        apiResponse.Data.Should().NotBeNull();
+        apiResponse.Data!.ProductName.Should().Be("SpecificProduct");
     }
 }
+

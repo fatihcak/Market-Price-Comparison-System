@@ -3,6 +3,7 @@ using Domain.Interfaces.Services;
 using DTOs.DTOs.Requests;
 using Microsoft.AspNetCore.Authorization;
 using Asp.Versioning;
+using API.Extensions;
 
 namespace API.Controllers;
 
@@ -24,7 +25,7 @@ public class PriceController : ControllerBase
     public async Task<IActionResult> GetByProduct(int productId)
     {
         var prices = await _priceService.GetPricesByProductIdAsync(productId);
-        return Ok(prices);
+        return this.ApiOk(prices);
     }
 
     [HttpGet("market/{marketId}")]
@@ -32,7 +33,7 @@ public class PriceController : ControllerBase
     public async Task<IActionResult> GetByMarket(int marketId)
     {
         var prices = await _priceService.GetPricesByMarketIdAsync(marketId);
-        return Ok(prices);
+        return this.ApiOk(prices);
     }
 
     [HttpGet("district/{districtId}")]
@@ -40,7 +41,7 @@ public class PriceController : ControllerBase
     public async Task<IActionResult> GetByDistrict(int districtId)
     {
         var prices = await _priceService.GetPricesByDistrictIdAsync(districtId);
-        return Ok(prices);
+        return this.ApiOk(prices);
     }
 
     [HttpPost]
@@ -49,11 +50,9 @@ public class PriceController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> AddPrice([FromBody] CreatePriceDTO dto)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) return this.ApiBadRequest(ModelState);
         var price = await _priceService.AddPriceAsync(dto);
-        // Assuming we don't have a direct GetById endpoint for price exposed or needed for CreatedAtAction easily without ID
-        // But we do return the created object.
-        return StatusCode(StatusCodes.Status201Created, price);
+        return this.ApiCreated(price);
     }
 
     [HttpPut("{id}")]
@@ -63,10 +62,10 @@ public class PriceController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> UpdatePrice(int id, [FromBody] UpdatePriceDTO dto)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) return this.ApiBadRequest(ModelState);
         var price = await _priceService.UpdatePriceAsync(id, dto);
-        if (price == null) return NotFound(new { message = $"Price with ID {id} not found" });
-        return Ok(price);
+        if (price == null) return this.ApiNotFound($"Price with ID {id} not found");
+        return this.ApiOk(price);
     }
 
     [HttpDelete("{id}")]
@@ -76,7 +75,8 @@ public class PriceController : ControllerBase
     public async Task<IActionResult> DeletePrice(int id)
     {
         var result = await _priceService.DeletePriceAsync(id);
-        if (!result) return NotFound(new { message = $"Price with ID {id} not found" });
+        if (!result) return this.ApiNotFound($"Price with ID {id} not found");
         return NoContent();
     }
 }
+

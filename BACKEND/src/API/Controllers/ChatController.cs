@@ -5,6 +5,7 @@ using Domain.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using Asp.Versioning;
+using API.Extensions;
 
 namespace API.Controllers
 {
@@ -30,19 +31,20 @@ namespace API.Controllers
             {
                 var errors = string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
                 _logger.LogWarning("Model State Error: {Errors}", errors);
-                return BadRequest(ModelState);
+                return this.ApiBadRequest(ModelState);
             }
 
             if (string.IsNullOrWhiteSpace(request.Message))
             {
                 _logger.LogWarning("Chat request received with empty message");
-                return BadRequest("The message cannot be empty.");
+                return this.ApiBadRequest("The message cannot be empty.");
             }
 
             var sessionId = request.SessionId ?? "default_session";
             var response = await _chatService.GetChatResponseAsync(request.Message, sessionId);
 
-            return Ok(response);
+            return this.ApiOk(response);
         }
     }
 }
+

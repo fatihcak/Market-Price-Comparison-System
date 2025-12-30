@@ -4,6 +4,7 @@ using Domain.Constants;
 using DTOs.DTOs.Requests;
 using Microsoft.AspNetCore.Authorization;
 using Asp.Versioning;
+using API.Extensions;
 
 namespace API.Controllers;
 
@@ -39,7 +40,7 @@ public class ProductController : ControllerBase
         Response.Headers.Append("X-Page", page.ToString());
         Response.Headers.Append("X-Page-Size", pageSize.ToString());
         
-        return Ok(products);
+        return this.ApiOk(products);
     }
 
     /// <summary>
@@ -54,10 +55,10 @@ public class ProductController : ControllerBase
 
         if (product == null)
         {
-            return NotFound(new { message = $"Product with ID {id} not found" });
+            return this.ApiNotFound($"Product with ID {id} not found");
         }
 
-        return Ok(product);
+        return this.ApiOk(product);
     }
 
     /// <summary>
@@ -68,7 +69,7 @@ public class ProductController : ControllerBase
     public async Task<IActionResult> GetByCategory(int categoryId)
     {
         var products = await _productService.GetProductsByCategoryAsync(categoryId);
-        return Ok(products);
+        return this.ApiOk(products);
     }
 
     /// <summary>
@@ -80,11 +81,11 @@ public class ProductController : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(name))
         {
-            return BadRequest(new { message = "Search term is required" });
+            return this.ApiBadRequest("Search term is required");
         }
 
         var products = await _productService.SearchProductsAsync(name);
-        return Ok(products);
+        return this.ApiOk(products);
     }
 
     /// <summary>
@@ -95,7 +96,7 @@ public class ProductController : ControllerBase
     public async Task<IActionResult> GetPriceHistory(int id, [FromQuery] int days = 30)
     {
         var history = await _productService.GetProductPriceHistoryAsync(id, days);
-        return Ok(history);
+        return this.ApiOk(history);
     }
 
     /// <summary>
@@ -107,11 +108,11 @@ public class ProductController : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(brand))
         {
-            return BadRequest(new { message = "Brand is required" });
+            return this.ApiBadRequest("Brand is required");
         }
 
         var products = await _productService.SearchByBrandAsync(brand);
-        return Ok(products);
+        return this.ApiOk(products);
     }
 
     /// <summary>
@@ -125,11 +126,11 @@ public class ProductController : ControllerBase
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(ModelState);
+            return this.ApiBadRequest(ModelState);
         }
 
         var product = await _productService.CreateProductAsync(dto);
-        return CreatedAtAction(nameof(GetById), new { id = product.Id }, product);
+        return this.ApiCreated(nameof(GetById), new { id = product.Id }, product);
     }
 
     /// <summary>
@@ -144,17 +145,17 @@ public class ProductController : ControllerBase
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(ModelState);
+            return this.ApiBadRequest(ModelState);
         }
 
         var product = await _productService.UpdateProductAsync(id, dto);
 
         if (product == null)
         {
-            return NotFound(new { message = $"Product with ID {id} not found" });
+            return this.ApiNotFound($"Product with ID {id} not found");
         }
 
-        return Ok(product);
+        return this.ApiOk(product);
     }
 
     /// <summary>
@@ -170,9 +171,10 @@ public class ProductController : ControllerBase
 
         if (!result)
         {
-            return NotFound(new { message = $"Product with ID {id} not found" });
+            return this.ApiNotFound($"Product with ID {id} not found");
         }
 
         return NoContent();
     }
 }
+
