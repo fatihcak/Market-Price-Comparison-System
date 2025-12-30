@@ -1,8 +1,8 @@
 import { PriceResponseDTO, Product, ProductResponseDTO, ProductPriceHistoryDTO, Market, MarketResponseDTO } from '../types';
 
 const API_BASE_URL = import.meta.env.PROD
-    ? 'INSERT_AWS_API_URL_HERE'
-    : 'http://localhost:5000/api';
+    ? 'http://3.75.205.148:5000/api'
+    : 'http://3.75.205.148:5000/api';
 
 export const api = {
     getMarkets: async (): Promise<Market[]> => {
