@@ -10,8 +10,8 @@ public static class AppConstants
     /// </summary>
     public static class Pagination
     {
-        public const int DefaultPageSize = 20;
-        public const int MaxPageSize = 100;
+        public const int DefaultPageSize = 5000; // Return all products by default
+        public const int MaxPageSize = 10000;
         public const int MinPageSize = 1;
     }
 

@@ -33,10 +33,10 @@ if (string.IsNullOrEmpty(connectionString))
     throw new InvalidOperationException("Database connection string 'DefaultConnection' is not configured. Set it in appsettings.json or environment variables.");
 }
 
-// Database (O5: Reduced timeout from 120s to 30s)
+// Database (O5: Increased timeout to 180s for large initial loads)
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(connectionString,
-        sqlOptions => sqlOptions.CommandTimeout(30)));
+        sqlOptions => sqlOptions.CommandTimeout(180)));
     
 // Caching
 builder.Services.AddMemoryCache();
@@ -84,10 +84,6 @@ builder.Services.AddScoped<IMarketRepository, MarketRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IPriceRepository, PriceRepository>();
-builder.Services.AddScoped<IShoppingListRepository, ShoppingListRepository>();
-builder.Services.AddScoped<ICityRepository, CityRepository>();
-builder.Services.AddScoped<IDistrictRepository, DistrictRepository>();
-builder.Services.AddScoped<IBasketRepository, BasketRepository>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
 // Services
@@ -95,13 +91,10 @@ builder.Services.AddScoped<IMarketService, MarketService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IPriceService, PriceService>();
-builder.Services.AddScoped<IShoppingListService, ShoppingListService>();
 builder.Services.AddScoped<IAdminUserRepository, AdminUserRepository>();
 builder.Services.AddSingleton<LoginThrottlingService>(); // Login throttling (D10)
-builder.Services.AddSingleton<RefreshTokenService>(); // Refresh tokens (D9)
-builder.Services.AddSingleton<PasswordHistoryService>(); // Password history (D11)
 builder.Services.AddScoped<AdminAuthService>();
-builder.Services.AddScoped<IBasketService, BasketService>();
+
 
 // Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -118,8 +111,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKey"]!))
         };
     });
-builder.Services.AddScoped<ICityService, CityService>();
-builder.Services.AddScoped<IDistrictService, DistrictService>();
 builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddHttpClient<IChatService, ChatService>();
 

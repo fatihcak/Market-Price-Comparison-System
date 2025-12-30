@@ -284,7 +284,7 @@ function ProductGrid({ products, onAdd, onCompare }: ProductGridProps) {
 
   // Apply category, market, and price filters
   const filteredProducts = products.filter(product => {
-    // Category filtering
+    // Category filtering - Skip for "All" to show ALL products
     if (selectedCategory !== 'All') {
       const mainCatDef = CATEGORIES.find(c => c.slug === selectedCategory);
       if (!mainCatDef) return false;
@@ -300,6 +300,7 @@ function ProductGrid({ products, onAdd, onCompare }: ProductGridProps) {
         }
       }
     }
+    // For "All" category, show all products (no category filter)
 
     // Market filtering (only if markets are selected)
     if (filters.selectedMarkets.length > 0) {

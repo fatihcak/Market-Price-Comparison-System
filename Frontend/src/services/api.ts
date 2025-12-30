@@ -11,7 +11,9 @@ export const api = {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
-            const data: MarketResponseDTO[] = await response.json();
+            const result = await response.json();
+            // Handle ApiResponse wrapper
+            const data: MarketResponseDTO[] = result.data || result;
             return data.map(m => ({
                 id: m.id,
                 name: m.marketName,
@@ -29,7 +31,8 @@ export const api = {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
-            return await response.json();
+            const result = await response.json();
+            return result.data || result;
         } catch (error) {
             console.error('Error fetching prices:', error);
             return [];
@@ -45,7 +48,16 @@ export const api = {
             const results = await Promise.all(
                 productIds.map(id =>
                     fetch(`${API_BASE_URL}/Price/product/${id}`)
-                        .then(res => res.ok ? res.json() : [])
+                        .then(async res => {
+                            if (!res.ok) return [];
+                            const json = await res.json();
+                            // Handle ApiResponse wrapper
+                            if (json.success && Array.isArray(json.data)) {
+                                return json.data;
+                            }
+                            // Fallback if data is directly returned (legacy) or invalid
+                            return Array.isArray(json) ? json : [];
+                        })
                         .catch(() => [])
                 )
             );
@@ -68,7 +80,9 @@ export const api = {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
-            const data: ProductResponseDTO[] = await response.json();
+            const result = await response.json();
+            // Handle ApiResponse wrapper
+            const data: ProductResponseDTO[] = result.data || result;
 
             // Map Backend DTO to Frontend UI Model
             // Backend now returns canonical products with MarketCount
@@ -152,7 +166,8 @@ export const api = {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
-            return await response.json();
+            const result = await response.json();
+            return result.data || result;
         } catch (error) {
             console.error('Error fetching product history:', error);
             return [];
@@ -165,7 +180,8 @@ export const api = {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
-            const data: ProductResponseDTO[] = await response.json();
+            const result = await response.json();
+            const data: ProductResponseDTO[] = result.data || result;
             return data.map(item => ({
                 id: item.id,
                 name: item.productName,
@@ -190,7 +206,8 @@ export const api = {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
-            const data: ProductResponseDTO[] = await response.json();
+            const result = await response.json();
+            const data: ProductResponseDTO[] = result.data || result;
             return data.map(item => ({
                 id: item.id,
                 name: item.productName,
@@ -221,7 +238,8 @@ export const api = {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
-            return await response.json();
+            const result = await response.json();
+            return result.data || result;
         } catch (error) {
             console.error('Error sending message:', error);
             throw error;

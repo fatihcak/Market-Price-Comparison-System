@@ -3,6 +3,7 @@ using DataAccess.Data;
 using Domain.Entities;
 using Domain.Interfaces.Repositories;
 using Domain.Utilities;
+using Domain.Constants;
 
 namespace DataAccess.Repositories;
 
@@ -224,7 +225,7 @@ public class ProductRepository : Repository<Product>, IProductRepository
     {
         // Ensure valid pagination parameters
         pageNumber = pageNumber < 1 ? 1 : pageNumber;
-        pageSize = pageSize < 1 ? 20 : (pageSize > 100 ? 100 : pageSize);
+        pageSize = pageSize < AppConstants.Pagination.MinPageSize ? AppConstants.Pagination.DefaultPageSize : (pageSize > AppConstants.Pagination.MaxPageSize ? AppConstants.Pagination.MaxPageSize : pageSize);
 
         var query = string.IsNullOrWhiteSpace(searchTerm)
             ? _context.Product.AsNoTracking()
@@ -250,7 +251,7 @@ public class ProductRepository : Repository<Product>, IProductRepository
         int pageSize)
     {
         pageNumber = pageNumber < 1 ? 1 : pageNumber;
-        pageSize = pageSize < 1 ? 20 : (pageSize > 100 ? 100 : pageSize);
+        pageSize = pageSize < AppConstants.Pagination.MinPageSize ? AppConstants.Pagination.DefaultPageSize : (pageSize > AppConstants.Pagination.MaxPageSize ? AppConstants.Pagination.MaxPageSize : pageSize);
 
         var query = _context.Product
             .AsNoTracking()
@@ -276,7 +277,7 @@ public class ProductRepository : Repository<Product>, IProductRepository
         int pageSize)
     {
         pageNumber = pageNumber < 1 ? 1 : pageNumber;
-        pageSize = pageSize < 1 ? 20 : (pageSize > 100 ? 100 : pageSize);
+        pageSize = pageSize < AppConstants.Pagination.MinPageSize ? AppConstants.Pagination.DefaultPageSize : (pageSize > AppConstants.Pagination.MaxPageSize ? AppConstants.Pagination.MaxPageSize : pageSize);
 
         var query = string.IsNullOrWhiteSpace(brand)
             ? _context.Product.AsNoTracking()
