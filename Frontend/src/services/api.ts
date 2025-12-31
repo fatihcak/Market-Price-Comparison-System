@@ -2,6 +2,7 @@ import { PriceResponseDTO, Product, ProductResponseDTO, ProductPriceHistoryDTO, 
 
 const API_BASE_URL = 'http://3.75.205.148/api';
 
+    // 'http://localhost:5000/api'
 export const api = {
     getMarkets: async (): Promise<Market[]> => {
         try {
