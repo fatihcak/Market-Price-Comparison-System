@@ -8,7 +8,7 @@ using Microsoft.Data.SqlClient;
 class Program
 {
     static string connectionString = "Server=database-compsys.cl0806yimqf2.eu-central-1.rds.amazonaws.com,1433;Database=compsys;User Id=admin;Password=admin-0-0;TrustServerCertificate=True;";
-    static string CatalogPath = @"c:\Users\DOU\Documents\GitHub\Market-Price-Comparison-System\Frontend\src\constants\corrected_full_catalog.md";
+    static string CatalogPath = @"c:\Users\DOU\Documents\GitHub\Market-Price-Comparison-System\Frontend\src\constants\product_category_update.md";
 
     static void Main(string[] args)
     {
@@ -102,53 +102,77 @@ class Program
                     categoryMap[reader.GetString(1)] = reader.GetInt32(0);
                 }
             }
-            Console.WriteLine($"Loaded {categoryMap.Count} categories.");
+            Console.WriteLine($"Loaded {categoryMap.Count} categories from DB.");
 
-            // 2. Parse Markdown
+            // 2. Parse Markdown Table
             var lines = File.ReadAllLines(CatalogPath);
-            string currentSubCategory = null;
             int updatedCount = 0;
             int notFoundCount = 0;
+            int categoryNotFoundCount = 0;
+
+            Console.WriteLine($"Processing {lines.Length} lines from catalog...");
 
             foreach (var line in lines)
             {
                 string text = line.Trim();
 
-                // Detect SubCategory Header (### Name)
-                if (text.StartsWith("### "))
+                // Skip headers and separators
+                if (string.IsNullOrWhiteSpace(text) || text.StartsWith("Main Category") || text.StartsWith("---"))
+                    continue;
+
+                var parts = text.Split('|').Select(p => p.Trim()).ToArray();
+                if (parts.Length < 3) continue;
+
+                // Format: Main Category | Sub Category | Product Name
+                string mainCategory = parts[0];
+                string subCategory = parts[1];
+                string productName = parts[2];
+
+                // Determine Target Category ID
+                // We assume 'Sub Category' maps to DB 'ProductCategory.CategoryName'
+                // If Sub Category is empty or same as Main, we might try Main.
+                string targetCategoryName = subCategory;
+                
+                if (!categoryMap.ContainsKey(targetCategoryName))
                 {
-                    string catName = text.Substring(4).Trim();
-                    if (categoryMap.ContainsKey(catName))
-                    {
-                        currentSubCategory = catName;
-                    }
-                    else
-                    {
-                        Console.WriteLine($"WARNING: Category '{catName}' not found in DB! Skipping products under it.");
-                        currentSubCategory = null;
-                    }
+                    // Fallback try: maybe SubCategory doesn't exist, try MainCategory?
+                    // Or log error.
+                    // For now, let's log and skip to be safe.
+                    // Console.WriteLine($"Category not found: '{targetCategoryName}' for product '{productName}'");
+                    categoryNotFoundCount++;
                     continue;
                 }
 
-                // Detect Product Item (- Name)
-                if (text.StartsWith("- ") && currentSubCategory != null)
-                {
-                    string productName = text.Substring(2).Trim();
-                    int targetCatId = categoryMap[currentSubCategory];
+                int targetCatId = categoryMap[targetCategoryName];
 
-                    // Update Product
-                    var updateSql = "UPDATE Product SET CategoryId = @catId WHERE ProductName = @name AND CategoryId != @catId";
-                    using var upCmd = new SqlCommand(updateSql, connection);
-                    upCmd.Parameters.AddWithValue("@catId", targetCatId);
-                    upCmd.Parameters.AddWithValue("@name", productName);
-                    
-                    int rows = upCmd.ExecuteNonQuery();
-                    if (rows > 0) updatedCount += rows;
+                // Update Product
+                // We use exact match on ProductName
+                var updateSql = @"UPDATE Product 
+                                  SET CategoryId = @catId, LastUpdated = GETDATE()
+                                  WHERE ProductName = @name AND CategoryId != @catId";
+                
+                using var upCmd = new SqlCommand(updateSql, connection);
+                upCmd.Parameters.AddWithValue("@catId", targetCatId);
+                upCmd.Parameters.AddWithValue("@name", productName);
+                
+                int rows = upCmd.ExecuteNonQuery();
+                if (rows > 0) 
+                {
+                    updatedCount += rows;
+                    if (updatedCount % 100 == 0) Console.Write(".");
+                }
+                else
+                {
+                    // Check if it's because product not found or already in category
+                    // Optional: Fuzzy check could go here if we wanted
+                    notFoundCount++;
                 }
             }
 
-            Console.WriteLine($"SYNC COMPLETE.");
-            Console.WriteLine($"Updated {updatedCount} product records to match the catalog.");
+            Console.WriteLine("\n=== SYNC COMPLETE ===");
+            Console.WriteLine($"Updated: {updatedCount} products");
+            Console.WriteLine($"Skipped/Not Found/Already Covered: {notFoundCount}");
+            Console.WriteLine($"Category Not Found Errors: {categoryNotFoundCount}");
         }
         catch (Exception ex)
         {
