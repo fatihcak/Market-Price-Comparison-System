@@ -44,6 +44,28 @@ public class ProductController : ControllerBase
     }
 
     /// <summary>
+    /// Get products ordered by discount percentage (highest first)
+    /// </summary>
+    [HttpGet("by-discount")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetByDiscount(
+        [FromQuery] int page = 1, 
+        [FromQuery] int pageSize = 20)
+    {
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 20;
+        if (pageSize > 100) pageSize = 100;
+        
+        var (products, totalCount) = await _productService.GetProductsOrderedByDiscountAsync(page, pageSize);
+        
+        Response.Headers.Append("X-Total-Count", totalCount.ToString());
+        Response.Headers.Append("X-Page", page.ToString());
+        Response.Headers.Append("X-Page-Size", pageSize.ToString());
+        
+        return this.ApiOk(products);
+    }
+
+    /// <summary>
     /// Get product by ID
     /// </summary>
     [HttpGet("{id}")]

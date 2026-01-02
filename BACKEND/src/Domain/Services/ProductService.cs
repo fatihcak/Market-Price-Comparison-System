@@ -182,6 +182,26 @@ public class ProductService : IProductService
         return result;
     }
 
+    public async Task<(IEnumerable<ProductResponseDTO> Products, int TotalCount)> GetProductsOrderedByDiscountAsync(int page, int pageSize)
+    {
+        // Get all products with details to calculate discount
+        var products = await _productRepository.GetAllWithDetailsAsync();
+        
+        // Map to DTO and filter to only products with discount > 0
+        var productsWithDiscount = products
+            .Select(p => MapToResponseDTO(p))
+            .Where(p => p.Discount > 0)
+            .OrderByDescending(p => p.Discount)
+            .ToList();
+        
+        var totalCount = productsWithDiscount.Count;
+        var pagedProducts = productsWithDiscount
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize);
+        
+        return (pagedProducts, totalCount);
+    }
+
     private static ProductResponseDTO MapToResponseDTO(Product product)
     {
         var prices = product.MarketProductPrices;

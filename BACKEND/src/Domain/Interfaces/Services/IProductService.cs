@@ -15,4 +15,5 @@ public interface IProductService
     Task<ProductResponseDTO?> UpdateProductAsync(int id, UpdateProductDTO dto);
     Task<bool> DeleteProductAsync(int id);
     Task<IEnumerable<ProductPriceHistoryDTO>> GetProductPriceHistoryAsync(int productId, int days);
+    Task<(IEnumerable<ProductResponseDTO> Products, int TotalCount)> GetProductsOrderedByDiscountAsync(int page, int pageSize);
 }
