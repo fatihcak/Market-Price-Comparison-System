@@ -23,7 +23,6 @@ export const api = {
             return [];
         }
     },
-
     getPricesByProduct: async (productId: number): Promise<PriceResponseDTO[]> => {
         try {
             const response = await fetch(`${API_BASE_URL}/Price/product/${productId}`);
