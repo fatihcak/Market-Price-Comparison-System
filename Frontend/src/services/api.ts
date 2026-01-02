@@ -1,8 +1,8 @@
 import { PriceResponseDTO, Product, ProductResponseDTO, ProductPriceHistoryDTO, Market, MarketResponseDTO } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://compare-market.site/api';
-
-    // 'http://localhost:5000/api'
+const API_BASE_URL = import.meta.env.DEV 
+  ? 'http://localhost:5000/api'
+  : 'https://compare-market.site/api';
 export const api = {
     getMarkets: async (): Promise<Market[]> => {
         try {
@@ -72,12 +72,13 @@ export const api = {
     },
 
 
-    getProducts: async (): Promise<Product[]> => {
+    getProducts: async (page: number = 1, pageSize: number = 50): Promise<{ products: Product[]; totalCount: number }> => {
         try {
-            const response = await fetch(`${API_BASE_URL}/Product`);
+            const response = await fetch(`${API_BASE_URL}/Product?page=${page}&pageSize=${pageSize}`);
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
+            const totalCount = parseInt(response.headers.get('X-Total-Count') || '0', 10);
             const result = await response.json();
             // Handle ApiResponse wrapper
             const data: ProductResponseDTO[] = result.data || result;
@@ -150,10 +151,42 @@ export const api = {
                 }
             }
 
-            return Array.from(uniqueMap.values());
+            return { products: Array.from(uniqueMap.values()), totalCount };
         } catch (error) {
             console.error('Error fetching products:', error);
-            return [];
+            return { products: [], totalCount: 0 };
+        }
+    },
+
+    getProductsByDiscount: async (page: number = 1, pageSize: number = 20): Promise<{ products: Product[]; totalCount: number }> => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/Product/by-discount?page=${page}&pageSize=${pageSize}`);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const totalCount = parseInt(response.headers.get('X-Total-Count') || '0', 10);
+            const result = await response.json();
+            const data: ProductResponseDTO[] = result.data || result;
+            
+            const products: Product[] = data.map(item => ({
+                id: item.id,
+                name: item.productName,
+                price: item.price,
+                oldPrice: item.oldPrice || null,
+                market: item.marketName,
+                discount: item.discount,
+                category: item.categoryName,
+                image: item.imageUrl || 'https://placehold.co/200x200?text=No+Image',
+                brand: item.brand,
+                unit: item.unit,
+                marketCount: item.marketCount || 1,
+                variantIds: [item.id]
+            }));
+            
+            return { products, totalCount };
+        } catch (error) {
+            console.error('Error fetching discounted products:', error);
+            return { products: [], totalCount: 0 };
         }
     },
 

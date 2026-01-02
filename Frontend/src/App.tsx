@@ -40,7 +40,8 @@ function App() {
   });
 
   useEffect(() => {
-    api.getProducts().then(setProducts);
+    // Load initial products using getProductsByDiscount for homepage (top 20 discounted)
+    api.getProductsByDiscount(1, 20).then(result => setProducts(result.products));
   }, []);
 
   useEffect(() => {
@@ -260,7 +261,7 @@ interface ProductGridProps {
   onCompare: (product: Product) => void;
 }
 
-function ProductGrid({ products, onAdd, onCompare }: ProductGridProps) {
+function ProductGrid({ onAdd, onCompare }: ProductGridProps) {
   const { category, subcategory } = useParams<{ category: string; subcategory?: string }>();
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
@@ -271,8 +272,54 @@ function ProductGrid({ products, onAdd, onCompare }: ProductGridProps) {
     selectedMarkets: []
   });
   const itemsPerPage = 16;
+  
+  // Pagination state for Load More
+  const [loadedProducts, setLoadedProducts] = useState<Product[]>([]);
+  const [apiPage, setApiPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const pageSize = 50;
 
   const selectedCategory = category || 'All';
+
+  // Fetch products from API based on category
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setIsLoading(true);
+      setApiPage(1);
+      
+      if (selectedCategory === 'All' && !subcategory) {
+        // Homepage: use getProductsByDiscount for top 20 discounted products
+        const result = await api.getProductsByDiscount(1, 20);
+        setLoadedProducts(result.products);
+        setTotalCount(result.totalCount);
+      } else {
+        // Category pages: use getProducts with pagination
+        const result = await api.getProducts(1, pageSize);
+        setLoadedProducts(result.products);
+        setTotalCount(result.totalCount);
+      }
+      
+      setIsLoading(false);
+    };
+    
+    fetchProducts();
+  }, [selectedCategory, subcategory]);
+
+  // Load more products handler
+  const handleLoadMore = async () => {
+    if (isLoading) return;
+    
+    setIsLoading(true);
+    const nextPage = apiPage + 1;
+    
+    const result = await api.getProducts(nextPage, pageSize);
+    setLoadedProducts(prev => [...prev, ...result.products]);
+    setApiPage(nextPage);
+    setIsLoading(false);
+  };
+
+  const hasMore = loadedProducts.length < totalCount;
 
   useEffect(() => {
     setCurrentPage(1);
@@ -283,7 +330,7 @@ function ProductGrid({ products, onAdd, onCompare }: ProductGridProps) {
   };
 
   // Apply category, market, and price filters
-  const filteredProducts = products.filter(product => {
+  const filteredProducts = loadedProducts.filter(product => {
     // Category filtering - Skip for "All" to show ALL products
     if (selectedCategory !== 'All') {
       const mainCatDef = CATEGORIES.find(c => c.slug === selectedCategory);
@@ -375,7 +422,7 @@ function ProductGrid({ products, onAdd, onCompare }: ProductGridProps) {
         </div>
       ) : (
         <div className="text-center py-12 text-gray-500">
-          No products found in this category.
+          {isLoading ? 'Loading products...' : 'No products found in this category.'}
         </div>
       )}
 
@@ -464,6 +511,19 @@ function ProductGrid({ products, onAdd, onCompare }: ProductGridProps) {
             className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronRight size={20} />
+          </button>
+        </div>
+      )}
+
+      {/* Load More Button */}
+      {hasMore && selectedCategory !== 'All' && (
+        <div className="flex justify-center mt-8">
+          <button
+            onClick={handleLoadMore}
+            disabled={isLoading}
+            className="px-8 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg"
+          >
+            {isLoading ? 'Loading...' : 'Load More Products'}
           </button>
         </div>
       )}
