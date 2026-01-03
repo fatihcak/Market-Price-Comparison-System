@@ -12,18 +12,147 @@ class Program
 
     static void Main(string[] args)
     {
-        // Show database stats first
-        Console.WriteLine("=== DATABASE STATISTICS ===");
-        ShowDatabaseStats();
-        
-        if (args.Length > 0 && args[0] == "--sync")
+        if (args.Length > 0 && args[0] == "--check-indexes")
         {
-            Console.WriteLine("\n=== STARTING DATABASE SYNC FROM CATALOG ===");
-            SyncFromCatalog();
+            VerifyIndexes();
+        }
+        else if (args.Length > 0 && args[0] == "--fix-migration-history")
+        {
+             FixMigrationHistory();
         }
         else
         {
-            Console.WriteLine("\nTo sync from catalog, run: dotnet run -- --sync");
+            // Show database stats first
+            Console.WriteLine("=== DATABASE STATISTICS ===");
+            ShowDatabaseStats();
+            Console.WriteLine("\nOptions:");
+            Console.WriteLine("  --check-indexes        : Verify DB indexes");
+            Console.WriteLine("  --fix-migration-history : Insert InitialCreate into history if missing");
+        }
+    }
+
+    static void FixMigrationHistory()
+    {
+        Console.WriteLine("=== FIXING MIGRATION HISTORY ===");
+        try
+        {
+            using var connection = new SqlConnection(connectionString);
+            connection.Open();
+
+            // Check if __EFMigrationsHistory exists
+            var checkTable = "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '__EFMigrationsHistory'";
+            using (var cmd = new SqlCommand(checkTable, connection))
+            {
+                int exists = (int)cmd.ExecuteScalar();
+                if (exists == 0)
+                {
+                    Console.WriteLine("Creating __EFMigrationsHistory table...");
+                    var createTable = @"
+                        CREATE TABLE [dbo].[__EFMigrationsHistory](
+                            [MigrationId] [nvarchar](150) NOT NULL,
+                            [ProductVersion] [nvarchar](32) NOT NULL,
+                         CONSTRAINT [PK___EFMigrationsHistory] PRIMARY KEY CLUSTERED 
+                        (
+                            [MigrationId] ASC
+                        ))";
+                    using var createCmd = new SqlCommand(createTable, connection);
+                    createCmd.ExecuteNonQuery();
+                }
+            }
+
+            // Check if InitialCreate is already recorded
+            // Note: We need the EXACT name of the migration class we generated.
+            // Based on file list: 20260102212833_InitialCreate.cs
+            string migrationName = "20260102212833_InitialCreate"; 
+
+            var checkMig = "SELECT COUNT(*) FROM __EFMigrationsHistory WHERE MigrationId = @mig";
+            using (var cmd = new SqlCommand(checkMig, connection))
+            {
+                cmd.Parameters.AddWithValue("@mig", migrationName);
+                int count = (int)cmd.ExecuteScalar();
+                
+                if (count == 0)
+                {
+                    Console.WriteLine($"Migration '{migrationName}' missing from history. Inserting...");
+                    var insert = "INSERT INTO __EFMigrationsHistory (MigrationId, ProductVersion) VALUES (@mig, '8.0.0')";
+                    using (var insertCmd = new SqlCommand(insert, connection))
+                    {
+                        insertCmd.Parameters.AddWithValue("@mig", migrationName);
+                        insertCmd.ExecuteNonQuery();
+                        Console.WriteLine("Inserted successfully.");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"Migration '{migrationName}' is already recorded.");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+             Console.WriteLine("Error: " + ex.Message);
+        }
+    }
+
+    static void VerifyIndexes()
+    {
+        Console.WriteLine("=== VERIFYING INDEXES ===");
+        try
+        {
+            using var connection = new SqlConnection(connectionString);
+            connection.Open();
+
+            // Query provided by user prompt
+            var sql = @"
+                SELECT 
+                    i.name AS IndexName,
+                    COL_NAME(ic.object_id, ic.column_id) AS ColumnName,
+                    i.type_desc AS IndexType
+                FROM sys.indexes i
+                INNER JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
+                WHERE i.object_id = OBJECT_ID('Product')
+                ORDER BY i.name, ic.key_ordinal;";
+
+            Console.WriteLine("Executing query for table 'Product' (Singular)...");
+            bool foundSingular = false;
+            using (var cmd = new SqlCommand(sql, connection))
+            using (var reader = cmd.ExecuteReader())
+            {
+                if (reader.HasRows)
+                {
+                    foundSingular = true;
+                    while (reader.Read())
+                    {
+                        Console.WriteLine($"{reader["IndexName"]} | {reader["ColumnName"]} | {reader["IndexType"]}");
+                    }
+                }
+            }
+
+            if (!foundSingular)
+            {
+                Console.WriteLine("No indexes found for 'Product'. Checking 'Products' (Plural)...");
+                
+                var sqlPlural = sql.Replace("'Product'", "'Products'");
+                using (var cmd = new SqlCommand(sqlPlural, connection))
+                using (var reader = cmd.ExecuteReader())
+                {
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            Console.WriteLine($"{reader["IndexName"]} | {reader["ColumnName"]} | {reader["IndexType"]}");
+                        }
+                    }
+                    else
+                    {
+                         Console.WriteLine("No indexes found for 'Products' either.");
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error: " + ex.Message);
         }
     }
 
@@ -37,40 +166,21 @@ class Program
             // Product count
             using (var cmd = new SqlCommand("SELECT COUNT(*) FROM Product", connection))
             {
-                var count = (int)cmd.ExecuteScalar();
-                Console.WriteLine($"Total Products: {count}");
+                // Handle potential missing table exception gracefully just in case
+                try {
+                     var count = (int)cmd.ExecuteScalar();
+                     Console.WriteLine($"Total Products: {count}");
+                } catch { Console.WriteLine("Table 'Product' not found (or error)."); }
             }
 
-            // Category count
-            using (var cmd = new SqlCommand("SELECT COUNT(*) FROM ProductCategory", connection))
+            // Products (plural) count check?
+            using (var cmd = new SqlCommand("SELECT OBJECT_ID('Products')", connection))
             {
-                var count = (int)cmd.ExecuteScalar();
-                Console.WriteLine($"Total Categories: {count}");
-            }
-
-            // Market count
-            using (var cmd = new SqlCommand("SELECT COUNT(*) FROM Market", connection))
-            {
-                var count = (int)cmd.ExecuteScalar();
-                Console.WriteLine($"Total Markets: {count}");
-            }
-
-            // Price count
-            using (var cmd = new SqlCommand("SELECT COUNT(*) FROM MarketProductPrice", connection))
-            {
-                var count = (int)cmd.ExecuteScalar();
-                Console.WriteLine($"Total Prices: {count}");
-            }
-
-            // Sample products
-            Console.WriteLine("\n=== SAMPLE PRODUCTS (First 10) ===");
-            using (var cmd = new SqlCommand("SELECT TOP 10 ProductID, ProductName, Brand, Unit FROM Product ORDER BY ProductID", connection))
-            using (var reader = cmd.ExecuteReader())
-            {
-                while (reader.Read())
-                {
-                    Console.WriteLine($"  [{reader.GetInt32(0)}] {reader.GetString(1)} - {(reader.IsDBNull(2) ? "N/A" : reader.GetString(2))} ({(reader.IsDBNull(3) ? "N/A" : reader.GetString(3))})");
-                }
+                 var objId = cmd.ExecuteScalar();
+                 if (objId != DBNull.Value && objId != null) 
+                 {
+                     Console.WriteLine("(Warning: 'Products' table also exists!)");
+                 }
             }
         }
         catch (Exception ex)
@@ -78,106 +188,4 @@ class Program
             Console.WriteLine("Error connecting to database: " + ex.Message);
         }
     }
-
-    static void SyncFromCatalog()
-    {
-        if (!File.Exists(CatalogPath))
-        {
-            Console.WriteLine($"Error: File not found at {CatalogPath}");
-            return;
-        }
-
-        try
-        {
-            using var connection = new SqlConnection(connectionString);
-            connection.Open();
-
-            // 1. Load Categories Map (Name -> ID)
-            var categoryMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-            using (var cmd = new SqlCommand("SELECT CategoryId, CategoryName FROM ProductCategory", connection))
-            using (var reader = cmd.ExecuteReader())
-            {
-                while (reader.Read())
-                {
-                    categoryMap[reader.GetString(1)] = reader.GetInt32(0);
-                }
-            }
-            Console.WriteLine($"Loaded {categoryMap.Count} categories from DB.");
-
-            // 2. Parse Markdown Table
-            var lines = File.ReadAllLines(CatalogPath);
-            int updatedCount = 0;
-            int notFoundCount = 0;
-            int categoryNotFoundCount = 0;
-
-            Console.WriteLine($"Processing {lines.Length} lines from catalog...");
-
-            foreach (var line in lines)
-            {
-                string text = line.Trim();
-
-                // Skip headers and separators
-                if (string.IsNullOrWhiteSpace(text) || text.StartsWith("Main Category") || text.StartsWith("---"))
-                    continue;
-
-                var parts = text.Split('|').Select(p => p.Trim()).ToArray();
-                if (parts.Length < 3) continue;
-
-                // Format: Main Category | Sub Category | Product Name
-                string mainCategory = parts[0];
-                string subCategory = parts[1];
-                string productName = parts[2];
-
-                // Determine Target Category ID
-                // We assume 'Sub Category' maps to DB 'ProductCategory.CategoryName'
-                // If Sub Category is empty or same as Main, we might try Main.
-                string targetCategoryName = subCategory;
-                
-                if (!categoryMap.ContainsKey(targetCategoryName))
-                {
-                    // Fallback try: maybe SubCategory doesn't exist, try MainCategory?
-                    // Or log error.
-                    // For now, let's log and skip to be safe.
-                    // Console.WriteLine($"Category not found: '{targetCategoryName}' for product '{productName}'");
-                    categoryNotFoundCount++;
-                    continue;
-                }
-
-                int targetCatId = categoryMap[targetCategoryName];
-
-                // Update Product
-                // We use exact match on ProductName
-                var updateSql = @"UPDATE Product 
-                                  SET CategoryId = @catId, LastUpdated = GETDATE()
-                                  WHERE ProductName = @name AND CategoryId != @catId";
-                
-                using var upCmd = new SqlCommand(updateSql, connection);
-                upCmd.Parameters.AddWithValue("@catId", targetCatId);
-                upCmd.Parameters.AddWithValue("@name", productName);
-                
-                int rows = upCmd.ExecuteNonQuery();
-                if (rows > 0) 
-                {
-                    updatedCount += rows;
-                    if (updatedCount % 100 == 0) Console.Write(".");
-                }
-                else
-                {
-                    // Check if it's because product not found or already in category
-                    // Optional: Fuzzy check could go here if we wanted
-                    notFoundCount++;
-                }
-            }
-
-            Console.WriteLine("\n=== SYNC COMPLETE ===");
-            Console.WriteLine($"Updated: {updatedCount} products");
-            Console.WriteLine($"Skipped/Not Found/Already Covered: {notFoundCount}");
-            Console.WriteLine($"Category Not Found Errors: {categoryNotFoundCount}");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine("Error: " + ex.Message);
-        }
-    }
 }
-

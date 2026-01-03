@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace DataAccess.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -29,77 +29,67 @@ namespace DataAccess.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Cities",
+                name: "City",
                 columns: table => new
                 {
                     CityID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    CityName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                    CityName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Cities", x => x.CityID);
+                    table.PrimaryKey("PK_City", x => x.CityID);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Markets",
+                name: "Market",
                 columns: table => new
                 {
                     MarketID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     MarketName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    LogoURL = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
-                    WebsiteURL = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                    WebsiteURL = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Markets", x => x.MarketID);
+                    table.PrimaryKey("PK_Market", x => x.MarketID);
                 });
 
             migrationBuilder.CreateTable(
-                name: "ProductCategories",
+                name: "ProductCategory",
                 columns: table => new
                 {
                     CategoryID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    CategoryName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    Icon = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                    CategoryName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ProductCategories", x => x.CategoryID);
+                    table.PrimaryKey("PK_ProductCategory", x => x.CategoryID);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Districts",
+                name: "District",
                 columns: table => new
                 {
                     DistrictID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CityID = table.Column<int>(type: "int", nullable: false),
-                    DistrictName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                    DistrictName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Districts", x => x.DistrictID);
+                    table.PrimaryKey("PK_District", x => x.DistrictID);
                     table.ForeignKey(
-                        name: "FK_Districts_Cities_CityID",
+                        name: "FK_District_City_CityID",
                         column: x => x.CityID,
-                        principalTable: "Cities",
+                        principalTable: "City",
                         principalColumn: "CityID",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Products",
+                name: "Product",
                 columns: table => new
                 {
                     ProductID = table.Column<int>(type: "int", nullable: false)
@@ -107,24 +97,23 @@ namespace DataAccess.Migrations
                     CategoryID = table.Column<int>(type: "int", nullable: false),
                     ProductName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     Brand = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    Unit = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    LastUpdated = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                    ImageURL = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Unit = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    LastUpdated = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Products", x => x.ProductID);
+                    table.PrimaryKey("PK_Product", x => x.ProductID);
                     table.ForeignKey(
-                        name: "FK_Products_ProductCategories_CategoryID",
+                        name: "FK_Product_ProductCategory_CategoryID",
                         column: x => x.CategoryID,
-                        principalTable: "ProductCategories",
+                        principalTable: "ProductCategory",
                         principalColumn: "CategoryID",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "MarketProductPrices",
+                name: "MarketProductPrice",
                 columns: table => new
                 {
                     PriceID = table.Column<int>(type: "int", nullable: false)
@@ -133,35 +122,33 @@ namespace DataAccess.Migrations
                     ProductID = table.Column<int>(type: "int", nullable: false),
                     DistrictID = table.Column<int>(type: "int", nullable: false),
                     Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    LastUpdated = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                    LastUpdated = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_MarketProductPrices", x => x.PriceID);
+                    table.PrimaryKey("PK_MarketProductPrice", x => x.PriceID);
                     table.ForeignKey(
-                        name: "FK_MarketProductPrices_Districts_DistrictID",
+                        name: "FK_MarketProductPrice_District_DistrictID",
                         column: x => x.DistrictID,
-                        principalTable: "Districts",
+                        principalTable: "District",
                         principalColumn: "DistrictID",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_MarketProductPrices_Markets_MarketID",
+                        name: "FK_MarketProductPrice_Market_MarketID",
                         column: x => x.MarketID,
-                        principalTable: "Markets",
+                        principalTable: "Market",
                         principalColumn: "MarketID",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_MarketProductPrices_Products_ProductID",
+                        name: "FK_MarketProductPrice_Product_ProductID",
                         column: x => x.ProductID,
-                        principalTable: "Products",
+                        principalTable: "Product",
                         principalColumn: "ProductID",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "UserProductLists",
+                name: "UserProductList",
                 columns: table => new
                 {
                     ListID = table.Column<int>(type: "int", nullable: false)
@@ -169,17 +156,15 @@ namespace DataAccess.Migrations
                     SessionID = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     ProductID = table.Column<int>(type: "int", nullable: false),
                     Quantity = table.Column<int>(type: "int", nullable: false),
-                    AddedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                    AddedDate = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_UserProductLists", x => x.ListID);
+                    table.PrimaryKey("PK_UserProductList", x => x.ListID);
                     table.ForeignKey(
-                        name: "FK_UserProductLists_Products_ProductID",
+                        name: "FK_UserProductList_Product_ProductID",
                         column: x => x.ProductID,
-                        principalTable: "Products",
+                        principalTable: "Product",
                         principalColumn: "ProductID",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -198,9 +183,9 @@ namespace DataAccess.Migrations
                 {
                     table.PrimaryKey("PK_ProductPriceHistories", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ProductPriceHistories_MarketProductPrices_MarketProductPriceId",
+                        name: "FK_ProductPriceHistories_MarketProductPrice_MarketProductPriceId",
                         column: x => x.MarketProductPriceId,
-                        principalTable: "MarketProductPrices",
+                        principalTable: "MarketProductPrice",
                         principalColumn: "PriceID",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -212,44 +197,64 @@ namespace DataAccess.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Districts_CityID",
-                table: "Districts",
+                name: "IX_District_CityID",
+                table: "District",
                 column: "CityID");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Districts_DistrictName",
-                table: "Districts",
+                name: "IX_District_DistrictName",
+                table: "District",
                 column: "DistrictName");
 
             migrationBuilder.CreateIndex(
-                name: "IX_MarketProductPrices_DistrictID",
-                table: "MarketProductPrices",
+                name: "IX_Market_MarketName",
+                table: "Market",
+                column: "MarketName");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MarketProductPrice_DistrictID",
+                table: "MarketProductPrice",
                 column: "DistrictID");
 
             migrationBuilder.CreateIndex(
-                name: "IX_MarketProductPrices_LastUpdated",
-                table: "MarketProductPrices",
+                name: "IX_MarketProductPrice_LastUpdated",
+                table: "MarketProductPrice",
                 column: "LastUpdated");
 
             migrationBuilder.CreateIndex(
-                name: "IX_MarketProductPrices_MarketID",
-                table: "MarketProductPrices",
+                name: "IX_MarketProductPrice_MarketID",
+                table: "MarketProductPrice",
                 column: "MarketID");
 
             migrationBuilder.CreateIndex(
-                name: "IX_MarketProductPrices_ProductID",
-                table: "MarketProductPrices",
+                name: "IX_MarketProductPrice_MarketID_ProductID",
+                table: "MarketProductPrice",
+                columns: new[] { "MarketID", "ProductID" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MarketProductPrice_ProductID",
+                table: "MarketProductPrice",
                 column: "ProductID");
 
             migrationBuilder.CreateIndex(
-                name: "IX_MarketProductPrices_ProductID_DistrictID",
-                table: "MarketProductPrices",
+                name: "IX_MarketProductPrice_ProductID_DistrictID",
+                table: "MarketProductPrice",
                 columns: new[] { "ProductID", "DistrictID" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Markets_MarketName",
-                table: "Markets",
-                column: "MarketName");
+                name: "IX_Product_Brand",
+                table: "Product",
+                column: "Brand");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Product_CategoryID",
+                table: "Product",
+                column: "CategoryID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Product_ProductName",
+                table: "Product",
+                column: "ProductName");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ProductPriceHistories_ChangedDate",
@@ -262,33 +267,18 @@ namespace DataAccess.Migrations
                 column: "MarketProductPriceId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Products_Brand",
-                table: "Products",
-                column: "Brand");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Products_CategoryID",
-                table: "Products",
-                column: "CategoryID");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Products_ProductName",
-                table: "Products",
-                column: "ProductName");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_UserProductLists_ProductID",
-                table: "UserProductLists",
+                name: "IX_UserProductList_ProductID",
+                table: "UserProductList",
                 column: "ProductID");
 
             migrationBuilder.CreateIndex(
-                name: "IX_UserProductLists_SessionID",
-                table: "UserProductLists",
+                name: "IX_UserProductList_SessionID",
+                table: "UserProductList",
                 column: "SessionID");
 
             migrationBuilder.CreateIndex(
-                name: "IX_UserProductLists_SessionID_ProductID",
-                table: "UserProductLists",
+                name: "IX_UserProductList_SessionID_ProductID",
+                table: "UserProductList",
                 columns: new[] { "SessionID", "ProductID" },
                 unique: true);
         }
@@ -303,25 +293,25 @@ namespace DataAccess.Migrations
                 name: "ProductPriceHistories");
 
             migrationBuilder.DropTable(
-                name: "UserProductLists");
+                name: "UserProductList");
 
             migrationBuilder.DropTable(
-                name: "MarketProductPrices");
+                name: "MarketProductPrice");
 
             migrationBuilder.DropTable(
-                name: "Districts");
+                name: "District");
 
             migrationBuilder.DropTable(
-                name: "Markets");
+                name: "Market");
 
             migrationBuilder.DropTable(
-                name: "Products");
+                name: "Product");
 
             migrationBuilder.DropTable(
-                name: "Cities");
+                name: "City");
 
             migrationBuilder.DropTable(
-                name: "ProductCategories");
+                name: "ProductCategory");
         }
     }
 }
