@@ -420,22 +420,22 @@ function ProductGrid({ onAdd, onCompare }: ProductGridProps) {
   // Apply category, market, and price filters
   const filteredProducts = loadedProducts.filter(product => {
     // Category filtering - Skip for "All" to show ALL products
-    if (selectedCategory !== 'All') {
-      const mainCatDef = CATEGORIES.find(c => c.slug === selectedCategory);
-      if (!mainCatDef) return false;
+    // Also skip if we fetched by category ID (catDef exists), since API already filtered
+    const mainCatDef = CATEGORIES.find(c => c.slug === selectedCategory);
+    
+    if (selectedCategory !== 'All' && !mainCatDef) {
+      // Unknown category, filter out
+      return false;
+    }
 
-      if (subcategory) {
-        if (product.category !== subcategory && product.categoryName !== subcategory) {
-          return false;
-        }
-      } else {
-        const validSubNames = mainCatDef.subCategories.map(s => s.name);
-        if (!validSubNames.includes(product.category) && !(product.categoryName && validSubNames.includes(product.categoryName))) {
-          return false;
-        }
+    // Only do subcategory filtering if a specific subcategory is selected
+    if (subcategory) {
+      if (product.category !== subcategory && product.categoryName !== subcategory) {
+        return false;
       }
     }
-    // For "All" category, show all products (no category filter)
+    // If no subcategory selected AND we have a mainCatDef, trust the API data
+    // (API already returned products for this category)
 
     // Market filtering (only if markets are selected)
     if (filters.selectedMarkets.length > 0) {
