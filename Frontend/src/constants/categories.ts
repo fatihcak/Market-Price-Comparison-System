@@ -6,6 +6,7 @@ export interface SubCategory {
 }
 
 export interface Category {
+    id: number;
     name: string;
     icon: any;
     color: string;
@@ -15,6 +16,7 @@ export interface Category {
 
 export const CATEGORIES: Category[] = [
     {
+        id: 1,
         name: 'Fruits and Vegetables',
         slug: 'Fruits and Vegetables',
         icon: Apple,
@@ -26,6 +28,7 @@ export const CATEGORIES: Category[] = [
         ]
     },
     {
+        id: 2,
         name: 'Meat, Chicken & Fish',
         slug: 'Meat, Chicken & Fish',
         icon: Milk,
@@ -40,6 +43,7 @@ export const CATEGORIES: Category[] = [
         ]
     },
     {
+        id: 3,
         name: 'Dairy Products & Breakfast Foods',
         slug: 'Dairy Products & Breakfast Foods',
         icon: Wheat,
@@ -60,6 +64,7 @@ export const CATEGORIES: Category[] = [
         ]
     },
     {
+        id: 4,
         name: 'Staple Foods',
         slug: 'Staple Food', // DB name is 'Staple Food' (singular)
         icon: Droplet,
@@ -83,6 +88,7 @@ export const CATEGORIES: Category[] = [
         ]
     },
     {
+        id: 5,
         name: 'Drinks',
         slug: 'Drink', // DB has 'Drink' (singular)
         icon: Wine,
@@ -99,6 +105,7 @@ export const CATEGORIES: Category[] = [
         ]
     },
     {
+        id: 6,
         name: 'Snacks & Desserts',
         slug: 'Snacks & Dessert', // DB singular 'Dessert'
         icon: Coffee,
@@ -117,6 +124,7 @@ export const CATEGORIES: Category[] = [
         ]
     },
     {
+        id: 7,
         name: 'Cleaning & Personal Care',
         slug: 'Cleaning & Personal Care Products', // DB Name
         icon: Egg,

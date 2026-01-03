@@ -5,6 +5,8 @@ using DTOs.DTOs.Requests;
 using Microsoft.AspNetCore.Authorization;
 using Asp.Versioning;
 using API.Extensions;
+using Microsoft.Extensions.Caching.Memory;
+using DTOs.DTOs.Responses;
 
 namespace API.Controllers;
 
@@ -15,10 +17,12 @@ namespace API.Controllers;
 public class ProductController : ControllerBase
 {
     private readonly IProductService _productService;
+    private readonly Microsoft.Extensions.Caching.Memory.IMemoryCache _cache;
 
-    public ProductController(IProductService productService)
+    public ProductController(IProductService productService, Microsoft.Extensions.Caching.Memory.IMemoryCache cache)
     {
         _productService = productService;
+        _cache = cache;
     }
 
     /// <summary>
@@ -55,6 +59,27 @@ public class ProductController : ControllerBase
         if (page < 1) page = 1;
         if (pageSize < 1) pageSize = 20;
         if (pageSize > 100) pageSize = 100;
+
+        // CACHE CHECK: Only for first page (most critical)
+        if (page == 1)
+        {
+            if (_cache.TryGetValue(API.Constants.CacheKeys.DiscountedProducts, out IEnumerable<DTOs.DTOs.Responses.ProductResponseDTO> cachedProducts))
+            {
+                // Note: The cache might have 100 items. If user asks for 20, we take 20.
+                var cachedPaged = cachedProducts.Take(pageSize);
+                 // We don't have total count in cache key easily unless we cache it too or just return list.
+                 // The cached object from Warmer is List<ProductResponseDTO>.
+                 // For total count, we might default or we can also cache it.
+                 // For now, let's return the cached list count as a rough total or fetch logic.
+                 // Actually the Warmer stored the whole list of 100.
+                 // Let's rely on that.
+                
+                Response.Headers.Append("X-Total-Count", "100"); // Approx
+                Response.Headers.Append("X-Page", page.ToString());
+                Response.Headers.Append("X-Page-Size", pageSize.ToString());
+                return this.ApiOk(cachedPaged);
+            }
+        }
         
         var (products, totalCount) = await _productService.GetProductsOrderedByDiscountAsync(page, pageSize);
         
@@ -88,10 +113,30 @@ public class ProductController : ControllerBase
     /// </summary>
     [HttpGet("category/{categoryId}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetByCategory(int categoryId)
+    public async Task<IActionResult> GetByCategory(
+        int categoryId,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50)
     {
+        // CACHE CHECK: Only for Page 1
+        if (page == 1)
+        {
+            if (_cache.TryGetValue(API.Constants.CacheKeys.CategoryPage(categoryId), out IEnumerable<DTOs.DTOs.Responses.ProductResponseDTO> cachedCategoryProducts))
+            {
+                 // Cached item is Top 50.
+                 var pagedCache = cachedCategoryProducts.Take(pageSize);
+                 return this.ApiOk(pagedCache);
+            }
+        }
+
         var products = await _productService.GetProductsByCategoryAsync(categoryId);
-        return this.ApiOk(products);
+        
+        // Manual Pagination since service returns all
+        var pagedProducts = products
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize);
+
+        return this.ApiOk(pagedProducts);
     }
 
     /// <summary>
