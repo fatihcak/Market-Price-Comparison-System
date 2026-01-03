@@ -9,6 +9,7 @@ public interface IProductService
     Task<(IEnumerable<ProductResponseDTO> Products, int TotalCount)> GetProductsWithPaginationAsync(int page, int pageSize);
     Task<ProductResponseDTO?> GetProductByIdAsync(int id);
     Task<IEnumerable<ProductResponseDTO>> GetProductsByCategoryAsync(int categoryId);
+    Task<(IEnumerable<ProductResponseDTO> Products, int TotalCount)> GetProductsByCategoryWithPaginationAsync(int categoryId, int page, int pageSize);
     Task<IEnumerable<ProductResponseDTO>> SearchProductsAsync(string searchTerm);
     Task<IEnumerable<ProductResponseDTO>> SearchByBrandAsync(string brand);
     Task<ProductResponseDTO> CreateProductAsync(CreateProductDTO dto);

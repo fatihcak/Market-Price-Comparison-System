@@ -155,6 +155,9 @@ public class AppDbContext : DbContext
             entity.HasIndex(e => new { e.ProductId, e.DistrictId });
             entity.HasIndex(e => new { e.MarketId, e.ProductId }); // O2: Added for price lookups
             entity.HasIndex(e => e.LastUpdated);
+            // PERF: Covering index for MIN/MAX price queries
+            entity.HasIndex(e => new { e.ProductId, e.Price })
+                .HasDatabaseName("IX_MarketProductPrice_ProductId_Price");
         });
 
         // UserProductList - (Keep for future use, ignore DB fields)

@@ -98,12 +98,22 @@ public class ProductController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(int id)
     {
+        // Cache check
+        var cacheKey = API.Constants.CacheKeys.ProductById(id);
+        if (_cache.TryGetValue(cacheKey, out DTOs.DTOs.Responses.ProductResponseDTO? cachedProduct))
+        {
+            return this.ApiOk(cachedProduct);
+        }
+
         var product = await _productService.GetProductByIdAsync(id);
 
         if (product == null)
         {
             return this.ApiNotFound($"Product with ID {id} not found");
         }
+
+        // Cache for 30 minutes
+        _cache.Set(cacheKey, product, TimeSpan.FromMinutes(30));
 
         return this.ApiOk(product);
     }
@@ -129,15 +139,16 @@ public class ProductController : ControllerBase
             }
         }
 
-        var products = await _productService.GetProductsByCategoryAsync(categoryId);
-        
-        // Manual Pagination since service returns all
-        var pagedProducts = products
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize);
+        // FIX: Use DB-level pagination instead of in-memory pagination
+        var (products, totalCount) = await _productService.GetProductsByCategoryWithPaginationAsync(categoryId, page, pageSize);
 
-        return this.ApiOk(pagedProducts);
+        Response.Headers.Append("X-Total-Count", totalCount.ToString());
+        Response.Headers.Append("X-Page", page.ToString());
+        Response.Headers.Append("X-Page-Size", pageSize.ToString());
+
+        return this.ApiOk(products);
     }
+
 
     /// <summary>
     /// Search products by name

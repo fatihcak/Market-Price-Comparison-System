@@ -41,6 +41,14 @@ public class ProductService : IProductService
         return products.Select(p => MapToResponseDTO(p));
     }
 
+    public async Task<(IEnumerable<ProductResponseDTO> Products, int TotalCount)> GetProductsByCategoryWithPaginationAsync(int categoryId, int page, int pageSize)
+    {
+        var (products, totalCount) = await _productRepository.GetByCategoryIdWithPaginationAsync(categoryId, page, pageSize);
+        var dtos = products.Select(p => MapToResponseDTO(p));
+        return (dtos, totalCount);
+    }
+
+
     public async Task<IEnumerable<ProductResponseDTO>> SearchProductsAsync(string searchTerm)
     {
         var products = await _productRepository.SearchByNameAsync(searchTerm);
@@ -184,62 +192,66 @@ public class ProductService : IProductService
 
     public async Task<(IEnumerable<ProductResponseDTO> Products, int TotalCount)> GetProductsOrderedByDiscountAsync(int page, int pageSize)
     {
-        // OPTIMIZATION: Fetch ALL products with prices in a single query (approx 3000 items - fast in-memory)
-        // using AsNoTracking and SplitQuery from repository.
-        var allProducts = await _productRepository.GetAllWithDetailsAsync();
-
-        // Perform calculation and sorting in-memory
-        var productsWithDiscount = allProducts
-            .Where(p => p.MarketProductPrices.Any()) // Only considering products with prices
-            .Select(p => 
-            {
-                var prices = p.MarketProductPrices;
-                var minPrice = prices.Min(x => x.Price);
-                var maxPrice = prices.Max(x => x.Price);
-                
-                // Calculate discount strictly
-                // Discount is only valid if we have varying prices (Max > Min) 
-                // AND Max > 0
-                double discount = 0;
-                if (maxPrice > 0 && maxPrice > minPrice)
-                {
-                    discount = (double)((maxPrice - minPrice) / maxPrice * 100);
-                }
-
-                return new 
-                { 
-                    Product = p, 
-                    Discount = discount,
-                    MinPrice = minPrice,
-                    MaxPrice = maxPrice
-                };
-            })
-            .Where(x => x.Discount > 0) // Filter only discounted products
-            .OrderByDescending(x => x.Discount)
-            .ToList();
-
-        var totalCount = productsWithDiscount.Count;
-
-        // Paginate the sorted list
-        var pagedItems = productsWithDiscount
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .Select(x => MapToResponseDTO(x.Product))
-            .ToList();
-
-        return (pagedItems, totalCount);
+        // OPTIMIZED: Using repository method with SQL-level aggregation and pagination
+        // This avoids loading 3000+ products into memory
+        var (products, totalCount) = await _productRepository.GetProductsOrderedByDiscountAsync(page, pageSize);
+        var dtos = products.Select(p => MapToResponseDTO(p));
+        return (dtos, totalCount);
     }
 
+
+    /// <summary>
+    /// OPTIMIZED: Single-pass iteration over prices (O(n) instead of O(4n))
+    /// Calculates min, max, cheapestMarket, and uniqueMarkets in one loop
+    /// </summary>
     private static ProductResponseDTO MapToResponseDTO(Product product)
     {
         var prices = product.MarketProductPrices;
-        var minPrice = prices.Any() ? prices.Min(p => p.Price) : 0;
-        var maxPrice = prices.Any() ? prices.Max(p => p.Price) : 0;
-        var cheapestMarket = prices.OrderBy(p => p.Price).FirstOrDefault()?.Market?.MarketName ?? "Unknown";
-        
-        // Count unique markets
-        var marketCount = prices.Select(p => p.MarketId).Distinct().Count();
-        
+
+        if (!prices.Any())
+        {
+            return new ProductResponseDTO
+            {
+                Id = product.Id,
+                CategoryId = product.CategoryId,
+                CategoryName = product.Category?.CategoryName ?? string.Empty,
+                ProductName = product.ProductName,
+                Brand = product.Brand,
+                Unit = product.Unit ?? string.Empty,
+                Price = 0,
+                MarketName = "Unknown",
+                MarketCount = 0,
+                LastUpdated = product.LastUpdated,
+                CreatedAt = null,
+                ImageUrl = !string.IsNullOrWhiteSpace(product.ImageUrl) ? product.ImageUrl : product.Category?.Icon
+            };
+        }
+
+        // Single pass through all prices
+        decimal minPrice = decimal.MaxValue;
+        decimal maxPrice = decimal.MinValue;
+        string cheapestMarket = "Unknown";
+        var uniqueMarkets = new HashSet<int>();
+
+        foreach (var price in prices)
+        {
+            // Find min and update cheapest market
+            if (price.Price < minPrice)
+            {
+                minPrice = price.Price;
+                cheapestMarket = price.Market?.MarketName ?? "Unknown";
+            }
+
+            // Find max
+            if (price.Price > maxPrice)
+            {
+                maxPrice = price.Price;
+            }
+
+            // Count unique markets
+            uniqueMarkets.Add(price.MarketId);
+        }
+
         var discount = maxPrice > minPrice ? (int)((maxPrice - minPrice) / maxPrice * 100) : 0;
 
         return new ProductResponseDTO
@@ -254,10 +266,11 @@ public class ProductService : IProductService
             OldPrice = maxPrice > minPrice ? maxPrice : null,
             Discount = discount,
             MarketName = cheapestMarket,
-            MarketCount = marketCount,
+            MarketCount = uniqueMarkets.Count,
             LastUpdated = product.LastUpdated,
-            CreatedAt = null, // BaseEntity.CreatedAt is ignored in AppDbContext
+            CreatedAt = null,
             ImageUrl = !string.IsNullOrWhiteSpace(product.ImageUrl) ? product.ImageUrl : product.Category?.Icon
         };
     }
+
 }
