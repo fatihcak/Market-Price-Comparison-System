@@ -231,9 +231,9 @@ export const api = {
         }
     },
 
-    getProductsByCategory: async (categoryId: number): Promise<Product[]> => {
+    getProductsByCategory: async (categoryId: number, page: number = 1, pageSize: number = 50): Promise<Product[]> => {
         try {
-            const response = await fetch(`${API_BASE_URL}/Product/category/${categoryId}`);
+            const response = await fetch(`${API_BASE_URL}/Product/category/${categoryId}?page=${page}&pageSize=${pageSize}`);
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }

@@ -39,9 +39,57 @@ function App() {
     return [];
   });
 
+  // Preload Categories logic
+  const preloadCategories = async () => {
+    const categories = [1, 2, 3, 4, 5, 6, 7]; // IDs of 7 categories
+    console.log("🚀 Starting background category preload...");
+    
+    // Process one by one with a small delay to be gentle
+    for (const id of categories) {
+      // Check if already cached and valid (6 hours)
+      const key = `category_${id}_data`;
+      const cached = localStorage.getItem(key);
+      let isValid = false;
+      if (cached) {
+        try {
+            const parsed = JSON.parse(cached);
+            if (Date.now() - parsed.timestamp < 6 * 60 * 60 * 1000) {
+                isValid = true;
+            }
+        } catch(e) { /* ignore */ }
+      }
+
+      if (!isValid) {
+          try {
+            // Fetch page 1, size 50
+            const products = await api.getProductsByCategory(id, 1, 50);
+            if (products && products.length > 0) {
+                const cacheData = {
+                    timestamp: Date.now(),
+                    products: products
+                };
+                localStorage.setItem(key, JSON.stringify(cacheData));
+                console.log(`✅ Preloaded Category ${id}`);
+            }
+          } catch (err) {
+              console.error(`Failed to preload category ${id}`, err);
+          }
+      } else {
+          console.log(`⚡ Category ${id} already cached and valid in LocalStorage.`);
+      }
+    }
+  };
+
   useEffect(() => {
     // Load initial products using getProductsByDiscount for homepage (top 20 discounted)
-    api.getProductsByDiscount(1, 20).then(result => setProducts(result.products));
+    // This is the "Page 1" of the homepage
+    api.getProductsByDiscount(1, 20).then(result => {
+        setProducts(result.products);
+        // Start preloading after 3 seconds to ensure UI is interactive first
+        setTimeout(() => {
+            preloadCategories();
+        }, 3000);
+    });
   }, []);
 
   useEffect(() => {
@@ -288,16 +336,56 @@ function ProductGrid({ onAdd, onCompare }: ProductGridProps) {
       setIsLoading(true);
       setApiPage(1);
       
+      let dataFound = false;
+
+      // 1. URL-based routing logic
       if (selectedCategory === 'All' && !subcategory) {
-        // Homepage: use getProductsByDiscount for top 20 discounted products
+        // HOMEPAGE: Top Discounted
+        // Backend cache handles this on /by-discount endpoint
         const result = await api.getProductsByDiscount(1, 20);
         setLoadedProducts(result.products);
         setTotalCount(result.totalCount);
+        dataFound = true;
       } else {
-        // Category pages: use getProducts with pagination
-        const result = await api.getProducts(1, pageSize);
-        setLoadedProducts(result.products);
-        setTotalCount(result.totalCount);
+         // CATEGORY PAGE
+         // Try finding ID from slug to check LocalStorage
+         // Note: We need a reliable Slug -> ID map.
+         // Based on categories.ts, we can try to guess or hardcode common ones for now.
+         // Or purely rely on Backend Cache if we can't map it easily in this file without import.
+         // But we imported CATEGORIES at the top!
+         const catDef = CATEGORIES.find(c => c.slug === selectedCategory);
+         
+         if (catDef && !subcategory) {
+             const key = `category_${catDef.id}_data`;
+             const cached = localStorage.getItem(key);
+             if (cached) {
+                 try {
+                     const parsed = JSON.parse(cached);
+                     // Check expiry (6h)
+                     if (Date.now() - parsed.timestamp < 6 * 60 * 60 * 1000) {
+                         console.log(`⚡ Loaded Category ${catDef.id} from LocalStorage!`);
+                         setLoadedProducts(parsed.products);
+                         setTotalCount(50); // Cache size
+                         dataFound = true;
+                     }
+                 } catch(e) {}
+             }
+         }
+
+         if (!dataFound) {
+             // Fallback to API
+             // If we have ID, use optimized endpoint
+             if (catDef) {
+                 const products = await api.getProductsByCategory(catDef.id, 1, pageSize);
+                 setLoadedProducts(products);
+                 setTotalCount(products.length); // approximate
+             } else {
+                 // Fallback for subcategories or unknown
+                 const result = await api.getProducts(1, pageSize);
+                 setLoadedProducts(result.products);
+                 setTotalCount(result.totalCount);
+             }
+         }
       }
       
       setIsLoading(false);
