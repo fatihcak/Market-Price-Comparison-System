@@ -178,20 +178,25 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// CACHE WARMUP ON STARTUP
+// AUTOMATIC MIGRATION & CACHE WARMUP ON STARTUP
 using (var scope = app.Services.CreateScope())
 {
+    var services = scope.ServiceProvider;
     try
     {
-        var services = scope.ServiceProvider;
+        // 1. Apply Database Migrations
+        var context = services.GetRequiredService<AppDbContext>();
+        Console.WriteLine("Applying database migrations...");
+        await context.Database.MigrateAsync();
+        Console.WriteLine("Database migrations applied successfully.");
+
+        // 2. Warm up Cache
         var cacheWarmer = services.GetRequiredService<ICacheWarmer>();
-        // Using Wait() since we are in top-level statements (sync context) or await if possible. 
-        // Top-level statements support await.
         await cacheWarmer.WarmupAsync();
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"⚠️ Startup Cache Warmup failed: {ex.Message}");
+        Console.WriteLine($"⚠️ Startup failed: {ex.Message}");
     }
 }
 
