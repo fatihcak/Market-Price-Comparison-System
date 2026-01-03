@@ -296,4 +296,63 @@ public class ProductRepository : Repository<Product>, IProductRepository
 
         return (items, totalCount);
     }
+
+    /// <summary>
+    /// OPTIMIZED: Calculate discount in SQL, filter and paginate at database level
+    /// Avoids loading 3000+ products into memory
+    /// </summary>
+    public async Task<(IEnumerable<Product> Items, int TotalCount)> GetProductsOrderedByDiscountAsync(int page, int pageSize)
+    {
+        page = page < 1 ? 1 : page;
+        pageSize = pageSize < 1 ? 20 : (pageSize > 100 ? 100 : pageSize);
+
+        // Step 1: Query products with aggregated prices using projection
+        // This calculates MIN/MAX at SQL level and filters products with actual discounts
+        var discountedProductIds = await _context.Product
+            .AsNoTracking()
+            .Where(p => p.MarketProductPrices.Any())
+            .Select(p => new
+            {
+                ProductId = p.Id,
+                MinPrice = p.MarketProductPrices.Min(mp => mp.Price),
+                MaxPrice = p.MarketProductPrices.Max(mp => mp.Price)
+            })
+            .Where(x => x.MaxPrice > x.MinPrice && x.MaxPrice > 0)
+            .Select(x => new
+            {
+                x.ProductId,
+                Discount = (double)((x.MaxPrice - x.MinPrice) / x.MaxPrice * 100)
+            })
+            .OrderByDescending(x => x.Discount)
+            .ToListAsync();
+
+        var totalCount = discountedProductIds.Count;
+
+        // Step 2: Get paginated IDs
+        var pagedIds = discountedProductIds
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(x => x.ProductId)
+            .ToList();
+
+        if (!pagedIds.Any())
+            return (new List<Product>(), totalCount);
+
+        // Step 3: Fetch full product details only for the paginated set
+        var products = await _context.Product
+            .AsNoTracking()
+            .Where(p => pagedIds.Contains(p.Id))
+            .Include(p => p.Category)
+            .Include(p => p.MarketProductPrices)
+                .ThenInclude(mpp => mpp.Market)
+            .ToListAsync();
+
+        // Step 4: Preserve discount ordering
+        var orderedProducts = pagedIds
+            .Select(id => products.FirstOrDefault(p => p.Id == id))
+            .Where(p => p != null)
+            .ToList();
+
+        return (orderedProducts!, totalCount);
+    }
 }

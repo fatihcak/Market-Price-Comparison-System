@@ -18,4 +18,5 @@ public interface IProductRepository : IRepository<Product>
     Task<(IEnumerable<Product> Items, int TotalCount)> SearchByNameWithPaginationAsync(string searchTerm, int pageNumber, int pageSize);
     Task<(IEnumerable<Product> Items, int TotalCount)> GetByCategoryIdWithPaginationAsync(int categoryId, int pageNumber, int pageSize);
     Task<(IEnumerable<Product> Items, int TotalCount)> SearchByBrandWithPaginationAsync(string brand, int pageNumber, int pageSize);
+    Task<(IEnumerable<Product> Items, int TotalCount)> GetProductsOrderedByDiscountAsync(int page, int pageSize);
 }
