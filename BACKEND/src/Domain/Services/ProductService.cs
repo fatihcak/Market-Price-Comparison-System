@@ -184,22 +184,50 @@ public class ProductService : IProductService
 
     public async Task<(IEnumerable<ProductResponseDTO> Products, int TotalCount)> GetProductsOrderedByDiscountAsync(int page, int pageSize)
     {
-        // Get all products with details to calculate discount
-        var products = await _productRepository.GetAllWithDetailsAsync();
-        
-        // Map to DTO and filter to only products with discount > 0
-        var productsWithDiscount = products
-            .Select(p => MapToResponseDTO(p))
-            .Where(p => p.Discount > 0)
-            .OrderByDescending(p => p.Discount)
+        // OPTIMIZATION: Fetch ALL products with prices in a single query (approx 3000 items - fast in-memory)
+        // using AsNoTracking and SplitQuery from repository.
+        var allProducts = await _productRepository.GetAllWithDetailsAsync();
+
+        // Perform calculation and sorting in-memory
+        var productsWithDiscount = allProducts
+            .Where(p => p.MarketProductPrices.Any()) // Only considering products with prices
+            .Select(p => 
+            {
+                var prices = p.MarketProductPrices;
+                var minPrice = prices.Min(x => x.Price);
+                var maxPrice = prices.Max(x => x.Price);
+                
+                // Calculate discount strictly
+                // Discount is only valid if we have varying prices (Max > Min) 
+                // AND Max > 0
+                double discount = 0;
+                if (maxPrice > 0 && maxPrice > minPrice)
+                {
+                    discount = (double)((maxPrice - minPrice) / maxPrice * 100);
+                }
+
+                return new 
+                { 
+                    Product = p, 
+                    Discount = discount,
+                    MinPrice = minPrice,
+                    MaxPrice = maxPrice
+                };
+            })
+            .Where(x => x.Discount > 0) // Filter only discounted products
+            .OrderByDescending(x => x.Discount)
             .ToList();
-        
+
         var totalCount = productsWithDiscount.Count;
-        var pagedProducts = productsWithDiscount
+
+        // Paginate the sorted list
+        var pagedItems = productsWithDiscount
             .Skip((page - 1) * pageSize)
-            .Take(pageSize);
-        
-        return (pagedProducts, totalCount);
+            .Take(pageSize)
+            .Select(x => MapToResponseDTO(x.Product))
+            .ToList();
+
+        return (pagedItems, totalCount);
     }
 
     private static ProductResponseDTO MapToResponseDTO(Product product)

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataAccess.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251222165616_Initial")]
-    partial class Initial
+    [Migration("20260102212833_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -74,17 +74,9 @@ namespace DataAccess.Migrations
                         .HasColumnType("nvarchar(100)")
                         .HasColumnName("CityName");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("CreatedAt");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit")
-                        .HasColumnName("IsDeleted");
-
                     b.HasKey("Id");
 
-                    b.ToTable("Cities", (string)null);
+                    b.ToTable("City", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.District", b =>
@@ -100,19 +92,11 @@ namespace DataAccess.Migrations
                         .HasColumnType("int")
                         .HasColumnName("CityID");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("CreatedAt");
-
                     b.Property<string>("DistrictName")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)")
                         .HasColumnName("DistrictName");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit")
-                        .HasColumnName("IsDeleted");
 
                     b.HasKey("Id");
 
@@ -120,7 +104,7 @@ namespace DataAccess.Migrations
 
                     b.HasIndex("DistrictName");
 
-                    b.ToTable("Districts", (string)null);
+                    b.ToTable("District", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.Market", b =>
@@ -131,19 +115,6 @@ namespace DataAccess.Migrations
                         .HasColumnName("MarketID");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("CreatedAt");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit")
-                        .HasColumnName("IsDeleted");
-
-                    b.Property<string>("LogoUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)")
-                        .HasColumnName("LogoURL");
 
                     b.Property<string>("MarketName")
                         .IsRequired()
@@ -160,7 +131,7 @@ namespace DataAccess.Migrations
 
                     b.HasIndex("MarketName");
 
-                    b.ToTable("Markets", (string)null);
+                    b.ToTable("Market", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.MarketProductPrice", b =>
@@ -172,19 +143,11 @@ namespace DataAccess.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("CreatedAt");
-
                     b.Property<int>("DistrictId")
                         .HasColumnType("int")
                         .HasColumnName("DistrictID");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit")
-                        .HasColumnName("IsDeleted");
-
-                    b.Property<DateTime>("LastUpdated")
+                    b.Property<DateTime?>("LastUpdated")
                         .HasColumnType("datetime2")
                         .HasColumnName("LastUpdated");
 
@@ -210,9 +173,11 @@ namespace DataAccess.Migrations
 
                     b.HasIndex("ProductId");
 
+                    b.HasIndex("MarketId", "ProductId");
+
                     b.HasIndex("ProductId", "DistrictId");
 
-                    b.ToTable("MarketProductPrices", (string)null);
+                    b.ToTable("MarketProductPrice", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.Product", b =>
@@ -233,15 +198,12 @@ namespace DataAccess.Migrations
                         .HasColumnType("int")
                         .HasColumnName("CategoryID");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("CreatedAt");
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("ImageURL");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit")
-                        .HasColumnName("IsDeleted");
-
-                    b.Property<DateTime>("LastUpdated")
+                    b.Property<DateTime?>("LastUpdated")
                         .HasColumnType("datetime2")
                         .HasColumnName("LastUpdated");
 
@@ -252,7 +214,6 @@ namespace DataAccess.Migrations
                         .HasColumnName("ProductName");
 
                     b.Property<string>("Unit")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)")
                         .HasColumnName("Unit");
@@ -265,7 +226,7 @@ namespace DataAccess.Migrations
 
                     b.HasIndex("ProductName");
 
-                    b.ToTable("Products", (string)null);
+                    b.ToTable("Product", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.ProductCategory", b =>
@@ -283,21 +244,9 @@ namespace DataAccess.Migrations
                         .HasColumnType("nvarchar(100)")
                         .HasColumnName("CategoryName");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("CreatedAt");
-
-                    b.Property<string>("Icon")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit")
-                        .HasColumnName("IsDeleted");
-
                     b.HasKey("Id");
 
-                    b.ToTable("ProductCategories", (string)null);
+                    b.ToTable("ProductCategory", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.ProductPriceHistory", b =>
@@ -340,14 +289,6 @@ namespace DataAccess.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("AddedDate");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("CreatedAt");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit")
-                        .HasColumnName("IsDeleted");
-
                     b.Property<int>("ProductId")
                         .HasColumnType("int")
                         .HasColumnName("ProductID");
@@ -371,7 +312,7 @@ namespace DataAccess.Migrations
                     b.HasIndex("SessionId", "ProductId")
                         .IsUnique();
 
-                    b.ToTable("UserProductLists", (string)null);
+                    b.ToTable("UserProductList", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.District", b =>
