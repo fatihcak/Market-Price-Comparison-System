@@ -14,7 +14,7 @@ import { Product, CartItem } from './types';
 import { api } from './services/api';
 import AiChatbot from './components/AiChatbot';
 import SubCategoryNavbar from './components/SubCategoryNavbar';
-import { CATEGORIES } from './constants/categories'; // Import categories
+import { CATEGORIES, Category } from './constants/categories'; // Import categories
 
 
 
@@ -25,7 +25,6 @@ function App() {
   const [selectedProductId, setSelectedProductId] = useState<number | undefined>(undefined);
   const [selectedProductForComparison, setSelectedProductForComparison] = useState<Product | null>(null);
   const [listOpen, setListOpen] = useState(false);
-  const [products, setProducts] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [shoppingList, setShoppingList] = useState<CartItem[]>(() => {
     const saved = localStorage.getItem('market_basket');
@@ -39,13 +38,45 @@ function App() {
     return [];
   });
 
-  // Preload Categories logic
+  const [activeCategories, setActiveCategories] = useState<Category[]>(CATEGORIES);
+
+  // Preload Categories & Fetch Real IDs
   const preloadCategories = async () => {
-    const categories = [1, 2, 3, 4, 5, 6, 7]; // IDs of 7 categories
-    console.log("🚀 Starting background category preload...");
+      let updatedCategories: Category[] = [];
+      // 1. Fetch proper IDs from Backend (Fix for "No products found")
+      try {
+          const backendCats = await api.getCategories();
+          if (backendCats && backendCats.length > 0) {
+              updatedCategories = CATEGORIES.map(frontendCat => {
+                  // Find matching backend category by loose name matching
+                  const match = backendCats.find(bc => 
+                      bc.categoryName.toLowerCase().trim() === frontendCat.name.toLowerCase().trim() ||
+                      bc.categoryName.toLowerCase().trim() === frontendCat.slug.toLowerCase().trim() || 
+                      // Handle potential singular/plural mismatch
+                       // e.g. "Drinks" vs "Drink"
+                      (frontendCat.name.includes(bc.categoryName) || bc.categoryName.includes(frontendCat.name)) 
+                  );
+
+                  if (match) {
+                      console.log(`✅ Mapped Category: ${frontendCat.name} (ID: ${frontendCat.id} -> ${match.id})`);
+                      return { ...frontendCat, id: match.id };
+                  } else {
+                      return frontendCat;
+                  }
+              });
+              setActiveCategories(updatedCategories);
+          }
+      } catch (e) {
+          console.error("Failed to sync category IDs", e);
+      }
+
+    // Use mapped IDs for preloading, or fallback to default
+    const currentCats = updatedCategories.length > 0 ? updatedCategories : CATEGORIES;
+    console.log("🚀 Starting background category preload with IDs:", currentCats.map(c => c.id));
     
     // Process one by one with a small delay to be gentle
-    for (const id of categories) {
+    for (const cat of currentCats) {
+      const id = cat.id;
       // Check if already cached and valid (6 hours)
       const key = `category_${id}_data`;
       const cached = localStorage.getItem(key);
@@ -70,7 +101,7 @@ function App() {
                     totalCount: result.totalCount
                 };
                 localStorage.setItem(key, JSON.stringify(cacheData));
-                console.log(`✅ Preloaded Category ${id}`);
+                console.log(`✅ Preloaded Category ${id} (${cat.name})`);
             }
           } catch (err) {
               console.error(`Failed to preload category ${id}`, err);
@@ -82,15 +113,11 @@ function App() {
   };
 
   useEffect(() => {
-    // Load initial products using getProductsByDiscount for homepage (top 20 discounted)
-    // This is the "Page 1" of the homepage
-    api.getProductsByDiscount(1, 20).then(result => {
-        setProducts(result.products);
-        // Start preloading after 3 seconds to ensure UI is interactive first
-        setTimeout(() => {
-            preloadCategories();
-        }, 3000);
-    });
+    // Start preloading categories after a short delay to ensure UI is interactive first
+    const timer = setTimeout(() => {
+        preloadCategories();
+    }, 3000);
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -136,42 +163,6 @@ function App() {
 
   const totalItems = shoppingList.reduce((sum, item) => sum + item.quantity, 0);
 
-  // Normalize Turkish characters for search
-  const normalizeTurkish = (text: string): string => {
-    return text
-      .toLowerCase()
-      .replace(/ğ/g, 'g')
-      .replace(/ü/g, 'u')
-      .replace(/ş/g, 's')
-      .replace(/ı/g, 'i')
-      .replace(/ö/g, 'o')
-      .replace(/ç/g, 'c')
-      .replace(/İ/g, 'i')
-      .replace(/Ğ/g, 'g')
-      .replace(/Ü/g, 'u')
-      .replace(/Ş/g, 's')
-      .replace(/Ö/g, 'o')
-      .replace(/Ç/g, 'c');
-  };
-
-  // Check if text contains all query words (supports multi-word search)
-  const matchesSearch = (text: string, query: string): boolean => {
-    const normalizedText = normalizeTurkish(text || '');
-    const queryWords = normalizeTurkish(query).split(/\s+/).filter(w => w.length > 0);
-
-    // All query words must be found in the text
-    return queryWords.every(queryWord =>
-      normalizedText.includes(queryWord)
-    );
-  };
-
-  // Filter products based on search query
-  const filteredProducts = searchQuery.trim()
-    ? products.filter(p => {
-      const combinedText = `${p.name || ''} ${p.brand || ''} ${p.category || ''}`;
-      return matchesSearch(combinedText, searchQuery);
-    })
-    : products;
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -188,8 +179,8 @@ function App() {
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-3xl font-bold text-gray-900">Categories</h2>
           </div>
-          <CategorySection />
-          <SubCategoryNavbar />
+          <CategorySection categories={activeCategories} />
+          <SubCategoryNavbar categories={activeCategories} />
         </section>
 
         <Routes>
@@ -198,7 +189,8 @@ function App() {
             path="/products/:category/:subcategory?"
             element={
               <ProductGrid
-                products={filteredProducts}
+                searchQuery={searchQuery}
+                categories={activeCategories}
                 onAdd={addToShoppingList}
                 onCompare={openComparison}
               />
@@ -305,12 +297,14 @@ function App() {
 }
 
 interface ProductGridProps {
-  products: Product[];
+  // products prop removed as it was unused and caused confusion
+  searchQuery?: string;
+  categories: Category[];
   onAdd: (product: Product) => void;
   onCompare: (product: Product) => void;
 }
 
-function ProductGrid({ onAdd, onCompare }: ProductGridProps) {
+function ProductGrid({ searchQuery, categories, onAdd, onCompare }: ProductGridProps) {
   const { category, subcategory } = useParams<{ category: string; subcategory?: string }>();
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
@@ -331,7 +325,7 @@ function ProductGrid({ onAdd, onCompare }: ProductGridProps) {
 
   const selectedCategory = category || 'All';
 
-  // Fetch products from API based on category
+  // Fetch products from API based on category OR search
   useEffect(() => {
     const fetchProducts = async () => {
       setIsLoading(true);
@@ -339,8 +333,15 @@ function ProductGrid({ onAdd, onCompare }: ProductGridProps) {
       
       let dataFound = false;
 
+      // 0. Search Logic (Priority)
+      if (searchQuery && searchQuery.trim().length > 0) {
+          const result = await api.searchProducts(searchQuery, 1, pageSize);
+          setLoadedProducts(result.products);
+          setTotalCount(result.totalCount);
+          dataFound = true;
+      } 
       // 1. URL-based routing logic
-      if (selectedCategory === 'All' && !subcategory) {
+      else if (selectedCategory === 'All' && !subcategory) {
         // HOMEPAGE: Discounted Products (Pagination supported)
         const result = await api.getProductsByDiscount(1, pageSize);
         setLoadedProducts(result.products);
@@ -348,7 +349,7 @@ function ProductGrid({ onAdd, onCompare }: ProductGridProps) {
         dataFound = true;
       } else {
          // CATEGORY PAGE
-         const catDef = CATEGORIES.find(c => c.slug === selectedCategory);
+         const catDef = categories.find(c => c.slug === selectedCategory);
          
          if (catDef && !subcategory) {
              const key = `category_${catDef.id}_data`;
@@ -386,7 +387,7 @@ function ProductGrid({ onAdd, onCompare }: ProductGridProps) {
     };
     
     fetchProducts();
-  }, [selectedCategory, subcategory]);
+  }, [selectedCategory, subcategory, searchQuery]);
 
   // Smart Prefetching: When on middle page of a packet (2, 5, 8...), fetch next packet
   useEffect(() => {

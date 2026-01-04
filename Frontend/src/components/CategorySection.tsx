@@ -1,7 +1,11 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { CATEGORIES } from '../constants/categories';
+import { Category } from '../constants/categories';
 
-export default function CategorySection() {
+interface Props {
+  categories: Category[];
+}
+
+export default function CategorySection({ categories }: Props) {
   const navigate = useNavigate();
   const { category } = useParams<{ category: string }>();
   // If category is undefined, it defaults to 'All'
@@ -20,7 +24,7 @@ export default function CategorySection() {
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 group">
-      {CATEGORIES.map((cat) => {
+      {categories.map((cat) => {
         const Icon = cat.icon;
         const isSelected = selectedCategory === cat.slug;
 

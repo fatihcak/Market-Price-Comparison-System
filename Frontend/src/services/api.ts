@@ -1,4 +1,4 @@
-import { PriceResponseDTO, Product, ProductResponseDTO, ProductPriceHistoryDTO, Market, MarketResponseDTO } from '../types';
+import { PriceResponseDTO, Product, ProductResponseDTO, ProductPriceHistoryDTO, Market, MarketResponseDTO, CategoryResponseDTO } from '../types';
 
 const API_BASE_URL = import.meta.env.DEV 
   ? 'http://localhost:5000/api'
@@ -20,6 +20,19 @@ export const api = {
             }));
         } catch (error) {
             console.error('Error fetching markets:', error);
+            return [];
+        }
+    },
+    getCategories: async (): Promise<CategoryResponseDTO[]> => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/Category`);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const result = await response.json();
+            return result.data || result;
+        } catch (error) {
+            console.error('Error fetching categories:', error);
             return [];
         }
     },
@@ -205,15 +218,16 @@ export const api = {
         }
     },
 
-    searchProducts: async (query: string): Promise<Product[]> => {
+    searchProducts: async (query: string, page: number = 1, pageSize: number = 50): Promise<{ products: Product[]; totalCount: number }> => {
         try {
-            const response = await fetch(`${API_BASE_URL}/Product/search?name=${encodeURIComponent(query)}`);
+            const response = await fetch(`${API_BASE_URL}/Product/search?name=${encodeURIComponent(query)}&page=${page}&pageSize=${pageSize}`);
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
+            const totalCount = parseInt(response.headers.get('X-Total-Count') || '0', 10);
             const result = await response.json();
             const data: ProductResponseDTO[] = result.data || result;
-            return data.map(item => ({
+            const products = data.map(item => ({
                 id: item.id,
                 name: item.productName,
                 price: item.price,
@@ -223,11 +237,14 @@ export const api = {
                 category: item.categoryName,
                 image: item.imageUrl || 'https://placehold.co/200x200?text=No+Image',
                 brand: item.brand,
-                unit: item.unit
+                unit: item.unit,
+                marketCount: item.marketCount || 1,
+                variantIds: [item.id]
             }));
+             return { products, totalCount };
         } catch (error) {
             console.error('Error searching products:', error);
-            return [];
+            return { products: [], totalCount: 0 };
         }
     },
 

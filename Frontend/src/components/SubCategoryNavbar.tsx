@@ -1,8 +1,11 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { CATEGORIES } from '../constants/categories';
+import { Category } from '../constants/categories';
 
+interface Props {
+    categories: Category[];
+}
 
-export default function SubCategoryNavbar() {
+export default function SubCategoryNavbar({ categories }: Props) {
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -14,7 +17,7 @@ export default function SubCategoryNavbar() {
     const category = categoryParam ? decodeURIComponent(categoryParam) : undefined;
     const subcategory = subCategoryParam ? decodeURIComponent(subCategoryParam) : undefined;
 
-    const currentCategory = CATEGORIES.find(c => c.slug === category);
+    const currentCategory = categories.find(c => c.slug === category);
 
     // If no valid category found or no subcategories, render nothing
     if (!currentCategory || !currentCategory.subCategories.length) {
