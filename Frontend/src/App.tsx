@@ -1,5 +1,5 @@
 import { MapPin, TrendingDown, ShoppingCart, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Routes, Route, useParams, useNavigate, Navigate } from 'react-router-dom';
 import Header from './components/Header';
 import SearchBar from './components/SearchBar';
@@ -19,6 +19,7 @@ import { CATEGORIES, Category } from './constants/categories'; // Import categor
 
 
 function App() {
+  const preloadStarted = useRef(false);
   const [comparisonOpen, setComparisonOpen] = useState(false);
   const [basketComparisonOpen, setBasketComparisonOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState('Organik Süt 1L');
@@ -74,8 +75,11 @@ function App() {
     const currentCats = updatedCategories.length > 0 ? updatedCategories : CATEGORIES;
     console.log("🚀 Starting background category preload with IDs:", currentCats.map(c => c.id));
     
-    // Process one by one with a small delay to be gentle
+    // Process one by one with a delay to prevent request waterfall
     for (const cat of currentCats) {
+      // Add artificial delay between requests (1.5s) to be gentle on the server
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
       const id = cat.id;
       // Check if already cached and valid (6 hours)
       const key = `category_${id}_data`;
@@ -115,7 +119,10 @@ function App() {
   useEffect(() => {
     // Start preloading categories after a short delay to ensure UI is interactive first
     const timer = setTimeout(() => {
-        preloadCategories();
+        if (!preloadStarted.current) {
+            preloadStarted.current = true;
+            preloadCategories();
+        }
     }, 3000);
     return () => clearTimeout(timer);
   }, []);
