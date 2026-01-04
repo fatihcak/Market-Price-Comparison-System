@@ -83,15 +83,47 @@ namespace Domain.Services
                         if (analysis.Items != null && analysis.Items.Any())
                         {
                             var addedItems = new List<string>();
+                            
+                            // Batch search first (1 DB call for all items)
+                            var batchMatches = (await _productRepository.SearchByNamesAsync(analysis.Items)).ToList();
+                            var itemsNeedingFuzzy = new List<string>();
+                            
+                            // First pass: exact match from batch
                             foreach (var item in analysis.Items)
                             {
-                                // Smart Normalization: Try to find the canonical name
-                                var fuzzyMatches = await _productRepository.SearchWithFuzzyAsync(item);
-                                var canonicalName = fuzzyMatches.FirstOrDefault()?.ProductName ?? item;
+                                var match = batchMatches.FirstOrDefault(p => 
+                                    p.ProductName.Contains(item, StringComparison.OrdinalIgnoreCase));
                                 
-                                shoppingList.Add(canonicalName);
-                                addedItems.Add(canonicalName);
+                                if (match != null)
+                                {
+                                    shoppingList.Add(match.ProductName);
+                                    addedItems.Add(match.ProductName);
+                                }
+                                else
+                                {
+                                    itemsNeedingFuzzy.Add(item);
+                                }
                             }
+                            
+                            // Second pass: parallel fuzzy search for unmatched
+                            if (itemsNeedingFuzzy.Any())
+                            {
+                                var fuzzyTasks = itemsNeedingFuzzy.Select(async item =>
+                                {
+                                    var fuzzyMatches = await _productRepository.SearchWithFuzzyAsync(item);
+                                    return (Item: item, Match: fuzzyMatches.FirstOrDefault());
+                                });
+                                
+                                var fuzzyResults = await Task.WhenAll(fuzzyTasks);
+                                
+                                foreach (var result in fuzzyResults)
+                                {
+                                    var canonicalName = result.Match?.ProductName ?? result.Item;
+                                    shoppingList.Add(canonicalName);
+                                    addedItems.Add(canonicalName);
+                                }
+                            }
+                            
                             _memoryCache.Set(shoppingListKey, shoppingList, TimeSpan.FromMinutes(60));
                             response.Reply = $"Added {string.Join(", ", addedItems)} to your list.";
                         }
@@ -397,43 +429,75 @@ namespace Domain.Services
 
         private async Task<ChatResponseDto> CalculateSmartBasketAsync(List<string> items)
         {
-            // 1. Batch fetch all relevant products for the requested items
-            var allFoundProducts = await _productRepository.SearchByNamesAsync(items);
+            // 1. Batch fetch all relevant products for the requested items (1 DB call)
+            var allFoundProducts = (await _productRepository.SearchByNamesAsync(items)).ToList();
             
             var productMap = new Dictionary<string, List<Product>>();
             var allProductIds = new List<int>();
+            var itemsNeedingFuzzy = new List<string>();
 
-            // Map products back to the requested items (in-memory)
+            // First pass: Try exact matching from batch results
             foreach (var item in items)
             {
-                var matches = new List<Product>();
-
-                // 1. Exact Match
                 var exactMatches = allFoundProducts
                     .Where(p => p.ProductName.Contains(item, StringComparison.OrdinalIgnoreCase))
                     .ToList();
-                matches.AddRange(exactMatches);
+                
+                if (exactMatches.Any())
+                {
+                    productMap[item] = exactMatches;
+                    allProductIds.AddRange(exactMatches.Select(p => p.Id));
+                }
+                else
+                {
+                    // Mark for fuzzy search
+                    itemsNeedingFuzzy.Add(item);
+                }
+            }
 
-                // 2. Fuzzy Match (if no exact match)
-                if (!matches.Any())
+            // Second pass: Batch fuzzy search for items without exact matches
+            // Note: SearchWithFuzzyAsync handles one term at a time but is already optimized
+            // For true batching, we'd need a new repository method, but we can parallelize
+            if (itemsNeedingFuzzy.Any())
+            {
+                // Run fuzzy searches in parallel (reduces wall-clock time)
+                var fuzzyTasks = itemsNeedingFuzzy.Select(async item => 
                 {
                     var fuzzyMatches = await _productRepository.SearchWithFuzzyAsync(item);
-                    matches.AddRange(fuzzyMatches);
-                }
-
-                // 3. Category Match (if still no match)
-                if (!matches.Any())
+                    return (Item: item, Matches: fuzzyMatches.ToList());
+                });
+                
+                var fuzzyResults = await Task.WhenAll(fuzzyTasks);
+                
+                foreach (var result in fuzzyResults)
                 {
-                     var catMatches = await _productRepository.SearchByCategoryAsync(item);
-                     matches.AddRange(catMatches);
+                    if (result.Matches.Any())
+                    {
+                        productMap[result.Item] = result.Matches;
+                        allProductIds.AddRange(result.Matches.Select(p => p.Id));
+                        itemsNeedingFuzzy.Remove(result.Item);
+                    }
                 }
+            }
 
-                if (matches.Any())
+            // Third pass: Category search for remaining items (parallel)
+            if (itemsNeedingFuzzy.Any())
+            {
+                var categoryTasks = itemsNeedingFuzzy.Select(async item =>
                 {
-                    // Deduplicate
-                    matches = matches.DistinctBy(p => p.Id).ToList();
-                    productMap[item] = matches;
-                    allProductIds.AddRange(matches.Select(p => p.Id));
+                    var catMatches = await _productRepository.SearchByCategoryAsync(item);
+                    return (Item: item, Matches: catMatches.ToList());
+                });
+                
+                var categoryResults = await Task.WhenAll(categoryTasks);
+                
+                foreach (var result in categoryResults)
+                {
+                    if (result.Matches.Any())
+                    {
+                        productMap[result.Item] = result.Matches;
+                        allProductIds.AddRange(result.Matches.Select(p => p.Id));
+                    }
                 }
             }
 

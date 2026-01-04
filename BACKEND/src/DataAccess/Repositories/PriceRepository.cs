@@ -52,4 +52,70 @@ public class PriceRepository : Repository<MarketProductPrice>, IPriceRepository
         await _context.ProductPriceHistory.AddAsync(history);
         await _context.SaveChangesAsync();
     }
+
+    // Pagination methods
+    public async Task<(IEnumerable<MarketProductPrice> Items, int TotalCount)> GetByProductIdWithPaginationAsync(int productId, int page, int pageSize)
+    {
+        page = page < 1 ? 1 : page;
+        pageSize = pageSize < 1 ? 20 : (pageSize > 100 ? 100 : pageSize);
+
+        var query = _context.MarketProductPrice
+            .AsNoTracking()
+            .Where(p => p.ProductId == productId);
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .Include(p => p.Market)
+            .Include(p => p.District)
+            .OrderBy(p => p.Price)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (items, totalCount);
+    }
+
+    public async Task<(IEnumerable<MarketProductPrice> Items, int TotalCount)> GetByMarketIdWithPaginationAsync(int marketId, int page, int pageSize)
+    {
+        page = page < 1 ? 1 : page;
+        pageSize = pageSize < 1 ? 20 : (pageSize > 100 ? 100 : pageSize);
+
+        var query = _context.MarketProductPrice
+            .AsNoTracking()
+            .Where(p => p.MarketId == marketId);
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .Include(p => p.Product)
+            .OrderBy(p => p.Product!.ProductName)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (items, totalCount);
+    }
+
+    public async Task<(IEnumerable<MarketProductPrice> Items, int TotalCount)> GetByDistrictIdWithPaginationAsync(int districtId, int page, int pageSize)
+    {
+        page = page < 1 ? 1 : page;
+        pageSize = pageSize < 1 ? 20 : (pageSize > 100 ? 100 : pageSize);
+
+        var query = _context.MarketProductPrice
+            .AsNoTracking()
+            .Where(p => p.DistrictId == districtId);
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .Include(p => p.Product)
+            .Include(p => p.Market)
+            .OrderBy(p => p.Product!.ProductName)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (items, totalCount);
+    }
 }

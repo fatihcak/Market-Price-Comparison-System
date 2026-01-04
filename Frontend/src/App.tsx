@@ -62,11 +62,12 @@ function App() {
       if (!isValid) {
           try {
             // Fetch page 1, size 50
-            const products = await api.getProductsByCategory(id, 1, 50);
-            if (products && products.length > 0) {
+            const result = await api.getProductsByCategory(id, 1, 50);
+            if (result && result.products.length > 0) {
                 const cacheData = {
                     timestamp: Date.now(),
-                    products: products
+                    products: result.products,
+                    totalCount: result.totalCount
                 };
                 localStorage.setItem(key, JSON.stringify(cacheData));
                 console.log(`✅ Preloaded Category ${id}`);
@@ -326,7 +327,7 @@ function ProductGrid({ onAdd, onCompare }: ProductGridProps) {
   const [apiPage, setApiPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const pageSize = 50;
+  const pageSize = 48; // Fetch 3 pages worth of data (16 * 3)
 
   const selectedCategory = category || 'All';
 
@@ -340,19 +341,13 @@ function ProductGrid({ onAdd, onCompare }: ProductGridProps) {
 
       // 1. URL-based routing logic
       if (selectedCategory === 'All' && !subcategory) {
-        // HOMEPAGE: Top Discounted
-        // Backend cache handles this on /by-discount endpoint
-        const result = await api.getProductsByDiscount(1, 20);
+        // HOMEPAGE: Discounted Products (Pagination supported)
+        const result = await api.getProductsByDiscount(1, pageSize);
         setLoadedProducts(result.products);
         setTotalCount(result.totalCount);
         dataFound = true;
       } else {
          // CATEGORY PAGE
-         // Try finding ID from slug to check LocalStorage
-         // Note: We need a reliable Slug -> ID map.
-         // Based on categories.ts, we can try to guess or hardcode common ones for now.
-         // Or purely rely on Backend Cache if we can't map it easily in this file without import.
-         // But we imported CATEGORIES at the top!
          const catDef = CATEGORIES.find(c => c.slug === selectedCategory);
          
          if (catDef && !subcategory) {
@@ -365,7 +360,7 @@ function ProductGrid({ onAdd, onCompare }: ProductGridProps) {
                      if (Date.now() - parsed.timestamp < 6 * 60 * 60 * 1000) {
                          console.log(`⚡ Loaded Category ${catDef.id} from LocalStorage!`);
                          setLoadedProducts(parsed.products);
-                         setTotalCount(50); // Cache size
+                         setTotalCount(parsed.totalCount || 50); // Use cached totalCount or fallback
                          dataFound = true;
                      }
                  } catch(e) {}
@@ -374,11 +369,10 @@ function ProductGrid({ onAdd, onCompare }: ProductGridProps) {
 
          if (!dataFound) {
              // Fallback to API
-             // If we have ID, use optimized endpoint
              if (catDef) {
-                 const products = await api.getProductsByCategory(catDef.id, 1, pageSize);
-                 setLoadedProducts(products);
-                 setTotalCount(products.length); // approximate
+                 const result = await api.getProductsByCategory(catDef.id, 1, pageSize);
+                 setLoadedProducts(result.products);
+                 setTotalCount(result.totalCount); 
              } else {
                  // Fallback for subcategories or unknown
                  const result = await api.getProducts(1, pageSize);
@@ -394,16 +388,48 @@ function ProductGrid({ onAdd, onCompare }: ProductGridProps) {
     fetchProducts();
   }, [selectedCategory, subcategory]);
 
-  // Load more products handler
+  // Smart Prefetching: When on middle page of a packet (2, 5, 8...), fetch next packet
+  useEffect(() => {
+    const isMiddleOfPacket = (currentPage % 3) === 2; // Page 2, 5, 8...
+    // Calculate if we need more data for the NEXT packet (Items needed > Loaded Items)
+    // Current Packet covers up to page: (Math.ceil(currentPage / 3) * 3)
+    // Next Packet covers up to page: (Math.ceil(currentPage / 3) + 1) * 3
+    const packetNumber = Math.ceil(currentPage / 3);
+    const neededItems = (packetNumber + 1) * 3 * itemsPerPage;
+
+    if (isMiddleOfPacket && loadedProducts.length < neededItems && loadedProducts.length < totalCount && !isLoading) {
+        console.log(`🚀 Prefetching next packet from page ${currentPage}...`);
+        handleLoadMore();
+    }
+  }, [currentPage, loadedProducts.length, totalCount, isLoading]);
+
+  // Load more products handler (Next Packet)
   const handleLoadMore = async () => {
     if (isLoading) return;
     
     setIsLoading(true);
     const nextPage = apiPage + 1;
+    let newProducts: Product[] = [];
     
-    const result = await api.getProducts(nextPage, pageSize);
-    setLoadedProducts(prev => [...prev, ...result.products]);
-    setApiPage(nextPage);
+    if (selectedCategory === 'All' && !subcategory) {
+        // Homepage / Discount
+        const result = await api.getProductsByDiscount(nextPage, pageSize);
+        newProducts = result.products;
+    } else {
+        const catDef = CATEGORIES.find(c => c.slug === selectedCategory);
+        if (catDef && !subcategory) {
+             const result = await api.getProductsByCategory(catDef.id, nextPage, pageSize);
+             newProducts = result.products;
+        } else {
+             const result = await api.getProducts(nextPage, pageSize);
+             newProducts = result.products;
+        }
+    }
+
+    if (newProducts.length > 0) {
+        setLoadedProducts(prev => [...prev, ...newProducts]);
+        setApiPage(nextPage);
+    }
     setIsLoading(false);
   };
 
@@ -411,6 +437,7 @@ function ProductGrid({ onAdd, onCompare }: ProductGridProps) {
 
   useEffect(() => {
     setCurrentPage(1);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [selectedCategory, subcategory, filters]);
 
   const handleFilterChange = (newFilters: FilterState) => {
@@ -419,32 +446,24 @@ function ProductGrid({ onAdd, onCompare }: ProductGridProps) {
 
   // Apply category, market, and price filters
   const filteredProducts = loadedProducts.filter(product => {
-    // Category filtering - Skip for "All" to show ALL products
-    // Also skip if we fetched by category ID (catDef exists), since API already filtered
     const mainCatDef = CATEGORIES.find(c => c.slug === selectedCategory);
     
     if (selectedCategory !== 'All' && !mainCatDef) {
-      // Unknown category, filter out
       return false;
     }
 
-    // Only do subcategory filtering if a specific subcategory is selected
     if (subcategory) {
       if (product.category !== subcategory && product.categoryName !== subcategory) {
         return false;
       }
     }
-    // If no subcategory selected AND we have a mainCatDef, trust the API data
-    // (API already returned products for this category)
 
-    // Market filtering (only if markets are selected)
     if (filters.selectedMarkets.length > 0) {
       if (!filters.selectedMarkets.includes(product.market)) {
         return false;
       }
     }
 
-    // Price filtering
     if (product.price < filters.minPrice || product.price > filters.maxPrice) {
       return false;
     }
@@ -464,7 +483,9 @@ function ProductGrid({ onAdd, onCompare }: ProductGridProps) {
       case 'newest':
         return (b.id || 0) - (a.id || 0);
       case 'popular':
+      case 'relevance':
       default:
+        // For 'relevance', logic can be added. Default to marketCount or ID
         return (b.marketCount || 1) - (a.marketCount || 1);
     }
   });
@@ -528,23 +549,19 @@ function ProductGrid({ onAdd, onCompare }: ProductGridProps) {
           <div className="flex gap-1 items-center">
             {(() => {
               const pages: (number | string)[] = [];
-              const maxMiddlePages = 7; // Middle pages to show
+              const maxMiddlePages = 7; 
 
-              // Always add first page
               pages.push(1);
 
               if (totalPages <= 10) {
-                // If total pages <= 10, show all
                 for (let i = 2; i <= totalPages; i++) {
                   pages.push(i);
                 }
               } else {
-                // Calculate middle range centered on current page
                 const half = Math.floor(maxMiddlePages / 2);
                 let start = Math.max(2, currentPage - half);
                 let end = Math.min(totalPages - 1, currentPage + half);
 
-                // Adjust if at edges
                 if (currentPage <= half + 2) {
                   start = 2;
                   end = maxMiddlePages + 1;
@@ -553,22 +570,18 @@ function ProductGrid({ onAdd, onCompare }: ProductGridProps) {
                   end = totalPages - 1;
                 }
 
-                // Add ellipsis after first page if needed
                 if (start > 2) {
                   pages.push('...');
                 }
 
-                // Add middle pages
                 for (let i = start; i <= end; i++) {
                   pages.push(i);
                 }
 
-                // Add ellipsis before last page if needed
                 if (end < totalPages - 1) {
                   pages.push('...');
                 }
 
-                // Always add last page
                 pages.push(totalPages);
               }
 
@@ -603,16 +616,10 @@ function ProductGrid({ onAdd, onCompare }: ProductGridProps) {
         </div>
       )}
 
-      {/* Load More Button */}
-      {hasMore && selectedCategory !== 'All' && (
+      {/* Load More Button (Manual Trigger if needed) */}
+      {hasMore && (
         <div className="flex justify-center mt-8">
-          <button
-            onClick={handleLoadMore}
-            disabled={isLoading}
-            className="px-8 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg"
-          >
-            {isLoading ? 'Loading...' : 'Load More Products'}
-          </button>
+            {isLoading && <span className="text-gray-500 animate-pulse">Loading more products...</span>}
         </div>
       )}
     </section>

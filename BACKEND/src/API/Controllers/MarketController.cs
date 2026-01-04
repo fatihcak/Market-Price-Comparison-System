@@ -4,6 +4,8 @@ using DTOs.DTOs.Requests;
 using Microsoft.AspNetCore.Authorization;
 using Asp.Versioning;
 using API.Extensions;
+using Microsoft.Extensions.Caching.Memory;
+using DTOs.DTOs.Responses;
 
 namespace API.Controllers;
 
@@ -14,20 +16,32 @@ namespace API.Controllers;
 public class MarketController : ControllerBase
 {
     private readonly IMarketService _marketService;
+    private readonly IMemoryCache _cache;
 
-    public MarketController(IMarketService marketService)
+    public MarketController(IMarketService marketService, IMemoryCache cache)
     {
         _marketService = marketService;
+        _cache = cache;
     }
 
     /// <summary>
-    /// Get all markets
+    /// Get all markets (cached for 24 hours)
     /// </summary>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll()
     {
+        // Check cache first
+        if (_cache.TryGetValue(API.Constants.CacheKeys.AllMarkets, out IEnumerable<MarketResponseDTO>? cached))
+        {
+            return this.ApiOk(cached);
+        }
+
         var markets = await _marketService.GetAllMarketsAsync();
+        
+        // Cache for 24 hours (markets rarely change)
+        _cache.Set(API.Constants.CacheKeys.AllMarkets, markets, TimeSpan.FromHours(24));
+        
         return this.ApiOk(markets);
     }
 
