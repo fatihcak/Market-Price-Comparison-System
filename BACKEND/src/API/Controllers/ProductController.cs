@@ -63,7 +63,7 @@ public class ProductController : ControllerBase
         // CACHE CHECK: Only for first page (most critical)
         if (page == 1)
         {
-            if (_cache.TryGetValue(API.Constants.CacheKeys.DiscountedProducts, out IEnumerable<DTOs.DTOs.Responses.ProductResponseDTO> cachedProducts))
+            if (_cache.TryGetValue(API.Constants.CacheKeys.DiscountedProducts, out IEnumerable<DTOs.DTOs.Responses.ProductResponseDTO>? cachedProducts) && cachedProducts != null)
             {
                 // Note: The cache might have 100 items. If user asks for 20, we take 20.
                 var cachedPaged = cachedProducts.Take(pageSize);
@@ -91,28 +91,37 @@ public class ProductController : ControllerBase
     }
 
     /// <summary>
-    /// Get product by ID
+    /// Get product by ID (with negative caching for 404s)
     /// </summary>
     [HttpGet("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(int id)
     {
-        // Cache check
         var cacheKey = API.Constants.CacheKeys.ProductById(id);
-        if (_cache.TryGetValue(cacheKey, out DTOs.DTOs.Responses.ProductResponseDTO? cachedProduct))
+        
+        // Check cache - handles both positive and negative caching
+        if (_cache.TryGetValue(cacheKey, out object? cachedValue))
         {
-            return this.ApiOk(cachedProduct);
+            // Negative cache hit - null was cached for this ID
+            if (cachedValue == null)
+            {
+                return this.ApiNotFound($"Product with ID {id} not found");
+            }
+            // Positive cache hit
+            return this.ApiOk((DTOs.DTOs.Responses.ProductResponseDTO)cachedValue);
         }
 
         var product = await _productService.GetProductByIdAsync(id);
 
         if (product == null)
         {
+            // Negative caching: Cache null for 5 minutes to prevent repeated DB hits
+            _cache.Set(cacheKey, (object?)null, TimeSpan.FromMinutes(5));
             return this.ApiNotFound($"Product with ID {id} not found");
         }
 
-        // Cache for 30 minutes
+        // Positive caching: Cache product for 30 minutes
         _cache.Set(cacheKey, product, TimeSpan.FromMinutes(30));
 
         return this.ApiOk(product);
@@ -131,7 +140,7 @@ public class ProductController : ControllerBase
         // CACHE CHECK: Only for Page 1
         if (page == 1)
         {
-            if (_cache.TryGetValue(API.Constants.CacheKeys.CategoryPage(categoryId), out IEnumerable<DTOs.DTOs.Responses.ProductResponseDTO> cachedCategoryProducts))
+            if (_cache.TryGetValue(API.Constants.CacheKeys.CategoryPage(categoryId), out IEnumerable<DTOs.DTOs.Responses.ProductResponseDTO>? cachedCategoryProducts) && cachedCategoryProducts != null)
             {
                  // Cached item is Top 50.
                  var pagedCache = cachedCategoryProducts.Take(pageSize);
@@ -155,14 +164,22 @@ public class ProductController : ControllerBase
     /// </summary>
     [HttpGet("search")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> Search([FromQuery] string name)
+    public async Task<IActionResult> Search(
+        [FromQuery] string name,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
             return this.ApiBadRequest("Search term is required");
         }
 
-        var products = await _productService.SearchProductsAsync(name);
+        var (products, totalCount) = await _productService.SearchProductsWithPaginationAsync(name, page, pageSize);
+        
+        Response.Headers.Append("X-Total-Count", totalCount.ToString());
+        Response.Headers.Append("X-Page", page.ToString());
+        Response.Headers.Append("X-Page-Size", pageSize.ToString());
+        
         return this.ApiOk(products);
     }
 
@@ -182,14 +199,22 @@ public class ProductController : ControllerBase
     /// </summary>
     [HttpGet("brand/{brand}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetByBrand(string brand)
+    public async Task<IActionResult> GetByBrand(
+        string brand,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
     {
         if (string.IsNullOrWhiteSpace(brand))
         {
             return this.ApiBadRequest("Brand is required");
         }
 
-        var products = await _productService.SearchByBrandAsync(brand);
+        var (products, totalCount) = await _productService.SearchByBrandWithPaginationAsync(brand, page, pageSize);
+        
+        Response.Headers.Append("X-Total-Count", totalCount.ToString());
+        Response.Headers.Append("X-Page", page.ToString());
+        Response.Headers.Append("X-Page-Size", pageSize.ToString());
+        
         return this.ApiOk(products);
     }
 
@@ -226,11 +251,36 @@ public class ProductController : ControllerBase
             return this.ApiBadRequest(ModelState);
         }
 
+        // Get old product to compare category
+        var oldProduct = await _productService.GetProductByIdAsync(id);
+        if (oldProduct == null)
+        {
+            return this.ApiNotFound($"Product with ID {id} not found");
+        }
+        
+        var oldCategoryId = oldProduct.CategoryId;
+
         var product = await _productService.UpdateProductAsync(id, dto);
 
         if (product == null)
         {
             return this.ApiNotFound($"Product with ID {id} not found");
+        }
+
+        // Cache Invalidation
+        _cache.Remove(API.Constants.CacheKeys.ProductById(id));
+        _cache.Remove(API.Constants.CacheKeys.DiscountedProducts);
+
+        // Category cache invalidation (if category changed, invalidate both)
+        if (oldCategoryId != product.CategoryId)
+        {
+            _cache.Remove(API.Constants.CacheKeys.CategoryPage(oldCategoryId));
+            _cache.Remove(API.Constants.CacheKeys.CategoryPage(product.CategoryId));
+        }
+        else
+        {
+            // Same category but product updated - still needs invalidation
+            _cache.Remove(API.Constants.CacheKeys.CategoryPage(product.CategoryId));
         }
 
         return this.ApiOk(product);
@@ -251,6 +301,11 @@ public class ProductController : ControllerBase
         {
             return this.ApiNotFound($"Product with ID {id} not found");
         }
+
+        // Cache Invalidation: Remove deleted product from cache
+        _cache.Remove(API.Constants.CacheKeys.ProductById(id));
+        // Also invalidate list caches
+        _cache.Remove(API.Constants.CacheKeys.DiscountedProducts);
 
         return NoContent();
     }

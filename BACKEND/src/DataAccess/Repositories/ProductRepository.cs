@@ -299,16 +299,16 @@ public class ProductRepository : Repository<Product>, IProductRepository
 
     /// <summary>
     /// OPTIMIZED: Calculate discount in SQL, filter and paginate at database level
-    /// Avoids loading 3000+ products into memory
+    /// Uses IQueryable to keep operations in SQL - prevents memory leak
     /// </summary>
     public async Task<(IEnumerable<Product> Items, int TotalCount)> GetProductsOrderedByDiscountAsync(int page, int pageSize)
     {
         page = page < 1 ? 1 : page;
         pageSize = pageSize < 1 ? 20 : (pageSize > 100 ? 100 : pageSize);
 
-        // Step 1: Query products with aggregated prices using projection
-        // This calculates MIN/MAX at SQL level and filters products with actual discounts
-        var discountedProductIds = await _context.Product
+        // Step 1: Build IQueryable for products with discount calculation
+        // All operations stay in SQL until we explicitly materialize
+        var discountQuery = _context.Product
             .AsNoTracking()
             .Where(p => p.MarketProductPrices.Any())
             .Select(p => new
@@ -323,22 +323,22 @@ public class ProductRepository : Repository<Product>, IProductRepository
                 x.ProductId,
                 Discount = (double)((x.MaxPrice - x.MinPrice) / x.MaxPrice * 100)
             })
-            .OrderByDescending(x => x.Discount)
-            .ToListAsync();
+            .OrderByDescending(x => x.Discount);
 
-        var totalCount = discountedProductIds.Count;
+        // Step 2: Get total count via SQL COUNT (no memory load)
+        var totalCount = await discountQuery.CountAsync();
 
-        // Step 2: Get paginated IDs
-        var pagedIds = discountedProductIds
+        // Step 3: Get ONLY paginated IDs via SQL SKIP/TAKE
+        var pagedIds = await discountQuery
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .Select(x => x.ProductId)
-            .ToList();
+            .ToListAsync();
 
         if (!pagedIds.Any())
             return (new List<Product>(), totalCount);
 
-        // Step 3: Fetch full product details only for the paginated set
+        // Step 4: Fetch full product details only for the paginated set
         var products = await _context.Product
             .AsNoTracking()
             .Where(p => pagedIds.Contains(p.Id))
@@ -347,7 +347,7 @@ public class ProductRepository : Repository<Product>, IProductRepository
                 .ThenInclude(mpp => mpp.Market)
             .ToListAsync();
 
-        // Step 4: Preserve discount ordering
+        // Step 5: Preserve discount ordering
         var orderedProducts = pagedIds
             .Select(id => products.FirstOrDefault(p => p.Id == id))
             .Where(p => p != null)

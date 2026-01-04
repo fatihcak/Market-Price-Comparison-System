@@ -61,6 +61,18 @@ public class ProductService : IProductService
         return products.Select(MapToResponseDTO);
     }
 
+    public async Task<(IEnumerable<ProductResponseDTO> Products, int TotalCount)> SearchProductsWithPaginationAsync(string searchTerm, int page, int pageSize)
+    {
+        var (products, totalCount) = await _productRepository.SearchByNameWithPaginationAsync(searchTerm, page, pageSize);
+        return (products.Select(MapToResponseDTO), totalCount);
+    }
+
+    public async Task<(IEnumerable<ProductResponseDTO> Products, int TotalCount)> SearchByBrandWithPaginationAsync(string brand, int page, int pageSize)
+    {
+        var (products, totalCount) = await _productRepository.SearchByBrandWithPaginationAsync(brand, page, pageSize);
+        return (products.Select(MapToResponseDTO), totalCount);
+    }
+
     public async Task<ProductResponseDTO> CreateProductAsync(CreateProductDTO dto)
     {
         var product = new Product

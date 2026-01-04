@@ -22,25 +22,49 @@ public class PriceController : ControllerBase
 
     [HttpGet("product/{productId}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetByProduct(int productId)
+    public async Task<IActionResult> GetByProduct(
+        int productId,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50)
     {
-        var prices = await _priceService.GetPricesByProductIdAsync(productId);
+        var (prices, totalCount) = await _priceService.GetPricesByProductIdWithPaginationAsync(productId, page, pageSize);
+        
+        Response.Headers.Append("X-Total-Count", totalCount.ToString());
+        Response.Headers.Append("X-Page", page.ToString());
+        Response.Headers.Append("X-Page-Size", pageSize.ToString());
+        
         return this.ApiOk(prices);
     }
 
     [HttpGet("market/{marketId}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetByMarket(int marketId)
+    public async Task<IActionResult> GetByMarket(
+        int marketId,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50)
     {
-        var prices = await _priceService.GetPricesByMarketIdAsync(marketId);
+        var (prices, totalCount) = await _priceService.GetPricesByMarketIdWithPaginationAsync(marketId, page, pageSize);
+        
+        Response.Headers.Append("X-Total-Count", totalCount.ToString());
+        Response.Headers.Append("X-Page", page.ToString());
+        Response.Headers.Append("X-Page-Size", pageSize.ToString());
+        
         return this.ApiOk(prices);
     }
 
     [HttpGet("district/{districtId}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetByDistrict(int districtId)
+    public async Task<IActionResult> GetByDistrict(
+        int districtId,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50)
     {
-        var prices = await _priceService.GetPricesByDistrictIdAsync(districtId);
+        var (prices, totalCount) = await _priceService.GetPricesByDistrictIdWithPaginationAsync(districtId, page, pageSize);
+        
+        Response.Headers.Append("X-Total-Count", totalCount.ToString());
+        Response.Headers.Append("X-Page", page.ToString());
+        Response.Headers.Append("X-Page-Size", pageSize.ToString());
+        
         return this.ApiOk(prices);
     }
 

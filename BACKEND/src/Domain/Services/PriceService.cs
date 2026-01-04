@@ -88,4 +88,23 @@ public class PriceService : IPriceService
             LastUpdated = price.LastUpdated
         };
     }
+
+    // Pagination methods
+    public async Task<(IEnumerable<PriceResponseDTO> Items, int TotalCount)> GetPricesByProductIdWithPaginationAsync(int productId, int page, int pageSize)
+    {
+        var (prices, totalCount) = await _priceRepository.GetByProductIdWithPaginationAsync(productId, page, pageSize);
+        return (prices.Select(MapToResponseDTO), totalCount);
+    }
+
+    public async Task<(IEnumerable<PriceResponseDTO> Items, int TotalCount)> GetPricesByMarketIdWithPaginationAsync(int marketId, int page, int pageSize)
+    {
+        var (prices, totalCount) = await _priceRepository.GetByMarketIdWithPaginationAsync(marketId, page, pageSize);
+        return (prices.Select(MapToResponseDTO), totalCount);
+    }
+
+    public async Task<(IEnumerable<PriceResponseDTO> Items, int TotalCount)> GetPricesByDistrictIdWithPaginationAsync(int districtId, int page, int pageSize)
+    {
+        var (prices, totalCount) = await _priceRepository.GetByDistrictIdWithPaginationAsync(districtId, page, pageSize);
+        return (prices.Select(MapToResponseDTO), totalCount);
+    }
 }

@@ -231,15 +231,16 @@ export const api = {
         }
     },
 
-    getProductsByCategory: async (categoryId: number, page: number = 1, pageSize: number = 50): Promise<Product[]> => {
+    getProductsByCategory: async (categoryId: number, page: number = 1, pageSize: number = 50): Promise<{ products: Product[]; totalCount: number }> => {
         try {
             const response = await fetch(`${API_BASE_URL}/Product/category/${categoryId}?page=${page}&pageSize=${pageSize}`);
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
+            const totalCount = parseInt(response.headers.get('X-Total-Count') || '0', 10);
             const result = await response.json();
             const data: ProductResponseDTO[] = result.data || result;
-            return data.map(item => ({
+            const products = data.map(item => ({
                 id: item.id,
                 name: item.productName,
                 price: item.price,
@@ -249,11 +250,15 @@ export const api = {
                 category: item.categoryName,
                 image: item.imageUrl || 'https://placehold.co/200x200?text=No+Image',
                 brand: item.brand,
-                unit: item.unit
+                unit: item.unit,
+                marketCount: item.marketCount || 1,
+                variantIds: [item.id]
             }));
+
+            return { products, totalCount };
         } catch (error) {
             console.error('Error fetching products by category:', error);
-            return [];
+            return { products: [], totalCount: 0 };
         }
     },
 
