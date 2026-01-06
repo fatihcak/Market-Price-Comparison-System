@@ -5,20 +5,18 @@ const MARKETS = [
         id: 1,
         name: 'Sarper Market',
         description: 'Fresh local produce and daily essentials at competitive prices. Known for their quality meats and organic vegetable selection.',
-        image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=1000',
+        image: 'https://cyprus-faq.com/site/assets/files/8333/image.webp',
         address: 'Girne Mahallesi, Lefkoşa',
         color: 'from-orange-500 to-red-600',
-        rating: 4.5,
         openHours: '08:00 - 22:00'
     },
     {
         id: 2,
         name: 'Kıbrıs Sanal Market',
-        description: 'Your premier online grocery destination. Largest selection of international and local brands delivered straight to your door.',
+        description: 'Online grocery market with a wide selection of fresh produce and daily essentials in Cyprus',
         image: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&q=80&w=1000',
         address: 'Online / Distribution Center: Gönyeli',
         color: 'from-blue-500 to-indigo-600',
-        rating: 4.8,
         openHours: '24/7'
     }
 ];
@@ -30,7 +28,7 @@ export default function Markets() {
                 {/* Header Section */}
                 <div className="text-center mb-16 space-y-4">
                     <h1 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-700">
-                        Our Partner Markets
+                        Markets
                     </h1>
                     <p className="text-lg text-gray-600 max-w-2xl mx-auto">
                         Compare prices across top local markets. We verify prices daily to ensure you get the best deals available in Cyprus.
@@ -59,9 +57,6 @@ export default function Markets() {
                                             <div className="flex items-center gap-4 text-white/90 text-sm font-medium">
                                                 <span className="flex items-center gap-1 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full">
                                                     <MapPin size={14} /> {market.address}
-                                                </span>
-                                                <span className="flex items-center gap-1 bg-green-500/80 backdrop-blur-md px-3 py-1 rounded-full">
-                                                    ★ {market.rating}
                                                 </span>
                                             </div>
                                         </div>
