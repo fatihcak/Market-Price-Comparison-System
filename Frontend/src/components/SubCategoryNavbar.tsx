@@ -19,6 +19,13 @@ export default function SubCategoryNavbar({ categories }: Props) {
 
     const currentCategory = categories.find(c => c.slug === category);
 
+    // Navigate without scrolling to top
+    const handleNavigate = (path: string) => {
+        const scrollY = window.scrollY;
+        navigate(path);
+        setTimeout(() => window.scrollTo(0, scrollY), 0);
+    };
+
     // If no valid category found or no subcategories, render nothing
     if (!currentCategory || !currentCategory.subCategories.length) {
         return null;
@@ -28,7 +35,7 @@ export default function SubCategoryNavbar({ categories }: Props) {
         <div className="relative group mb-8">
             <div className="flex flex-wrap gap-3 py-2 px-1 items-center">
                 <button
-                    onClick={() => navigate(`/products/${currentCategory.slug}`)}
+                    onClick={() => handleNavigate(`/products/${currentCategory.slug}`)}
                     className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap
             ${!subcategory
                             ? 'bg-green-600 text-white shadow-md transform scale-105'
@@ -43,7 +50,7 @@ export default function SubCategoryNavbar({ categories }: Props) {
                     return (
                         <button
                             key={sub.slug}
-                            onClick={() => navigate(`/products/${currentCategory.slug}/${sub.slug}`)}
+                            onClick={() => handleNavigate(`/products/${currentCategory.slug}/${sub.slug}`)}
                             className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap
                 ${isActive
                                     ? 'bg-green-600 text-white shadow-md transform scale-105'
