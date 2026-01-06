@@ -1,10 +1,10 @@
-using System.Threading.Tasks;
 using DTOs.DTOs.Responses;
+using System.Runtime.CompilerServices;
 
-namespace Domain.Services
+namespace Domain.Interfaces.Services;
+
+public interface IChatService
 {
-    public interface IChatService
-    {
-        Task<ChatResponseDto> GetChatResponseAsync(string userMessage, string sessionId);
-    }
+    Task<ChatResponseDto> GetChatResponseAsync(string userMessage, string sessionId);
+    IAsyncEnumerable<string> GetChatResponseStreamAsync(string userMessage, string sessionId, [EnumeratorCancellation] CancellationToken cancellationToken = default);
 }

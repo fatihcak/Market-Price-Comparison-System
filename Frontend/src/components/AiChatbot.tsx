@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { X, Send, Bot, User, /*Minimize2, Maximize2*/ } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 import { api } from '../services/api';
 
 
@@ -61,38 +62,87 @@ export default function AiChatbot({ hideOnMobile = false }: AiChatbotProps) {
 
     const handleSendMessage = async (e?: React.FormEvent) => {
         e?.preventDefault();
-        if (!inputText.trim()) return;
+        if (!inputText.trim() || isLoading) return; // Prevent double submission
+
+        const userMessageId = Date.now();
+        const botMessageId = userMessageId + 1;
 
         const newUserMessage: Message = {
-            id: Date.now(),
+            id: userMessageId,
             text: inputText,
             sender: 'user',
             timestamp: new Date()
         };
 
+        // Only add user message first
         setMessages(prev => [...prev, newUserMessage]);
         setInputText('');
         setIsLoading(true);
 
-        try {
-            const response = await api.sendMessage(newUserMessage.text);
+        // Generate or use existing sessionId
+        const sessionId = sessionStorage.getItem('chat_session_id') || `session-${Date.now()}`;
+        sessionStorage.setItem('chat_session_id', sessionId);
 
-            const botResponse: Message = {
-                id: Date.now() + 1,
-                text: response.reply || "I'm sorry, I couldn't understand that.",
+        let botMessageAdded = false;
+
+        try {
+            await api.sendMessageStream(
+                newUserMessage.text,
+                sessionId,
+                // onChunk: append to bot message
+                (chunk: string) => {
+                    if (!botMessageAdded) {
+                        // First chunk - add the bot message
+                        botMessageAdded = true;
+                        setMessages(prev => [...prev, {
+                            id: botMessageId,
+                            text: chunk,
+                            sender: 'bot',
+                            timestamp: new Date()
+                        }]);
+                    } else {
+                        // Subsequent chunks - append to existing message
+                        setMessages(prev =>
+                            prev.map(msg =>
+                                msg.id === botMessageId
+                                    ? { ...msg, text: msg.text + chunk }
+                                    : msg
+                            )
+                        );
+                    }
+                },
+                // onComplete
+                () => {
+                    setIsLoading(false);
+                },
+                // onError
+                () => {
+                    if (!botMessageAdded) {
+                        setMessages(prev => [...prev, {
+                            id: botMessageId,
+                            text: "Sorry, I'm having trouble connecting to the server. Please try again.",
+                            sender: 'bot',
+                            timestamp: new Date()
+                        }]);
+                    } else {
+                        setMessages(prev =>
+                            prev.map(msg =>
+                                msg.id === botMessageId
+                                    ? { ...msg, text: msg.text || "Sorry, I'm having trouble connecting to the server." }
+                                    : msg
+                            )
+                        );
+                    }
+                    setIsLoading(false);
+                }
+            );
+        } catch {
+            setMessages(prev => [...prev, {
+                id: botMessageId,
+                text: "Sorry, I'm having trouble connecting to the server. Please check your connection.",
                 sender: 'bot',
                 timestamp: new Date()
-            };
-            setMessages(prev => [...prev, botResponse]);
-        } catch (error) {
-            const errorResponse: Message = {
-                id: Date.now() + 1,
-                text: "Sorry, I'm having trouble connecting to the server. Please check your API key configuration.",
-                sender: 'bot',
-                timestamp: new Date()
-            };
-            setMessages(prev => [...prev, errorResponse]);
-        } finally {
+            }]);
             setIsLoading(false);
         }
     };
@@ -146,13 +196,15 @@ export default function AiChatbot({ hideOnMobile = false }: AiChatbotProps) {
                                     )}
                                 </div>
                                 <div
-                                    className={`max-w-[75%] p-3 rounded-2xl text-sm ${msg.sender === 'user'
-                                        ? 'bg-green-600 text-white rounded-tr-none'
-                                        : 'bg-white text-gray-800 shadow-sm border border-gray-100 rounded-tl-none'
+                                    className={`max-w-[85%] p-3.5 rounded-2xl text-sm leading-relaxed ${msg.sender === 'user'
+                                        ? 'bg-green-600 text-white rounded-tr-none shadow-md'
+                                        : 'bg-white text-gray-800 shadow-md border border-gray-100 rounded-tl-none'
                                         }`}
                                 >
-                                    <p>{msg.text}</p>
-                                    <span className={`text-[10px] mt-1 block opacity-70 ${msg.sender === 'user' ? 'text-green-100' : 'text-gray-400'
+                                    <div className={`prose prose-sm max-w-none ${msg.sender === 'user' ? 'prose-invert' : ''}`}>
+                                        <ReactMarkdown>{msg.text}</ReactMarkdown>
+                                    </div>
+                                    <span className={`text-[10px] mt-2 block font-medium opacity-60 ${msg.sender === 'user' ? 'text-green-50' : 'text-gray-400'
                                         }`}>
                                         {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </span>

@@ -9,8 +9,40 @@
     z-index: 0;
 }
 
-/* Custom marker styling */
-.custom-marker {
-    background: transparent;
-    border: none;
+/* Chatbot Markdown Styles */
+.prose-sm {
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.prose-sm p {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+}
+
+.prose-sm p:last-child {
+    margin-bottom: 0;
+}
+
+.prose-sm ul, .prose-sm ol {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    padding-left: 1.25rem;
+}
+
+.prose-sm li {
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
+}
+
+.prose-sm strong {
+    font-weight: 600;
+}
+
+.prose-invert {
+    color: white;
+}
+
+.prose-invert strong {
+    color: white;
 }
