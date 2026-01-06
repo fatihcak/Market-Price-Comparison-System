@@ -1,3 +1,16 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Fix for Leaflet map container */
+.leaflet-container {
+    height: 100%;
+    width: 100%;
+    z-index: 0;
+}
+
+/* Custom marker styling */
+.custom-marker {
+    background: transparent;
+    border: none;
+}

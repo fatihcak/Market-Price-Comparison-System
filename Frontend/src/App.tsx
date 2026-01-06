@@ -9,6 +9,7 @@ import { Product, CartItem } from './types';
 import { api } from './services/api';
 import AiChatbot from './components/AiChatbot';
 import Markets from './components/Markets';
+import MapPage from './components/MapPage';
 import Home from './components/Home';
 import { CATEGORIES, Category } from './constants/categories'; // Import categories
 
@@ -174,6 +175,7 @@ function App() {
 
       <Routes>
         <Route path="/markets" element={<Markets />} />
+        <Route path="/map" element={<MapPage />} />
         <Route path="/*" element={
           <Home
             activeCategories={activeCategories}

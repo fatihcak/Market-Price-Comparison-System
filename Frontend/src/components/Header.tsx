@@ -13,8 +13,8 @@ export default function Header({ onOpenList, itemCount = 0 }: HeaderProps) {
   return (
     <header className="bg-white border-b border-gray-100 sticky top-0 z-50 backdrop-blur-sm bg-opacity-95">
       <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-        <div
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        <Link
+          to="/"
           className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
         >
           <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-md">
@@ -24,7 +24,7 @@ export default function Header({ onOpenList, itemCount = 0 }: HeaderProps) {
             <span className="text-xl font-bold text-gray-900">Market Comparison System</span>
             <p className="text-xs text-gray-500">Find and Compare the Best Prices</p>
           </div>
-        </div>
+        </Link>
 
         <div className="flex items-center gap-2 md:gap-4">
           <nav className="hidden md:flex items-center gap-6 mr-4">
@@ -33,11 +33,11 @@ export default function Header({ onOpenList, itemCount = 0 }: HeaderProps) {
               Markets
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-green-600 transition-all group-hover:w-full"></span>
             </Link>
-            <a href="#" className="flex items-center text-gray-600 hover:text-green-600 font-medium text-sm transition-colors relative group">
+            <Link to="/map" className="flex items-center text-gray-600 hover:text-green-600 font-medium text-sm transition-colors relative group">
               <Map size={18} className="mr-1.5" />
               Map
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-green-600 transition-all group-hover:w-full"></span>
-            </a>
+            </Link>
           </nav>
           <button
             onClick={onOpenList}
@@ -65,9 +65,9 @@ export default function Header({ onOpenList, itemCount = 0 }: HeaderProps) {
           <Link to="/markets" className="block flex items-center text-gray-600 hover:text-green-600 font-medium text-sm p-2">
             <Store size={18} className="mr-2 inline" /> Markets
           </Link>
-          <a href="#" className="block flex items-center text-gray-600 hover:text-green-600 font-medium text-sm p-2">
+          <Link to="/map" className="block flex items-center text-gray-600 hover:text-green-600 font-medium text-sm p-2">
             <Map size={18} className="mr-2 inline" /> Map
-          </a>
+          </Link>
           <button
             onClick={onOpenList}
             className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors mt-2 relative"

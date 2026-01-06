@@ -33,7 +33,6 @@ export const CATEGORIES: Category[] = [
         icon: Apple,
         color: 'bg-red-50 hover:bg-red-100 text-red-600',
         subCategories: [
-            { name: 'All', slug: 'Fruits & Vegetables' }, // Shows all products in parent category
             { name: 'Fruits', slug: 'Fruits' },
             { name: 'Vegetables', slug: 'Vegetables' }
         ]
