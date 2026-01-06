@@ -1,4 +1,4 @@
-import { ShoppingBag, Bell, Menu, X, ShoppingBasket } from 'lucide-react';
+import { ShoppingBag, Menu, X, ShoppingBasket, Store, Map } from 'lucide-react';
 import { useState } from 'react';
 
 interface HeaderProps {
@@ -25,26 +25,19 @@ export default function Header({ onOpenList, itemCount = 0 }: HeaderProps) {
           </div>
         </div>
 
-        <nav className="hidden md:flex items-center gap-8">
-          <a href="#" className="text-gray-600 hover:text-green-600 font-medium text-sm transition-colors relative group">
-            Markets
-            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-green-600 transition-all group-hover:w-full"></span>
-          </a>
-          <a href="#" className="text-gray-600 hover:text-green-600 font-medium text-sm transition-colors relative group">
-            Products
-            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-green-600 transition-all group-hover:w-full"></span>
-          </a>
-          <a href="#" className="text-gray-600 hover:text-green-600 font-medium text-sm transition-colors relative group">
-            Map
-            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-green-600 transition-all group-hover:w-full"></span>
-          </a>
-
-        </nav>
-
         <div className="flex items-center gap-2 md:gap-4">
-          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors hover:scale-110 transform duration-200">
-            <Bell size={20} className="text-gray-600" />
-          </button>
+          <nav className="hidden md:flex items-center gap-6 mr-4">
+            <a href="#" className="flex items-center text-gray-600 hover:text-green-600 font-medium text-sm transition-colors relative group">
+              <Store size={18} className="mr-1.5" />
+              Markets
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-green-600 transition-all group-hover:w-full"></span>
+            </a>
+            <a href="#" className="flex items-center text-gray-600 hover:text-green-600 font-medium text-sm transition-colors relative group">
+              <Map size={18} className="mr-1.5" />
+              Map
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-green-600 transition-all group-hover:w-full"></span>
+            </a>
+          </nav>
           <button
             onClick={onOpenList}
             className="hidden md:block bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-all hover:shadow-lg hover:scale-105 transform duration-200 relative"
@@ -68,9 +61,12 @@ export default function Header({ onOpenList, itemCount = 0 }: HeaderProps) {
 
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-gray-100 p-4 space-y-3 animate-in fade-in slide-in-from-top">
-          <a href="#" className="block text-gray-600 hover:text-green-600 font-medium text-sm p-2">Markets</a>
-          <a href="#" className="block text-gray-600 hover:text-green-600 font-medium text-sm p-2">Products</a>
-          <a href="#" className="block text-gray-600 hover:text-green-600 font-medium text-sm p-2">Map</a>
+          <a href="#" className="block flex items-center text-gray-600 hover:text-green-600 font-medium text-sm p-2">
+            <Store size={18} className="mr-2 inline" /> Markets
+          </a>
+          <a href="#" className="block flex items-center text-gray-600 hover:text-green-600 font-medium text-sm p-2">
+            <Map size={18} className="mr-2 inline" /> Map
+          </a>
           <button
             onClick={onOpenList}
             className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors mt-2 relative"
