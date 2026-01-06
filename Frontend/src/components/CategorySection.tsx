@@ -15,11 +15,19 @@ export default function CategorySection({ categories }: Props) {
   // but here it seems we are just displaying the blocks.
 
   const handleSelectCategory = (categorySlug: string) => {
+    // Save current scroll position
+    const scrollY = window.scrollY;
+
     if (selectedCategory === categorySlug) {
       navigate('/products/All');
     } else {
       navigate(`/products/${categorySlug}`);
     }
+
+    // Restore scroll position after navigation
+    setTimeout(() => {
+      window.scrollTo(0, scrollY);
+    }, 0);
   };
 
   return (

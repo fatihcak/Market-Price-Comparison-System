@@ -26,6 +26,12 @@ export default function ProductGrid({ searchQuery, categories, onAdd, onCompare 
     });
     const itemsPerPage = 16;
 
+    const handleNavigate = (path: string) => {
+        const scrollY = window.scrollY;
+        navigate(path);
+        setTimeout(() => window.scrollTo(0, scrollY), 0);
+    };
+
     // Pagination state for Load More
     const [loadedProducts, setLoadedProducts] = useState<Product[]>([]);
     const [apiPage, setApiPage] = useState(1);
@@ -269,8 +275,8 @@ export default function ProductGrid({ searchQuery, categories, onAdd, onCompare 
                     {subcategory ? subcategory : (selectedCategory === 'All' ? 'All Products' : selectedCategory)}
                 </h2>
                 <button
-                    onClick={() => navigate('/products/All')}
-                    className="text-green-600 hover:text-green-700 font-semibold text-sm transition-colors"
+                    onClick={() => handleNavigate('/products/All')}
+                    className="text-green-600 bg-green-100 rounded-full px-4 py-2 hover:text-green-700 font-semibold text-sm transition-colors"
                 >
                     See All →
                 </button>

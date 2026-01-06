@@ -98,6 +98,48 @@ export default function Markets() {
                         </div>
                     ))}
                 </div>
+
+                {/* Upcoming Markets Section */}
+                <div className="mt-16">
+                    <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Coming Soon</h2>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                        {/* Upcoming Market 1 */}
+                        <div className="group bg-white rounded-3xl overflow-hidden shadow-sm border-2 border-dashed border-gray-300 flex flex-col">
+                            <div className="relative h-64 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                                <div className="text-center">
+                                    <div className="w-20 h-20 bg-gray-300 rounded-full mx-auto mb-4 flex items-center justify-center">
+                                        <span className="text-4xl text-gray-500">?</span>
+                                    </div>
+                                    <span className="text-gray-500 font-medium">New Market</span>
+                                </div>
+                            </div>
+                            <div className="p-8 flex-1 flex flex-col justify-center items-center">
+                                <h3 className="text-xl font-bold text-gray-400 mb-2">Coming Soon</h3>
+                                <p className="text-gray-400 text-center">
+                                    We're working on adding more markets to give you better price comparisons.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Upcoming Market 2 */}
+                        <div className="group bg-white rounded-3xl overflow-hidden shadow-sm border-2 border-dashed border-gray-300 flex flex-col">
+                            <div className="relative h-64 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                                <div className="text-center">
+                                    <div className="w-20 h-20 bg-gray-300 rounded-full mx-auto mb-4 flex items-center justify-center">
+                                        <span className="text-4xl text-gray-500">?</span>
+                                    </div>
+                                    <span className="text-gray-500 font-medium">New Market</span>
+                                </div>
+                            </div>
+                            <div className="p-8 flex-1 flex flex-col justify-center items-center">
+                                <h3 className="text-xl font-bold text-gray-400 mb-2">Coming Soon</h3>
+                                <p className="text-gray-400 text-center">
+                                    Stay tuned for more partner markets joining our platform.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );
