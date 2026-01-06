@@ -1,8 +1,8 @@
 import { PriceResponseDTO, Product, ProductResponseDTO, ProductPriceHistoryDTO, Market, MarketResponseDTO, CategoryResponseDTO } from '../types';
 
-const API_BASE_URL = import.meta.env.DEV 
-  ? 'http://localhost:5000/api'
-  : 'https://compare-market.site/api';
+const API_BASE_URL = import.meta.env.DEV
+    ? 'http://localhost:5000/api'
+    : 'https://compare-market.site/api';
 export const api = {
     getMarkets: async (): Promise<Market[]> => {
         try {
@@ -180,7 +180,7 @@ export const api = {
             const totalCount = parseInt(response.headers.get('X-Total-Count') || '0', 10);
             const result = await response.json();
             const data: ProductResponseDTO[] = result.data || result;
-            
+
             const products: Product[] = data.map(item => ({
                 id: item.id,
                 name: item.productName,
@@ -195,7 +195,7 @@ export const api = {
                 marketCount: item.marketCount || 1,
                 variantIds: [item.id]
             }));
-            
+
             return { products, totalCount };
         } catch (error) {
             console.error('Error fetching discounted products:', error);
@@ -241,7 +241,7 @@ export const api = {
                 marketCount: item.marketCount || 1,
                 variantIds: [item.id]
             }));
-             return { products, totalCount };
+            return { products, totalCount };
         } catch (error) {
             console.error('Error searching products:', error);
             return { products: [], totalCount: 0 };
@@ -250,13 +250,22 @@ export const api = {
 
     getProductsByCategory: async (categoryId: number, page: number = 1, pageSize: number = 50): Promise<{ products: Product[]; totalCount: number }> => {
         try {
+            console.log(`[API] Fetching category ${categoryId} page ${page}`);
             const response = await fetch(`${API_BASE_URL}/Product/category/${categoryId}?page=${page}&pageSize=${pageSize}`);
             if (!response.ok) {
+                console.error(`[API] Category fetch failed: ${response.status} ${response.statusText}`);
                 throw new Error('Network response was not ok');
             }
             const totalCount = parseInt(response.headers.get('X-Total-Count') || '0', 10);
             const result = await response.json();
-            const data: ProductResponseDTO[] = result.data || result;
+
+            // Helpful logging
+            if (!result.data && !Array.isArray(result)) {
+                console.warn(`[API] Category ${categoryId} returned null/empty data. Result:`, result);
+            }
+
+            const data: ProductResponseDTO[] = result.data || result || []; // Handle null data safely
+
             const products = data.map(item => ({
                 id: item.id,
                 name: item.productName,
@@ -275,6 +284,64 @@ export const api = {
             return { products, totalCount };
         } catch (error) {
             console.error('Error fetching products by category:', error);
+            return { products: [], totalCount: 0 };
+        }
+    },
+
+    // Fetch products from multiple subcategory IDs in parallel
+    // Used when a parent category is clicked but products are stored in subcategories
+    getProductsBySubcategories: async (subcategoryIds: number[], page: number = 1, pageSize: number = 50): Promise<{ products: Product[]; totalCount: number }> => {
+        try {
+            if (!subcategoryIds || subcategoryIds.length === 0) {
+                console.warn('[API] No subcategory IDs provided');
+                return { products: [], totalCount: 0 };
+            }
+
+            console.log(`[API] Fetching from ${subcategoryIds.length} subcategories:`, subcategoryIds);
+
+            // Fetch from all subcategories in parallel
+            const results = await Promise.all(
+                subcategoryIds.map(id =>
+                    fetch(`${API_BASE_URL}/Product/category/${id}?page=${page}&pageSize=${pageSize}`)
+                        .then(async res => {
+                            if (!res.ok) return { products: [], totalCount: 0 };
+                            const totalCount = parseInt(res.headers.get('X-Total-Count') || '0', 10);
+                            const json = await res.json();
+                            const data: ProductResponseDTO[] = json.data || json || [];
+                            return { products: data, totalCount };
+                        })
+                        .catch(() => ({ products: [], totalCount: 0 }))
+                )
+            );
+
+            // Combine all products
+            const allProducts: Product[] = [];
+            let totalCountSum = 0;
+
+            for (const result of results) {
+                totalCountSum += result.totalCount;
+                for (const item of result.products) {
+                    allProducts.push({
+                        id: item.id,
+                        name: item.productName,
+                        price: item.price,
+                        oldPrice: item.oldPrice || null,
+                        market: item.marketName,
+                        discount: item.discount,
+                        category: item.categoryName,
+                        image: item.imageUrl || 'https://placehold.co/200x200?text=No+Image',
+                        brand: item.brand,
+                        unit: item.unit,
+                        marketCount: item.marketCount || 1,
+                        variantIds: [item.id]
+                    });
+                }
+            }
+
+            console.log(`[API] Combined ${allProducts.length} products from subcategories`);
+            return { products: allProducts, totalCount: totalCountSum };
+        } catch (error) {
+            console.error('Error fetching products by subcategories:', error);
             return { products: [], totalCount: 0 };
         }
     },

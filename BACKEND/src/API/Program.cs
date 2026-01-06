@@ -70,8 +70,8 @@ builder.Services.AddRateLimiter(options =>
             factory: partition => new FixedWindowRateLimiterOptions
             {
                 AutoReplenishment = true,
-                PermitLimit = 100,
-                QueueLimit = 0,
+                PermitLimit = 500, // Increased from 100 to handle subcategory fetching
+                QueueLimit = 10,   // Allow some queuing instead of immediate rejection
                 Window = TimeSpan.FromMinutes(1)
             }));
 });
