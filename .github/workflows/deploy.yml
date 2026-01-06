@@ -11,11 +11,15 @@ jobs:
     steps:
     - name: Deploy to EC2
       uses: appleboy/ssh-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USER }}
         key: ${{ secrets.EC2_SSH_KEY }}
+        envs: GITHUB_TOKEN
         script: |
           cd ~/app
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/DogukanOrs/Market-Price-Comparison-System.git
           git pull origin main
           ~/deploy.sh
