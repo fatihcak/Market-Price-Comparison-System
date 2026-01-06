@@ -275,7 +275,7 @@ export default function ProductGrid({ searchQuery, categories, onAdd, onCompare 
                     {subcategory ? subcategory : (selectedCategory === 'All' ? 'All Products' : selectedCategory)}
                 </h2>
                 <button
-                    onClick={() => handleNavigate('/products/All')}
+                    onClick={() => handleNavigate('/products/All')} //noscroll 
                     className="text-green-600 bg-green-100 rounded-full px-4 py-2 hover:text-green-700 font-semibold text-sm transition-colors"
                 >
                     See All →
@@ -297,13 +297,6 @@ export default function ProductGrid({ searchQuery, categories, onAdd, onCompare 
             ) : (
                 <div className="text-center py-12 text-gray-500">
                     <p>{isLoading ? 'Loading products...' : 'No products found in this category.'}</p>
-                    {!isLoading && (selectedCategory !== 'All') && (
-                        <p className="text-xs text-gray-400 mt-2">
-                            Debug: Category "{selectedCategory}" (ID: {
-                                categories.find(c => c.slug === selectedCategory)?.id || 'Unknown'
-                            })
-                        </p>
-                    )}
                 </div>
             )}
 

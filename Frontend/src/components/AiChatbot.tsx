@@ -100,12 +100,11 @@ export default function AiChatbot({ hideOnMobile = false }: AiChatbotProps) {
 
     return (
         <div
-            className={`fixed bottom-3 left-2 bg-white rounded-2xl shadow-2xl z-50 transition-all duration-300 ${hideOnMobile ? 'hidden md:flex' : 'flex'} flex-col overflow-hidden border border-gray-100 ${isMinimized ? 'w-72 h-14' : 'w-80 sm:w-96 h-[500px] max-h-[80vh]'
-                }`}
+            className={`fixed bottom-3 left-2 bg-white rounded-2xl shadow-2xl z-40 transition-all duration-300 ${hideOnMobile ? 'hidden md:flex' : 'flex'} flex-col overflow-hidden ${isMinimized ? 'w-72 h-14' : 'w-80 sm:w-96 h-[500px] max-h-[80vh]'}`}
         >
             {/* Header */}
             <div
-                className="bg-gradient-to-r from-green-600 to-emerald-600 p-4 flex items-center justify-between cursor-pointer"
+                className="bg-green-600 p-4 flex items-center justify-between cursor-pointer"
                 onClick={() => setIsMinimized(!isMinimized)}
             >
                 <div className="flex items-center gap-3">
