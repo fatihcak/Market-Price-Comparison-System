@@ -36,8 +36,10 @@ public class CacheWarmer : ICacheWarmer
              Console.WriteLine("  ✓ Discounted products cached (Top 100)");
 
             // 2. Categories (First Pages)
-            // IDs 1 to 7 based on the constant list user provided in prompt/file
-            int[] categoryIds = { 1, 2, 3, 4, 5, 6, 7 }; 
+            // UPDATED: Use correct backend category IDs (15-21)
+            // 15: Fruits & Vegetables, 16: Meat/Chicken/Fish, 17: Dairy/Breakfast
+            // 18: Staple Food, 19: Drink, 20: Snacks/Dessert, 21: Cleaning/Personal Care
+            int[] categoryIds = { 15, 16, 17, 18, 19, 20, 21 }; 
             int processed = 0;
             foreach (var catId in categoryIds)
             {

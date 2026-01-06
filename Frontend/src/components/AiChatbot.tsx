@@ -10,7 +10,11 @@ interface Message {
     timestamp: Date;
 }
 
-export default function AiChatbot() {
+interface AiChatbotProps {
+    hideOnMobile?: boolean;
+}
+
+export default function AiChatbot({ hideOnMobile = false }: AiChatbotProps) {
     const [/*isOpen/*, /*setIsOpen*/] = useState(true);
     const [isMinimized, setIsMinimized] = useState(true);
     const [inputText, setInputText] = useState('');
@@ -96,7 +100,7 @@ export default function AiChatbot() {
 
     return (
         <div
-            className={`fixed bottom-3 left-2 bg-white rounded-2xl shadow-2xl z-50 transition-all duration-300 flex flex-col overflow-hidden border border-gray-100 ${isMinimized ? 'w-72 h-14' : 'w-80 sm:w-96 h-[500px] max-h-[80vh]'
+            className={`fixed bottom-3 left-2 bg-white rounded-2xl shadow-2xl z-50 transition-all duration-300 ${hideOnMobile ? 'hidden md:flex' : 'flex'} flex-col overflow-hidden border border-gray-100 ${isMinimized ? 'w-72 h-14' : 'w-80 sm:w-96 h-[500px] max-h-[80vh]'
                 }`}
         >
             {/* Header */}

@@ -14,23 +14,34 @@ export interface Category {
     subCategories: SubCategory[];
 }
 
+// IMPORTANT: Names and slugs MUST exactly match the backend database CategoryName values.
+// IDs are placeholders - the real IDs (15-21) are fetched from the API in App.tsx.
+// Backend Categories (from https://compare-market.site/api/Category):
+//   15: "Fruits & Vegetables"
+//   16: "Meat, Chicken & Fish"
+//   17: "Dairy Products & Breakfast Foods"
+//   18: "Staple Food"
+//   19: "Drink"
+//   20: "Snacks & Dessert"
+//   21: "Cleaning & Personal Care Products"
+
 export const CATEGORIES: Category[] = [
     {
-        id: 1,
-        name: 'Fruits and Vegetables',
-        slug: 'Fruits and Vegetables',
+        id: 15, // Backend ID
+        name: 'Fruits & Vegetables',
+        slug: 'Fruits & Vegetables', // MUST match backend CategoryName
         icon: Apple,
         color: 'bg-red-50 hover:bg-red-100 text-red-600',
         subCategories: [
+            { name: 'All', slug: 'Fruits & Vegetables' }, // Shows all products in parent category
             { name: 'Fruits', slug: 'Fruits' },
-            { name: 'Vegetables', slug: 'Vegetables' },
-            { name: 'Fruits & Vegetables', slug: 'Fruits & Vegetables' }
+            { name: 'Vegetables', slug: 'Vegetables' }
         ]
     },
     {
-        id: 2,
+        id: 16, // Backend ID
         name: 'Meat, Chicken & Fish',
-        slug: 'Meat, Chicken & Fish',
+        slug: 'Meat, Chicken & Fish', // MUST match backend CategoryName
         icon: Milk,
         color: 'bg-blue-50 hover:bg-blue-100 text-blue-600',
         subCategories: [
@@ -38,14 +49,13 @@ export const CATEGORIES: Category[] = [
             { name: 'Poultry & Chicken', slug: 'Poultry & Chicken' },
             { name: 'Fish & Seafood', slug: 'Fish & Seafood' },
             { name: 'Cold Cuts & Cured Meats', slug: 'Cold Cuts & Cured Meats' },
-            { name: 'Offal', slug: 'Offal' },
-            { name: 'Meat, Chicken & Fish', slug: 'Meat, Chicken & Fish' }
+            { name: 'Offal', slug: 'Offal' }
         ]
     },
     {
-        id: 3,
+        id: 17, // Backend ID
         name: 'Dairy Products & Breakfast Foods',
-        slug: 'Dairy Products & Breakfast Foods',
+        slug: 'Dairy Products & Breakfast Foods', // MUST match backend CategoryName
         icon: Wheat,
         color: 'bg-orange-50 hover:bg-orange-100 text-orange-600',
         subCategories: [
@@ -60,13 +70,13 @@ export const CATEGORIES: Category[] = [
             { name: 'Ayran & Kefir', slug: 'Ayran & Kefir' },
             { name: 'Breakfast Cereals, Bars & Granola', slug: 'Breakfast Cereals, Bars & Granola' },
             { name: 'Spreads & Breakfast Sauces', slug: 'Spreads & Breakfast Sauces' },
-            { name: 'Dairy Products & Breakfast Foods', slug: 'Dairy Products & Breakfast Foods' }
+            { name: 'Halva, Tahini & Molasses', slug: 'Halva, Tahini & Molasses' }
         ]
     },
     {
-        id: 4,
-        name: 'Staple Foods',
-        slug: 'Staple Food', // DB name is 'Staple Food' (singular)
+        id: 18, // Backend ID
+        name: 'Staple Food',
+        slug: 'Staple Food', // MUST match backend CategoryName
         icon: Droplet,
         color: 'bg-yellow-50 hover:bg-yellow-100 text-yellow-600',
         subCategories: [
@@ -83,14 +93,13 @@ export const CATEGORIES: Category[] = [
             { name: 'Canned Goods', slug: 'Canned Goods' },
             { name: 'Pickles', slug: 'Pickles' },
             { name: 'Baby Food', slug: 'Baby Food' },
-            { name: 'Convenience Food', slug: 'Convenience Food' },
-            { name: 'Staple Food', slug: 'Staple Food' }
+            { name: 'Convenience Food', slug: 'Convenience Food' }
         ]
     },
     {
-        id: 5,
-        name: 'Drinks',
-        slug: 'Drink', // DB has 'Drink' (singular)
+        id: 19, // Backend ID
+        name: 'Drink',
+        slug: 'Drink', // MUST match backend CategoryName
         icon: Wine,
         color: 'bg-purple-50 hover:bg-purple-100 text-purple-600',
         subCategories: [
@@ -100,14 +109,13 @@ export const CATEGORIES: Category[] = [
             { name: 'Carbonated Drinks', slug: 'Carbonated Drinks' },
             { name: 'Non-Carbonated Drinks', slug: 'Non-Carbonated Drinks' },
             { name: 'Tea & Herbal Teas', slug: 'Tea & Herbal Teas' },
-            { name: 'Coffee', slug: 'Coffee' },
-            { name: 'Drink', slug: 'Drink' }
+            { name: 'Coffee', slug: 'Coffee' }
         ]
     },
     {
-        id: 6,
-        name: 'Snacks & Desserts',
-        slug: 'Snacks & Dessert', // DB singular 'Dessert'
+        id: 20, // Backend ID
+        name: 'Snacks & Dessert',
+        slug: 'Snacks & Dessert', // MUST match backend CategoryName
         icon: Coffee,
         color: 'bg-amber-50 hover:bg-amber-100 text-amber-600',
         subCategories: [
@@ -119,14 +127,13 @@ export const CATEGORIES: Category[] = [
             { name: 'Nuts & Dried Fruits', slug: 'Nuts & Dried Fruits' },
             { name: 'Gum & Candy', slug: 'Gum & Candy' },
             { name: 'Ice Cream', slug: 'Ice Cream' },
-            { name: 'Desserts', slug: 'Desserts' },
-            { name: 'Snacks & Dessert', slug: 'Snacks & Dessert' }
+            { name: 'Desserts', slug: 'Desserts' }
         ]
     },
     {
-        id: 7,
-        name: 'Cleaning & Personal Care',
-        slug: 'Cleaning & Personal Care Products', // DB Name
+        id: 21, // Backend ID
+        name: 'Cleaning & Personal Care Products',
+        slug: 'Cleaning & Personal Care Products', // MUST match backend CategoryName
         icon: Egg,
         color: 'bg-pink-50 hover:bg-pink-100 text-pink-600',
         subCategories: [
@@ -146,8 +153,7 @@ export const CATEGORIES: Category[] = [
             { name: 'Makeup', slug: 'Makeup' },
             { name: 'Feminine Hygiene', slug: 'Feminine Hygiene' },
             { name: 'Diapers & Adult Incontinence', slug: 'Diapers & Adult Incontinence' },
-            { name: 'Fragrances, Deodorants & Colognes', slug: 'Fragrances, Deodorants & Colognes' },
-            { name: 'Cleaning & Personal Care Products', slug: 'Cleaning & Personal Care Products' }
+            { name: 'Fragrances, Deodorants & Colognes', slug: 'Fragrances, Deodorants & Colognes' }
         ]
     }
 ];

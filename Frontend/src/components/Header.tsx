@@ -1,5 +1,6 @@
 import { ShoppingBag, Menu, X, ShoppingBasket, Store, Map } from 'lucide-react';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 interface HeaderProps {
   onOpenList?: () => void;
@@ -27,11 +28,11 @@ export default function Header({ onOpenList, itemCount = 0 }: HeaderProps) {
 
         <div className="flex items-center gap-2 md:gap-4">
           <nav className="hidden md:flex items-center gap-6 mr-4">
-            <a href="#" className="flex items-center text-gray-600 hover:text-green-600 font-medium text-sm transition-colors relative group">
+            <Link to="/markets" className="flex items-center text-gray-600 hover:text-green-600 font-medium text-sm transition-colors relative group">
               <Store size={18} className="mr-1.5" />
               Markets
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-green-600 transition-all group-hover:w-full"></span>
-            </a>
+            </Link>
             <a href="#" className="flex items-center text-gray-600 hover:text-green-600 font-medium text-sm transition-colors relative group">
               <Map size={18} className="mr-1.5" />
               Map
@@ -61,9 +62,9 @@ export default function Header({ onOpenList, itemCount = 0 }: HeaderProps) {
 
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-gray-100 p-4 space-y-3 animate-in fade-in slide-in-from-top">
-          <a href="#" className="block flex items-center text-gray-600 hover:text-green-600 font-medium text-sm p-2">
+          <Link to="/markets" className="block flex items-center text-gray-600 hover:text-green-600 font-medium text-sm p-2">
             <Store size={18} className="mr-2 inline" /> Markets
-          </a>
+          </Link>
           <a href="#" className="block flex items-center text-gray-600 hover:text-green-600 font-medium text-sm p-2">
             <Map size={18} className="mr-2 inline" /> Map
           </a>
