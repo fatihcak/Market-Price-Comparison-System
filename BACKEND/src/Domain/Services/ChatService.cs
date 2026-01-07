@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Runtime.CompilerServices;
 using Domain.Entities;
 using DTOs.DTOs.Responses;
 using Microsoft.Extensions.Caching.Memory;
@@ -14,8 +15,7 @@ namespace Domain.Services
 {
     public class ChatService : IChatService
     {
-        private readonly string _apiKey;
-        private readonly HttpClient _httpClient;
+        private readonly IGeminiApiClient _geminiClient;
         private readonly IProductRepository _productRepository;
         private readonly IMarketRepository _marketRepository;
         private readonly IPriceRepository _priceRepository;
@@ -23,16 +23,14 @@ namespace Domain.Services
         private readonly ILogger<ChatService> _logger;
 
         public ChatService(
-            IConfiguration configuration, 
-            HttpClient httpClient,
+            IGeminiApiClient geminiClient,
             IProductRepository productRepository,
             IMarketRepository marketRepository,
             IPriceRepository priceRepository,
             IMemoryCache memoryCache,
             ILogger<ChatService> logger)
         {
-            _apiKey = configuration["AiSettings:GoogleApiKey"]!;
-            _httpClient = httpClient;
+            _geminiClient = geminiClient;
             _productRepository = productRepository;
             _marketRepository = marketRepository;
             _priceRepository = priceRepository;
@@ -258,17 +256,27 @@ namespace Domain.Services
 
                             if (foundAllProducts.Any())
                             {
-                                // Optimization: Take only top 5 products matching the query to avoid massive price fetch
-                                var relevantProducts = foundAllProducts.DistinctBy(p => p.Id).Take(5).ToList();
+                                // ADVANCED RAG: Score and rank products by relevance
+                                var scoredProducts = foundAllProducts
+                                    .DistinctBy(p => p.Id)
+                                    .Select(p => new
+                                    {
+                                        Product = p,
+                                        Score = RelevanceScoring.CalculateRelevanceScore(userMessage, p)
+                                    })
+                                    .OrderByDescending(x => x.Score)
+                                    .Take(20) // Increased from 5 to 20 for better context
+                                    .Select(x => x.Product)
+                                    .ToList();
 
                                 // 1. Get prices for context
-                                var productIds = relevantProducts.Select(p => p.Id).Distinct();
+                                var productIds = scoredProducts.Select(p => p.Id).Distinct();
                                 var prices = await _priceRepository.GetPricesForProductsAsync(productIds);
                                 
                                 // 2. Build Context String
                                 var sb = new StringBuilder();
                                 sb.AppendLine("System Info (Real Database Data):");
-                                foreach (var p in relevantProducts)
+                                foreach (var p in scoredProducts)
                                 {
                                     var priceInfo = prices.Where(pr => pr.ProductId == p.Id).OrderBy(pr => pr.Price).FirstOrDefault();
                                     var priceStr = priceInfo != null ? $"{priceInfo.Price} TL" : "Price N/A";
@@ -297,26 +305,62 @@ namespace Domain.Services
                                 }}
                                 ";
 
-                                var ragResponse = await CallGeminiApiAsync(ragPrompt);
+                                var ragResponse = await _geminiClient.SendRequestAsync(ragPrompt);
                                 
                                 try 
                                 {
                                      var json = ragResponse.Replace("```json", "").Replace("```", "").Trim();
                                      using var doc = JsonDocument.Parse(json);
+                                     
+                                     // Try to get "reply" first (our format)
                                      if (doc.RootElement.TryGetProperty("reply", out var replyProp))
                                      {
                                          reply = replyProp.GetString();
                                      }
+                                     // Fallback: try "response" (sometimes AI uses this)
+                                     else if (doc.RootElement.TryGetProperty("response", out var responseProp))
+                                     {
+                                         reply = responseProp.GetString();
+                                     }
                                 }
-                                catch
+                                catch (Exception ex)
                                 {
-                                    // Fallback to original reply if RAG fails
+                                    _logger.LogWarning(ex, "RAG response parsing failed. Raw: {Response}", ragResponse);
+                                    // Fallback: use original reply or raw response
+                                    // Don't show JSON to user
                                 }
                             }
                             else
                             {
                                 // No products found in DB
                                 reply = "I checked our database, but I couldn't find any products matching your request (tried exact name, similar names, and categories).";
+                            }
+                        }
+
+                        // Clean up JSON from reply if present
+                        if (!string.IsNullOrEmpty(reply))
+                        {
+                            try
+                            {
+                                var json = reply.Replace("```json", "").Replace("```", "").Trim();
+                                // Check if it looks like JSON
+                                if (json.StartsWith("{") && json.EndsWith("}"))
+                                {
+                                    using var doc = JsonDocument.Parse(json);
+                                    
+                                    if (doc.RootElement.TryGetProperty("reply", out var replyProp))
+                                    {
+                                        reply = replyProp.GetString();
+                                    }
+                                    else if (doc.RootElement.TryGetProperty("response", out var responseProp))
+                                    {
+                                        reply = responseProp.GetString();
+                                    }
+                                }
+                            }
+                            catch
+                            {
+                                // Not JSON or can't parse, use as-is
                             }
                         }
 
@@ -365,6 +409,97 @@ namespace Domain.Services
             return finalResponse;
         }
 
+        public async IAsyncEnumerable<string> GetChatResponseStreamAsync(
+            string userMessage, 
+            string sessionId,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            // Retrieve history
+            var historyKey = $"chat_history_{sessionId}";
+            var history = _memoryCache.Get<List<string>>(historyKey) ?? new List<string>();
+
+            // Analyze intent first (non-streaming)
+            var analysisResults = await AnalyzeUserMessageAsync(userMessage, history);
+            var firstAnalysis = analysisResults.FirstOrDefault();
+
+            if (firstAnalysis == null)
+            {
+                yield return "{\"chunk\": \"I'm sorry, I couldn't understand that.\"}";
+                yield break;
+            }
+
+            // For non-chat intents, handle synchronously and stream result
+            if (firstAnalysis.Intent != "chat")
+            {
+                var response = await GetChatResponseAsync(userMessage, sessionId);
+                yield return $"{{\"chunk\": \"{EscapeJson(response.Reply)}\"}}";
+                yield break;
+            }
+
+            // For chat intent: stream the AI response
+            // Get real markets from database (materialize to list first)
+            var allMarkets = (await _marketRepository.GetAllAsync()).ToList();
+            var marketNames = allMarkets.Any() 
+                ? string.Join(", ", allMarkets.Select(m => m.MarketName))
+                : "No markets available";
+            
+            var prompt = $@"
+            You are a Market Price Comparison Assistant for Turkish supermarkets. Your ONLY role is to help users with:
+            - Product prices and availability
+            - Market comparisons
+            - Shopping lists
+            - Smart basket calculations
+            - Product recommendations from our database
+
+            AVAILABLE MARKETS IN OUR SYSTEM:
+            {marketNames}
+            
+            IMPORTANT: ONLY mention the markets listed above. NEVER invent or mention markets that are not in this list!
+
+            IMPORTANT RULES:
+            - NEVER answer general knowledge questions (history, science, celebrities, etc.)
+            - If asked about non-market topics, politely redirect: ""I'm a market assistant. I can only help with product prices and shopping. What would you like to know about our markets?""
+            - Only discuss products, prices, markets, and shopping
+            - Be helpful and friendly, but stay in your role
+            - When asked about markets, ONLY mention: {marketNames}
+
+            Previous conversation history:
+            {string.Join("\n", history)}
+
+            User Message: {userMessage}
+
+            Generate a helpful response about markets/products, or politely decline if the question is off-topic.
+            ";
+
+            var fullResponse = new StringBuilder();
+            
+            await foreach (var chunk in _geminiClient.SendStreamingRequestAsync(prompt, cancellationToken))
+            {
+                fullResponse.Append(chunk);
+                yield return $"{{\"chunk\": \"{EscapeJson(chunk)}\"}}";
+            }
+
+            // Update history after streaming completes
+            history.Add($"User: {userMessage}");
+            history.Add($"Assistant: {fullResponse}");
+            
+            if (history.Count > 10)
+            {
+                history = history.Skip(history.Count - 10).ToList();
+            }
+            
+            _memoryCache.Set(historyKey, history, TimeSpan.FromMinutes(30));
+        }
+
+        private string EscapeJson(string text)
+        {
+            return text.Replace("\\", "\\\\")
+                       .Replace("\"", "\\\"")
+                       .Replace("\n", "\\n")
+                       .Replace("\r", "\\r")
+                       .Replace("\t", "\\t");
+        }
+
         private async Task<List<MessageAnalysisResult>> AnalyzeUserMessageAsync(string message, List<string> history)
         {
             var historyText = string.Join("\n", history);
@@ -405,25 +540,41 @@ namespace Domain.Services
             ]
             ";
 
-            var response = await CallGeminiApiAsync(prompt);
+            var response = await _geminiClient.SendRequestAsync(prompt);
             
             try 
             {
                 var json = response.Replace("```json", "").Replace("```", "").Trim();
-                // Handle potential single object response from AI by wrapping in array if needed, 
-                // but prompt asks for array.
+                
+                // Handle potential single object response from AI by wrapping in array if needed
                 if (json.StartsWith("{"))
                 {
                     json = $"[{json}]";
                 }
 
-                return JsonSerializer.Deserialize<List<MessageAnalysisResult>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) 
-                       ?? new List<MessageAnalysisResult> { new MessageAnalysisResult { Intent = "chat", Reply = "Error parsing response (Null result)." } };
+                var results = JsonSerializer.Deserialize<List<MessageAnalysisResult>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                
+                if (results == null || !results.Any())
+                {
+                    _logger.LogWarning("Intent analysis returned null or empty. Raw response: {Response}", response);
+                    return new List<MessageAnalysisResult> { new MessageAnalysisResult { Intent = "chat", Reply = "I'm sorry, I'm having trouble understanding. Could you rephrase that?" } };
+                }
+                
+                return results;
             }
-            catch (Exception ex)
+            catch (JsonException ex)
             {
-                _logger.LogWarning(ex, "Error parsing AI response");
-                return new List<MessageAnalysisResult> { new MessageAnalysisResult { Intent = "chat", Reply = $"Error parsing AI response. Raw: {response.Substring(0, Math.Min(response.Length, 50))}..." } };
+                _logger.LogError(ex, "Error parsing AI intent analysis. Raw response: {Response}", response);
+                
+                // If parsing fails, return a safe default
+                return new List<MessageAnalysisResult> 
+                { 
+                    new MessageAnalysisResult 
+                    { 
+                        Intent = "chat", 
+                        Reply = "I apologize, I'm experiencing some technical difficulties. Please try rephrasing your message or use simpler terms."
+                    } 
+                };
             }
         }
 
@@ -622,50 +773,6 @@ namespace Domain.Services
             };
         }
 
-        private async Task<string> CallGeminiApiAsync(string prompt)
-        {
-            _logger.LogDebug("Sending request to Google API");
-            var requestBody = new
-            {
-                contents = new[]
-                {
-                    new { parts = new[] { new { text = prompt } } }
-                },
-                generationConfig = new 
-                {
-                    response_mime_type = "application/json"
-                }
-            };
-
-            var jsonContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
-            var response = await _httpClient.PostAsync($"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key={_apiKey}", jsonContent);
-            
-            _logger.LogDebug("Google API Status: {StatusCode}", response.StatusCode);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                var errorContent = await response.Content.ReadAsStringAsync();
-                _logger.LogError("Google API Error: {StatusCode} - {ErrorContent}", response.StatusCode, errorContent);
-                return "AI service is not available at the moment.";
-            }
-
-            var responseString = await response.Content.ReadAsStringAsync();
-            try
-            {
-                using var doc = JsonDocument.Parse(responseString);
-                return doc.RootElement
-                    .GetProperty("candidates")[0]
-                    .GetProperty("content")
-                    .GetProperty("parts")[0]
-                    .GetProperty("text")
-                    .GetString() ?? "";
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Gemini Parsing Error. Raw Response: {RawResponse}", responseString);
-                return "AI Error";
-            }
-        }
 
         private class MessageAnalysisResult
         {

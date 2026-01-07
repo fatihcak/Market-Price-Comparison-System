@@ -364,5 +364,68 @@ export const api = {
             console.error('Error sending message:', error);
             throw error;
         }
+    },
+
+    sendMessageStream: async (
+        message: string,
+        sessionId: string,
+        onChunk: (chunk: string) => void,
+        onComplete: () => void,
+        onError: (error: Error) => void
+    ): Promise<void> => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/Chat/stream`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message, sessionId }),
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const reader = response.body?.getReader();
+            const decoder = new TextDecoder();
+
+            if (!reader) {
+                throw new Error('Response body is null');
+            }
+
+            while (true) {
+                const { done, value } = await reader.read();
+
+                if (done) {
+                    onComplete();
+                    break;
+                }
+
+                const chunk = decoder.decode(value, { stream: true });
+                const lines = chunk.split('\n');
+
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        const data = line.substring(6); // Remove "data: " prefix
+
+                        try {
+                            const json = JSON.parse(data);
+                            if (json.chunk) {
+                                onChunk(json.chunk);
+                            } else if (json.error) {
+                                onError(new Error(json.error));
+                                break;
+                            }
+                        } catch (parseError) {
+                            // Ignore parse errors for incomplete chunks
+                            console.warn('Failed to parse SSE data:', data);
+                        }
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error in stream:', error);
+            onError(error instanceof Error ? error : new Error('Unknown streaming error'));
+        }
     }
 };

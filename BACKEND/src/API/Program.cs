@@ -134,9 +134,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = builder.Configuration["JwtSettings:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKey"]!))
         };
-    });
+    })
+;
+
+// AI Services
+builder.Services.AddScoped<IGeminiApiClient, GeminiApiClient>();
+builder.Services.AddHttpClient<IGeminiApiClient, GeminiApiClient>();
 builder.Services.AddScoped<IChatService, ChatService>();
-builder.Services.AddHttpClient<IChatService, ChatService>();
 
 // Caching Services
 // Register Cache Services
