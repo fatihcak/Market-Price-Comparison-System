@@ -93,10 +93,10 @@ export default function MapPage() {
                         ${market.description}
                     </p>
                     <p style="font-size: 12px; color: #444; margin: 4px 0;">
-                        📍 ${market.address}
+                         ${market.address}
                     </p>
                     <p style="font-size: 12px; color: #444; margin: 4px 0;">
-                        🕐 ${market.openHours}
+                         ${market.openHours}
                     </p>
                     <a href="${market.website}" target="_blank" rel="noopener" style="
                         display: inline-block;
@@ -129,7 +129,7 @@ export default function MapPage() {
                         Market Locations
                     </h1>
                     <p className="text-gray-600 max-w-2xl mx-auto">
-                        Find our partner markets on the map. Click on markers to see details.
+
                     </p>
                 </div>
 
