@@ -1,13 +1,15 @@
-import { ShoppingBag, Menu, X, ShoppingBasket, Store, Map } from 'lucide-react';
+import { ShoppingBag, Menu, X, ShoppingBasket, Store, Map, Heart } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 interface HeaderProps {
   onOpenList?: () => void;
   itemCount?: number;
+  onOpenFavorites?: () => void;
+  favoritesCount?: number;
 }
 
-export default function Header({ onOpenList, itemCount = 0 }: HeaderProps) {
+export default function Header({ onOpenList, itemCount = 0, onOpenFavorites, favoritesCount = 0 }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -40,6 +42,18 @@ export default function Header({ onOpenList, itemCount = 0 }: HeaderProps) {
             </Link>
           </nav>
           <button
+            onClick={onOpenFavorites}
+            className="hidden md:block bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-lg font-medium text-sm transition-all hover:shadow-lg hover:scale-105 transform duration-200 relative"
+          >
+            <Heart size={16} className="inline-block mr-2 fill-red-500" />
+            Favorites
+            {favoritesCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white">
+                {favoritesCount}
+              </span>
+            )}
+          </button>
+          <button
             onClick={onOpenList}
             className="hidden md:block bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-all hover:shadow-lg hover:scale-105 transform duration-200 relative"
           >
@@ -68,6 +82,18 @@ export default function Header({ onOpenList, itemCount = 0 }: HeaderProps) {
           <Link to="/map" className="block flex items-center text-gray-600 hover:text-green-600 font-medium text-sm p-2">
             <Map size={18} className="mr-2 inline" /> Map
           </Link>
+          <button
+            onClick={onOpenFavorites}
+            className="w-full bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-lg font-medium text-sm transition-colors relative"
+          >
+            <Heart size={16} className="inline-block mr-2 fill-red-500" />
+            Favorites
+            {favoritesCount > 0 && (
+              <span className="ml-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                {favoritesCount}
+              </span>
+            )}
+          </button>
           <button
             onClick={onOpenList}
             className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors mt-2 relative"

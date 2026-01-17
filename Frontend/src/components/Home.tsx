@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { TrendingDown, MapPin, ShoppingCart, Search } from 'lucide-react';
 import SearchBar from './SearchBar';
 import CategorySection from './CategorySection';
@@ -93,7 +93,17 @@ export default function Home({ activeCategories, onAdd, onCompare }: HomeProps) 
             </div>
 
             <Routes>
-                <Route path="/" element={<Navigate to="/products/All" replace />} />
+                <Route
+                    path="/"
+                    element={
+                        <ProductGrid
+                            searchQuery={searchQuery}
+                            categories={activeCategories}
+                            onAdd={onAdd}
+                            onCompare={onCompare}
+                        />
+                    }
+                />
                 <Route
                     path="/products/:category/:subcategory?"
                     element={

@@ -9,7 +9,44 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, onAdd, onCompare }: ProductCardProps) {
-  const [isFavorite, setIsFavorite] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(() => {
+    const saved = localStorage.getItem('market_favorites');
+    if (saved) {
+      try {
+        const favorites: Product[] = JSON.parse(saved);
+        return favorites.some(p => p.id === product.id);
+      } catch {
+        return false;
+      }
+    }
+    return false;
+  });
+
+  const handleToggleFavorite = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const saved = localStorage.getItem('market_favorites');
+    let favorites: Product[] = [];
+    if (saved) {
+      try {
+        favorites = JSON.parse(saved);
+      } catch {
+        favorites = [];
+      }
+    }
+
+    if (isFavorite) {
+      // Remove from favorites
+      favorites = favorites.filter(p => p.id !== product.id);
+    } else {
+      // Add to favorites
+      favorites.push(product);
+    }
+
+    localStorage.setItem('market_favorites', JSON.stringify(favorites));
+    setIsFavorite(!isFavorite);
+    // Dispatch storage event so App.tsx can listen
+    window.dispatchEvent(new Event('storage'));
+  };
 
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -44,14 +81,11 @@ export default function ProductCard({ product, onAdd, onCompare }: ProductCardPr
         )}
 
         <div className="absolute top-3 right-3 flex gap-2">
-          <div className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
-            -{product.discount}%
+          <div className="bg-green-400 text-white px-3 py-1 rounded-full text-sm font-bold">
+            {product.discount}%
           </div>
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsFavorite(!isFavorite);
-            }}
+            onClick={handleToggleFavorite}
             className="bg-white rounded-full p-2 hover:bg-gray-100 transition-colors cursor-pointer"
           >
             <Heart

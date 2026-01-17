@@ -5,13 +5,14 @@ import Header from './components/Header';
 import PriceComparison from './components/PriceComparison';
 import BasketComparison from './components/BasketComparison';
 import ProductList from './components/ProductList';
+import FavoritesList from './components/FavoritesList';
 import { Product, CartItem } from './types';
 import { api } from './services/api';
 import AiChatbot from './components/AiChatbot';
 import Markets from './components/Markets';
 import MapPage from './components/MapPage';
 import Home from './components/Home';
-import { CATEGORIES, Category } from './constants/categories'; // Import categories
+import { CATEGORIES, Category } from './constants/categories';
 
 
 
@@ -30,6 +31,19 @@ function App() {
         return JSON.parse(saved);
       } catch (error) {
         console.error('Failed to parse basket:', error);
+      }
+    }
+    return [];
+  });
+
+  const [favoritesOpen, setFavoritesOpen] = useState(false);
+  const [favorites, setFavorites] = useState<Product[]>(() => {
+    const saved = localStorage.getItem('market_favorites');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (error) {
+        console.error('Failed to parse favorites:', error);
       }
     }
     return [];
@@ -172,12 +186,42 @@ function App() {
 
   const totalItems = shoppingList.length;
 
+  // Favorites sync - listen for storage events from ProductCard
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const saved = localStorage.getItem('market_favorites');
+      if (saved) {
+        try {
+          setFavorites(JSON.parse(saved));
+        } catch {
+          // ignore
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  // Save favorites to localStorage
+  useEffect(() => {
+    localStorage.setItem('market_favorites', JSON.stringify(favorites));
+  }, [favorites]);
+
+  const removeFavorite = (productId: number) => {
+    setFavorites(prev => prev.filter(p => p.id !== productId));
+  };
+
 
 
 
   return (
     <div className="min-h-screen bg-white">
-      <Header onOpenList={() => setListOpen(true)} itemCount={totalItems} />
+      <Header
+        onOpenList={() => setListOpen(true)}
+        itemCount={totalItems}
+        onOpenFavorites={() => setFavoritesOpen(true)}
+        favoritesCount={favorites.length}
+      />
 
       <Routes>
         <Route path="/markets" element={<Markets />} />
@@ -254,6 +298,14 @@ function App() {
       />
 
       <AiChatbot hideOnMobile={listOpen} />
+
+      <FavoritesList
+        isOpen={favoritesOpen}
+        onClose={() => setFavoritesOpen(false)}
+        favorites={favorites}
+        onRemove={removeFavorite}
+        onAddToList={addToShoppingList}
+      />
     </div>
   );
 }

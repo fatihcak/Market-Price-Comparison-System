@@ -272,10 +272,10 @@ export default function ProductGrid({ searchQuery, categories, onAdd, onCompare 
 
             <div className="flex items-center justify-between mb-8">
                 <h2 className="text-3xl font-bold text-gray-900">
-                    {subcategory ? subcategory : (selectedCategory === 'All' ? 'All Products' : selectedCategory)}
+                    {subcategory ? subcategory : (selectedCategory === 'All' ? 'Popular Products' : selectedCategory)}
                 </h2>
                 <button
-                    onClick={() => handleNavigate('/products/All')} //noscroll 
+                    onClick={() => handleNavigate(`/products/${selectedCategory}`)}
                     className="text-green-600 bg-green-100 rounded-full px-4 py-2 hover:text-green-700 font-semibold text-sm transition-colors"
                 >
                     See All →
