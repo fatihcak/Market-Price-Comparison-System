@@ -1,10 +1,10 @@
-# 🛒 Market Price Comparison System
+#  Market Price Comparison System
 
 A full-stack application designed to help users compare product prices across different markets, manage shopping lists, and find the best deals.
 
 ---
 
-## 🚀 Features
+##  Features
 
 - **Price Comparison** - Compare prices of products across various markets to find the cheapest options
 - **Smart Shopping List** - Create and manage shopping lists with automatic price calculation
@@ -16,7 +16,7 @@ A full-stack application designed to help users compare product prices across di
 
 ---
 
-## 🛠️ Technology Stack
+##  Technology Stack
 
 ### Frontend
 | Technology | Purpose |
@@ -38,7 +38,7 @@ A full-stack application designed to help users compare product prices across di
 
 ---
 
-## 📦 Project Structure
+##  Project Structure
 
 ```
 Market-Price-Comparison-System/
@@ -62,7 +62,7 @@ Market-Price-Comparison-System/
 
 ---
 
-## 🏁 Getting Started
+##  Getting Started
 
 ### Prerequisites
 - Node.js (v18 or higher)

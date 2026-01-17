@@ -41,6 +41,7 @@ export default function AiChatbot({ hideOnMobile = false }: AiChatbotProps) {
         }];
     });
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const chatbotRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -59,6 +60,17 @@ export default function AiChatbot({ hideOnMobile = false }: AiChatbotProps) {
     useEffect(() => {
         sessionStorage.setItem('chat_history', JSON.stringify(messages));
     }, [messages]);
+
+    // Click outside to close
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (chatbotRef.current && !chatbotRef.current.contains(event.target as Node) && !isMinimized) {
+                setIsMinimized(true);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isMinimized]);
 
     const handleSendMessage = async (e?: React.FormEvent) => {
         e?.preventDefault();
@@ -148,8 +160,10 @@ export default function AiChatbot({ hideOnMobile = false }: AiChatbotProps) {
     };
 
 
+
     return (
         <div
+            ref={chatbotRef}
             className={`fixed bottom-3 left-2 bg-white rounded-2xl shadow-2xl z-40 transition-all duration-300 ${hideOnMobile ? 'hidden md:flex' : 'flex'} flex-col overflow-hidden ${isMinimized ? 'w-72 h-14' : 'w-80 sm:w-96 h-[500px] max-h-[80vh]'}`}
         >
             {/* Header */}
