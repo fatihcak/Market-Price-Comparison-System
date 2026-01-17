@@ -125,8 +125,8 @@ export default function Home({ activeCategories, onAdd, onCompare }: HomeProps) 
                         <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md">
                             <TrendingDown className="text-green-600" size={32} />
                         </div>
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">Price Tracking</h3>
-                        <p className="text-gray-600">Track price changes of your favorite products</p>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">Price Comparison</h3>
+                        <p className="text-gray-600">Compare prices of your favorite products</p>
                     </div>
 
                     <div className="text-center hover:scale-105 transition-transform duration-300">

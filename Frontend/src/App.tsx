@@ -268,7 +268,6 @@ function App() {
             </div>
           </div>
           <div className="border-t border-gray-700 pt-8 text-sm text-center">
-            <p>&copy; Market Price. All rights reserved.</p>
           </div>
         </div>
       </footer>
