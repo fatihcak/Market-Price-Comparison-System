@@ -247,19 +247,22 @@ function App() {
             <div>
               <h4 className="text-white font-bold mb-4">Quick Links</h4>
               <ul className="text-sm space-y-2">
-                <li><a href="#" className="hover:text-white transition-colors">About Us</a></li>
+                <li><a href="/about" className="hover:text-white transition-colors">About Us</a></li>
                 <li><a href="/markets" className="hover:text-white transition-colors">Markets</a></li>
               </ul>
             </div>
             <div>
               <h4 className="text-white font-bold mb-4">Support</h4>
               <ul className="text-sm space-y-2">
-                <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
+                <p>Contact:</p>
+                <p>21000128@emu.edu.tr</p>
+                <p>+90 551 590 9932</p>
               </ul>
             </div>
             <div>
-              <h4 className="text-white font-bold mb-4">Follow Us</h4>
-              <p className="text-sm">Follow Us</p>
+              <h4 className="textwhite font-bold mb-4">Follow Us</h4>
+              <p className="text-sm">Follow Us:</p>
+              <p><a href="https://github.com/DogukanOrs/Market-Price-Comparison-System">GitHub</a></p>
             </div>
           </div>
           <div className="border-t border-gray-700 pt-8 text-sm text-center">
