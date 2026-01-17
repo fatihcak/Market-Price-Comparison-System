@@ -8,12 +8,13 @@ interface ProductListProps {
     onRemove: (id: number) => void;
     onUpdateQuantity: (id: number, delta: number) => void;
     onCompare: () => void;
+    onRemoveAll: () => void;
 }
 
-export default function ProductList({ isOpen, onClose, products, onRemove, onUpdateQuantity, onCompare }: ProductListProps) {
+export default function ProductList({ isOpen, onClose, products, onRemove, onUpdateQuantity, onCompare, onRemoveAll }: ProductListProps) {
     if (!isOpen) return null;
 
-    const totalPrice = products.reduce((sum, product) => sum + (product.price * product.quantity), 0);
+    //const totalPrice = products.reduce((sum, product) => sum + (product.price * product.quantity), 0);
 
     return (
         <div className="fixed inset-0 z-50 overflow-hidden">
@@ -88,16 +89,18 @@ export default function ProductList({ isOpen, onClose, products, onRemove, onUpd
                 </div>
 
                 {products.length > 0 && (
-                    <div className="p-6 border-t border-gray-100 bg-gray-50">
-                        <div className="flex items-center justify-between mb-4">
-                            <span className="text-gray-600">Total Amount</span>
-                            <span className="text-2xl font-bold text-green-600">{totalPrice.toFixed(2)}₺</span>
-                        </div>
+                    <div className="p-6 border-t border-gray-100 bg-gray-50 space-y-3">
                         <button
                             onClick={onCompare}
                             className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-bold transition-colors shadow-lg shadow-green-200"
                         >
                             Compare Prices
+                        </button>
+                        <button
+                            onClick={onRemoveAll}
+                            className="w-full bg-red-100 hover:bg-red-200 text-red-600 py-3 rounded-xl font-bold transition-colors"
+                        >
+                            Remove All
                         </button>
                     </div>
                 )}
