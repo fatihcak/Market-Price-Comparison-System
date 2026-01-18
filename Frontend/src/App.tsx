@@ -11,6 +11,7 @@ import { api } from './services/api';
 import AiChatbot from './components/AiChatbot';
 import Markets from './components/Markets';
 import MapPage from './components/MapPage';
+import AboutUs from './components/AboutUs';
 import Home from './components/Home';
 import { CATEGORIES, Category } from './constants/categories';
 
@@ -226,6 +227,7 @@ function App() {
       <Routes>
         <Route path="/markets" element={<Markets />} />
         <Route path="/map" element={<MapPage />} />
+        <Route path="/about" element={<AboutUs />} />
         <Route path="/*" element={
           <Home
             activeCategories={activeCategories}
