@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { TrendingDown, MapPin, ShoppingCart, Search } from 'lucide-react';
 import SearchBar from './SearchBar';
 import CategorySection from './CategorySection';
 import SubCategoryNavbar from './SubCategoryNavbar';
 import ProductGrid from './ProductGrid';
+import NotFound from './NotFound';
 import { Category } from '../constants/categories';
 import { Product } from '../types';
 
@@ -93,7 +94,17 @@ export default function Home({ activeCategories, onAdd, onCompare }: HomeProps) 
             </div>
 
             <Routes>
-                <Route path="/" element={<Navigate to="/products/All" replace />} />
+                <Route
+                    path="/"
+                    element={
+                        <ProductGrid
+                            searchQuery={searchQuery}
+                            categories={activeCategories}
+                            onAdd={onAdd}
+                            onCompare={onCompare}
+                        />
+                    }
+                />
                 <Route
                     path="/products/:category/:subcategory?"
                     element={
@@ -105,6 +116,7 @@ export default function Home({ activeCategories, onAdd, onCompare }: HomeProps) 
                         />
                     }
                 />
+                <Route path="*" element={<NotFound />} />
             </Routes>
 
             <section className="mt-20 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-12">

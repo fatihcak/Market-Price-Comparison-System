@@ -5,13 +5,14 @@ import Header from './components/Header';
 import PriceComparison from './components/PriceComparison';
 import BasketComparison from './components/BasketComparison';
 import ProductList from './components/ProductList';
+import FavoritesList from './components/FavoritesList';
 import { Product, CartItem } from './types';
 import { api } from './services/api';
 import AiChatbot from './components/AiChatbot';
 import Markets from './components/Markets';
 import MapPage from './components/MapPage';
 import Home from './components/Home';
-import { CATEGORIES, Category } from './constants/categories'; // Import categories
+import { CATEGORIES, Category } from './constants/categories';
 
 
 
@@ -30,6 +31,19 @@ function App() {
         return JSON.parse(saved);
       } catch (error) {
         console.error('Failed to parse basket:', error);
+      }
+    }
+    return [];
+  });
+
+  const [favoritesOpen, setFavoritesOpen] = useState(false);
+  const [favorites, setFavorites] = useState<Product[]>(() => {
+    const saved = localStorage.getItem('market_favorites');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (error) {
+        console.error('Failed to parse favorites:', error);
       }
     }
     return [];
@@ -172,12 +186,42 @@ function App() {
 
   const totalItems = shoppingList.length;
 
+  // Favorites sync - listen for storage events from ProductCard
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const saved = localStorage.getItem('market_favorites');
+      if (saved) {
+        try {
+          setFavorites(JSON.parse(saved));
+        } catch {
+          // ignore
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  // Save favorites to localStorage
+  useEffect(() => {
+    localStorage.setItem('market_favorites', JSON.stringify(favorites));
+  }, [favorites]);
+
+  const removeFavorite = (productId: number) => {
+    setFavorites(prev => prev.filter(p => p.id !== productId));
+  };
+
 
 
 
   return (
     <div className="min-h-screen bg-white">
-      <Header onOpenList={() => setListOpen(true)} itemCount={totalItems} />
+      <Header
+        onOpenList={() => setListOpen(true)}
+        itemCount={totalItems}
+        onOpenFavorites={() => setFavoritesOpen(true)}
+        favoritesCount={favorites.length}
+      />
 
       <Routes>
         <Route path="/markets" element={<Markets />} />
@@ -203,19 +247,22 @@ function App() {
             <div>
               <h4 className="text-white font-bold mb-4">Quick Links</h4>
               <ul className="text-sm space-y-2">
-                <li><a href="#" className="hover:text-white transition-colors">About Us</a></li>
+                <li><a href="/about" className="hover:text-white transition-colors">About Us</a></li>
                 <li><a href="/markets" className="hover:text-white transition-colors">Markets</a></li>
               </ul>
             </div>
             <div>
               <h4 className="text-white font-bold mb-4">Support</h4>
               <ul className="text-sm space-y-2">
-                <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
+                <p>Contact:</p>
+                <p>21000128@emu.edu.tr</p>
+                <p>+90 551 590 9932</p>
               </ul>
             </div>
             <div>
-              <h4 className="text-white font-bold mb-4">Follow Us</h4>
-              <p className="text-sm">Follow Us</p>
+              <h4 className="textwhite font-bold mb-4">Follow Us</h4>
+              <p className="text-sm">Follow Us:</p>
+              <p><a href="https://github.com/DogukanOrs/Market-Price-Comparison-System">GitHub</a></p>
             </div>
           </div>
           <div className="border-t border-gray-700 pt-8 text-sm text-center">
@@ -254,6 +301,14 @@ function App() {
       />
 
       <AiChatbot hideOnMobile={listOpen} />
+
+      <FavoritesList
+        isOpen={favoritesOpen}
+        onClose={() => setFavoritesOpen(false)}
+        favorites={favorites}
+        onRemove={removeFavorite}
+        onAddToList={addToShoppingList}
+      />
     </div>
   );
 }
