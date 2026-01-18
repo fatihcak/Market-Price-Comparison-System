@@ -1,23 +1,27 @@
-import { MapPin, Navigation, ExternalLink } from 'lucide-react';
+import { MapPin, ExternalLink } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Map } from 'lucide-react'
 
 const MARKETS = [
     {
         id: 1,
         name: 'Sarper Market',
-        description: 'Fresh local produce and daily essentials at competitive prices. Known for their quality meats and organic vegetable selection.',
+        description: 'Fresh local produce and daily essentials in Cyprus.',
         image: 'https://cyprus-faq.com/site/assets/files/8333/image.webp',
         address: 'Girne Mahallesi, Lefkoşa',
         color: 'from-orange-500 to-red-600',
-        openHours: '08:00 - 22:00'
+        openHours: '08:30 - 23:00',
+        url: 'https://www.sarpermarket.com'
     },
     {
         id: 2,
         name: 'Kıbrıs Sanal Market',
-        description: 'Online grocery market with a wide selection of fresh produce and daily essentials in Cyprus',
+        description: 'Online grocery market with fresh produce and daily essentials in Cyprus',
         image: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&q=80&w=1000',
         address: 'Online / Distribution Center: Gönyeli',
         color: 'from-blue-500 to-indigo-600',
-        openHours: '24/7'
+        openHours: '10:00 - 22:00',
+        url: 'https://www.kibrissanalmarket.com/'
     }
 ];
 
@@ -72,12 +76,6 @@ export default function Markets() {
                                     </p>
 
                                     <div className="flex flex-wrap gap-3">
-                                        <span className="px-4 py-1.5 bg-gray-50 text-gray-600 rounded-lg text-sm font-medium border border-gray-200">
-                                            Daily Fresh
-                                        </span>
-                                        <span className="px-4 py-1.5 bg-gray-50 text-gray-600 rounded-lg text-sm font-medium border border-gray-200">
-                                            Best Prices
-                                        </span>
                                         <span className="px-4 py-1.5 bg-green-50 text-green-700 rounded-lg text-sm font-medium border border-green-100">
                                             Open: {market.openHours}
                                         </span>
@@ -85,30 +83,32 @@ export default function Markets() {
                                 </div>
 
                                 <div className="mt-8 flex gap-4">
-                                    <button className="flex-1 flex items-center justify-center gap-2 bg-gray-900 text-white py-4 rounded-xl font-bold transition-transform active:scale-95 group/btn">
+                                    <button onClick={() => window.open(market.url, '_blank')} className="flex-1 flex items-center justify-center gap-2 bg-gray-900 text-white py-4 rounded-xl font-bold transition-transform active:scale-95 group/btn">
                                         Visit Market
                                         <ExternalLink size={18} className="group-hover/btn:translate-x-1 transition-transform" />
                                     </button>
-                                    <button className="flex-1 flex items-center justify-center gap-2 bg-gray-100 text-gray-900 py-4 rounded-xl font-bold hover:bg-gray-200 transition-colors active:scale-95">
-                                        <Navigation size={18} />
-                                        Get Directions
-                                    </button>
+                                    <Link to="/map">
+                                        <button className="flex-1 flex items-center justify-center gap-2 bg-gray-900 text-white py-4 px-5 rounded-xl font-bold transition-transform active:scale-95 group/btn">
+                                            View on Map
+                                            <Map size={18} className="group-hover/btn:translate-x-1 transition-transform" />
+                                        </button>
+                                    </Link>
                                 </div>
                             </div>
                         </div>
                     ))}
                 </div>
 
-                {/* Upcoming Markets Section */}
+                {/* Coming Soon Section */}
                 <div className="mt-16">
                     <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Coming Soon</h2>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                        {/* Upcoming Market 1 */}
+                        {/*  Market 1 */}
                         <div className="group bg-white rounded-3xl overflow-hidden shadow-sm border-2 border-dashed border-gray-300 flex flex-col">
                             <div className="relative h-64 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
                                 <div className="text-center">
                                     <div className="w-20 h-20 bg-gray-300 rounded-full mx-auto mb-4 flex items-center justify-center">
-                                        <span className="text-4xl text-gray-500">?</span>
+
                                     </div>
                                     <span className="text-gray-500 font-medium">New Market</span>
                                 </div>
@@ -116,17 +116,17 @@ export default function Markets() {
                             <div className="p-8 flex-1 flex flex-col justify-center items-center">
                                 <h3 className="text-xl font-bold text-gray-400 mb-2">Coming Soon</h3>
                                 <p className="text-gray-400 text-center">
-                                    We're working on adding more markets to give you better price comparisons.
+                                    Coming Soon
                                 </p>
                             </div>
                         </div>
 
-                        {/* Upcoming Market 2 */}
+                        {/*  Market 2 */}
                         <div className="group bg-white rounded-3xl overflow-hidden shadow-sm border-2 border-dashed border-gray-300 flex flex-col">
                             <div className="relative h-64 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
                                 <div className="text-center">
                                     <div className="w-20 h-20 bg-gray-300 rounded-full mx-auto mb-4 flex items-center justify-center">
-                                        <span className="text-4xl text-gray-500">?</span>
+
                                     </div>
                                     <span className="text-gray-500 font-medium">New Market</span>
                                 </div>
@@ -134,7 +134,7 @@ export default function Markets() {
                             <div className="p-8 flex-1 flex flex-col justify-center items-center">
                                 <h3 className="text-xl font-bold text-gray-400 mb-2">Coming Soon</h3>
                                 <p className="text-gray-400 text-center">
-                                    Stay tuned for more partner markets joining our platform.
+                                    Coming Soon
                                 </p>
                             </div>
                         </div>

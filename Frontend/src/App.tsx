@@ -164,7 +164,13 @@ function App() {
     setShoppingList(prevList => prevList.filter(item => item.id !== productId));
   };
 
-  const totalItems = shoppingList.reduce((sum, item) => sum + item.quantity, 0);
+  const clearShoppingList = () => {
+    if (window.confirm("Are you sure you want to clear your shopping list?")) {
+      setShoppingList([]);
+    }
+  };
+
+  const totalItems = shoppingList.length;
 
 
 
@@ -198,16 +204,13 @@ function App() {
               <h4 className="text-white font-bold mb-4">Quick Links</h4>
               <ul className="text-sm space-y-2">
                 <li><a href="#" className="hover:text-white transition-colors">About Us</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Markets</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
+                <li><a href="/markets" className="hover:text-white transition-colors">Markets</a></li>
               </ul>
             </div>
             <div>
               <h4 className="text-white font-bold mb-4">Support</h4>
               <ul className="text-sm space-y-2">
                 <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Privacy</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Terms</a></li>
               </ul>
             </div>
             <div>
@@ -220,7 +223,7 @@ function App() {
           </div>
         </div>
       </footer>
-
+      {/* props */}
       <PriceComparison
         isOpen={comparisonOpen}
         onClose={() => setComparisonOpen(false)}
@@ -247,6 +250,7 @@ function App() {
           setListOpen(false);
           setBasketComparisonOpen(true);
         }}
+        onRemoveAll={clearShoppingList}
       />
 
       <AiChatbot hideOnMobile={listOpen} />

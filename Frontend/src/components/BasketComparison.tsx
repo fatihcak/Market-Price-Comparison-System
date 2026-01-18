@@ -11,7 +11,7 @@ interface BasketComparisonProps {
 
 interface MarketBasket {
     marketName: string;
-    districtName: string;
+    districtNames: string[];
     items: {
         productName: string;
         price: number;
@@ -25,8 +25,8 @@ export default function BasketComparison({ isOpen, onClose, products }: BasketCo
     const [marketBaskets, setMarketBaskets] = useState<MarketBasket[]>([]);
     const [loading, setLoading] = useState(false);
 
-    const openMap = (marketName: string, districtName: string) => {
-        const query = encodeURIComponent(`${marketName} ${districtName}`);
+    const openMap = (marketName: string, districtNames: string[]) => {
+        const query = encodeURIComponent(`${marketName} ${districtNames[0]}`);
         window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
     };
 
@@ -44,31 +44,47 @@ export default function BasketComparison({ isOpen, onClose, products }: BasketCo
 
             Promise.all(fetchPromises)
                 .then(results => {
-                    // Group by Market
+                    // Group by Market Name only (not by district)
                     const marketMap = new Map<string, MarketBasket>();
+                    const districtSet = new Map<string, Set<string>>();
 
                     results.forEach(({ productName, quantity, prices }) => {
                         prices.forEach(priceDto => {
-                            const key = `${priceDto.marketName}-${priceDto.districtName}`;
+                            const key = priceDto.marketName;
+
+                            // Track districts for this market
+                            if (!districtSet.has(key)) {
+                                districtSet.set(key, new Set());
+                            }
+                            districtSet.get(key)!.add(priceDto.districtName);
 
                             if (!marketMap.has(key)) {
                                 marketMap.set(key, {
                                     marketName: priceDto.marketName,
-                                    districtName: priceDto.districtName,
+                                    districtNames: [],
                                     items: [],
                                     totalPrice: 0,
                                     missingCount: 0
                                 });
                             }
 
+                            // Only add item if not already added (avoid duplicates from different districts)
                             const basket = marketMap.get(key)!;
-                            basket.items.push({
-                                productName: `${productName} (x${quantity})`,
-                                price: priceDto.price * quantity,
-                                found: true
-                            });
-                            basket.totalPrice += priceDto.price * quantity;
+                            const existingItem = basket.items.find(item => item.productName === `${productName} (x${quantity})`);
+                            if (!existingItem) {
+                                basket.items.push({
+                                    productName: `${productName} (x${quantity})`,
+                                    price: priceDto.price * quantity,
+                                    found: true
+                                });
+                                basket.totalPrice += priceDto.price * quantity;
+                            }
                         });
+                    });
+
+                    // Add district names to each basket
+                    marketMap.forEach((basket, key) => {
+                        basket.districtNames = Array.from(districtSet.get(key) || []);
                     });
 
                     const finalBaskets: MarketBasket[] = [];
@@ -81,7 +97,7 @@ export default function BasketComparison({ isOpen, onClose, products }: BasketCo
                         results.forEach(({ productName, quantity, prices }) => {
 
                             const priceInMarket = prices.find(p =>
-                                p.marketName === basket.marketName && p.districtName === basket.districtName
+                                p.marketName === basket.marketName
                             );
 
                             if (priceInMarket) {
@@ -189,12 +205,12 @@ export default function BasketComparison({ isOpen, onClose, products }: BasketCo
                                                 <div className="flex justify-between items-start mb-4">
                                                     <div>
                                                         <h4 className="font-bold text-lg text-gray-900">{basket.marketName}</h4>
-                                                        <div className="flex items-center gap-1 text-sm text-gray-500">
+                                                        <div className="flex items-center gap-1 text-sm text-gray-500 flex-wrap">
                                                             <MapPin size={14} />
-                                                            {basket.districtName}
+                                                            {basket.districtNames.join(', ')}
                                                         </div>
                                                         <button
-                                                            onClick={() => openMap(basket.marketName, basket.districtName)}
+                                                            onClick={() => openMap(basket.marketName, basket.districtNames)}
                                                             className="inline-block px-2 py-1 bg-gray-300 rounded-full text-xs flex items-center gap-1 text-green-600 hover:text-green-700 mt-1 hover:bg-gray-200  font-medium"
                                                         >
                                                             <ExternalLink size={12} />
@@ -247,21 +263,26 @@ export default function BasketComparison({ isOpen, onClose, products }: BasketCo
                                                 <div className="flex justify-between items-start mb-3">
                                                     <div>
                                                         <h4 className="font-bold text-gray-900">{basket.marketName}</h4>
-                                                        <div className="flex items-center gap-1 text-sm text-gray-500">
+                                                        <div className="flex items-center gap-1 text-sm text-gray-500 flex-wrap">
                                                             <MapPin size={14} />
-                                                            {basket.districtName}
+                                                            {basket.districtNames.join(', ')}
                                                         </div>
                                                         <button
-                                                            onClick={() => openMap(basket.marketName, basket.districtName)}
+                                                            onClick={() => openMap(basket.marketName, basket.districtNames)}
                                                             className="inline-block px-2 py-1 bg-gray-300 rounded-full hover:bg-gray-200 text-xs flex items-center gap-1 text-green-600 hover:text-green-700 mt-1  font-medium"
                                                         >
                                                             <ExternalLink size={12} />
                                                             See on Map
                                                         </button>
                                                     </div>
-                                                    <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs font-bold rounded-full">
-                                                        Missing {basket.missingCount} items
-                                                    </span>
+                                                    <div className="text-right">
+                                                        <span className="block text-xl font-bold text-gray-700">
+                                                            {basket.totalPrice.toFixed(2)}₺
+                                                        </span>
+                                                        <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs font-bold rounded-full">
+                                                            Missing {basket.missingCount} items
+                                                        </span>
+                                                    </div>
                                                 </div>
 
                                                 <div className="space-y-2 border-t border-gray-200 pt-3">

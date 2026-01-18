@@ -35,8 +35,8 @@ const MARKET_LOCATIONS = [
         lat: 35.190020601688914,
         lng: 33.35477913694478,
         address: 'Gönyeli, Lefkoşa',
-        description: 'Online grocery market with wide selection.',
-        openHours: '24/7 Online',
+        description: 'Online grocery market.',
+        openHours: '10:00 - 22:00',
         website: 'https://kibrissanalmarket.com',
         color: '#3b82f6'
     }
@@ -147,7 +147,7 @@ export default function MapPage() {
                     {MARKET_LOCATIONS.map((market) => (
                         <div
                             key={market.id}
-                            className="bg-white rounded-xl p-4 shadow-md border border-gray-100 hover:shadow-lg transition-shadow"
+                            className="bg-white rounded-xl p-4 border border-gray-100"
                         >
                             <div className="flex items-start gap-4">
                                 <div
