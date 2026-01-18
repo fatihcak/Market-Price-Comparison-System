@@ -66,16 +66,16 @@ export default function AboutUs() {
 
             {/* Team Section */}
             <div className="mb-12">
-                <div className="flex items-center gap-3 mb-6">
-                    <Users className="text-green-600 " size={28} />
+                <div className="flex items-center justify-center gap-3 mb-6">
+                    <Users className="text-green-600" size={28} />
                     <h2 className="text-2xl font-bold text-gray-900">Team</h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {teamMembers.map((member, index) => (
-                        <div key={index} className="bg-white border border-gray-100 rounded-xl p-6 hover:shadow-lg transition-shadow">
+                        <div key={index} className="bg-white border border-gray-100 rounded-xl p-6 text-center">
                             <h3 className="text-lg font-bold text-gray-900">{member.name}</h3>
                             <p className="text-green-600 text-sm mb-4">{member.role}</p>
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center justify-center gap-4">
                                 <a
                                     href={member.github}
                                     target="_blank"
