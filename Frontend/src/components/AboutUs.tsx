@@ -1,4 +1,4 @@
-import { Github, Linkedin, Mail, Heart, Code, Users } from 'lucide-react';
+import { Github, Linkedin, Mail, Code, Users } from 'lucide-react';
 
 export default function AboutUs() {
     const teamMembers = [
