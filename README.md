@@ -95,7 +95,8 @@ The application will be available at `http://localhost:5173`
 
 ## 📸 Screenshots
 
-> Add screenshots here
+> <img width="1903" height="908" alt="image" src="https://github.com/user-attachments/assets/b18930b3-0e99-49a9-bb66-fe05fe3917c1" />
+
 
 ---
 
