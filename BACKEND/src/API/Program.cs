@@ -204,15 +204,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// Swagger is enabled in all environments but protected by Basic Auth in production
-app.UseSwagger();
-app.UseSwaggerUI(c =>
-{
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Market Price Comparison API v1");
-    c.RoutePrefix = "swagger";
-});
-
-// Basic Auth protection for Swagger in production
+// Basic Auth protection for Swagger in production (MUST be before UseSwagger)
 if (!app.Environment.IsDevelopment())
 {
     app.Use(async (context, next) =>
@@ -221,31 +213,43 @@ if (!app.Environment.IsDevelopment())
         if (context.Request.Path.StartsWithSegments("/swagger"))
         {
             string authHeader = context.Request.Headers["Authorization"].ToString();
-            if (authHeader != null && authHeader.StartsWith("Basic "))
+            if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Basic "))
             {
-                var encodedCredentials = authHeader.Substring("Basic ".Length).Trim();
-                var credentials = Encoding.UTF8.GetString(Convert.FromBase64String(encodedCredentials));
-                var parts = credentials.Split(':');
-                
-                // Admin credentials from config
-                var adminUser = builder.Configuration["SwaggerAuth:Username"] ?? "admin";
-                var adminPass = builder.Configuration["SwaggerAuth:Password"] ?? "MarketAdmin2024!";
-                
-                if (parts.Length == 2 && parts[0] == adminUser && parts[1] == adminPass)
+                try
                 {
-                    await next();
-                    return;
+                    var encodedCredentials = authHeader.Substring("Basic ".Length).Trim();
+                    var credentials = Encoding.UTF8.GetString(Convert.FromBase64String(encodedCredentials));
+                    var parts = credentials.Split(':');
+                    
+                    // Admin credentials from config
+                    var adminUser = builder.Configuration["SwaggerAuth:Username"] ?? "admin";
+                    var adminPass = builder.Configuration["SwaggerAuth:Password"] ?? "MarketAdmin2024!";
+                    
+                    if (parts.Length == 2 && parts[0] == adminUser && parts[1] == adminPass)
+                    {
+                        await next();
+                        return;
+                    }
                 }
+                catch { }
             }
             
-            context.Response.Headers["WWW-Authenticate"] = "Basic realm=\"Swagger\"";
+            context.Response.Headers["WWW-Authenticate"] = "Basic realm=\"Swagger Admin\"";
             context.Response.StatusCode = 401;
-            await context.Response.WriteAsync("Unauthorized");
+            await context.Response.WriteAsync("Unauthorized - Login required");
             return;
         }
         await next();
     });
 }
+
+// Swagger UI (after auth middleware)
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Market Price Comparison API v1");
+    c.RoutePrefix = "swagger";
+});
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 // app.UseHttpsRedirection();
