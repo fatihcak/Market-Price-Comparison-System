@@ -17,10 +17,11 @@ export default function Header({ onOpenList, itemCount = 0, onOpenFavorites, fav
       <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
         <Link
           to="/"
-          className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="flex items-center gap-2 cursor-pointer "
         >
           <img
-            src="/MarketComparisonLogo.png"
+            src="/MarketComparisonLogo1.png"
             alt="Market Comparison System Logo"
             className="w-14 h-12 object-contain"
           />
