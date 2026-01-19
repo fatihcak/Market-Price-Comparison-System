@@ -31,7 +31,7 @@ export const CATEGORIES: Category[] = [
         name: 'Fruits & Vegetables',
         slug: 'Fruits & Vegetables', // MUST match backend CategoryName
         icon: Apple,
-        color: 'bg-red-50 hover:bg-red-100 text-red-600',
+        color: 'bg-emerald-50 hover:bg-emerald-100 text-emerald-600',
         subCategories: [
             { name: 'Fruits', slug: 'Fruits' },
             { name: 'Vegetables', slug: 'Vegetables' }
@@ -42,7 +42,7 @@ export const CATEGORIES: Category[] = [
         name: 'Meat, Chicken & Fish',
         slug: 'Meat, Chicken & Fish', // MUST match backend CategoryName
         icon: Milk,
-        color: 'bg-blue-50 hover:bg-blue-100 text-blue-600',
+        color: 'bg-rose-50 hover:bg-rose-100 text-rose-600',
         subCategories: [
             { name: 'Beef & Lamb', slug: 'Beef & Lamb' },
             { name: 'Poultry & Chicken', slug: 'Poultry & Chicken' },
@@ -56,7 +56,7 @@ export const CATEGORIES: Category[] = [
         name: 'Dairy Products & Breakfast Foods',
         slug: 'Dairy Products & Breakfast Foods', // MUST match backend CategoryName
         icon: Wheat,
-        color: 'bg-orange-50 hover:bg-orange-100 text-orange-600',
+        color: 'bg-amber-100 hover:bg-amber-100 text-amber-600',
         subCategories: [
             { name: 'Cheese', slug: 'Cheese' },
             { name: 'Milk', slug: 'Milk' },
@@ -100,7 +100,7 @@ export const CATEGORIES: Category[] = [
         name: 'Drink',
         slug: 'Drink', // MUST match backend CategoryName
         icon: Wine,
-        color: 'bg-purple-50 hover:bg-purple-100 text-purple-600',
+        color: 'bg-blue-50 hover:bg-blue-100 text-blue-600',
         subCategories: [
             { name: 'Water', slug: 'Water' },
             { name: 'Mineral Water', slug: 'Mineral Water' },
@@ -116,7 +116,7 @@ export const CATEGORIES: Category[] = [
         name: 'Snacks & Dessert',
         slug: 'Snacks & Dessert', // MUST match backend CategoryName
         icon: Coffee,
-        color: 'bg-amber-50 hover:bg-amber-100 text-amber-600',
+        color: 'bg-orange-50 hover:bg-orange-100 text-orange-600',
         subCategories: [
             { name: 'Chocolate', slug: 'Chocolate' },
             { name: 'Biscuits & Crackers', slug: 'Biscuits & Crackers' },
@@ -134,7 +134,7 @@ export const CATEGORIES: Category[] = [
         name: 'Cleaning & Personal Care Products',
         slug: 'Cleaning & Personal Care Products', // MUST match backend CategoryName
         icon: Egg,
-        color: 'bg-pink-50 hover:bg-pink-100 text-pink-600',
+        color: 'bg-pink-100 hover:bg-pink-100 text-pink-600',
         subCategories: [
             { name: 'Laundry Products', slug: 'Laundry Products' },
             { name: 'Dishwashing & Cleaning Products', slug: 'Dishwashing & Cleaning Products' },
