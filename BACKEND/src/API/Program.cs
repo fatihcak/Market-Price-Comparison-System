@@ -204,12 +204,47 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// SECURITY: Swagger is ONLY enabled in Development environment
-// Ensure ASPNETCORE_ENVIRONMENT is set to "Production" in production deployments
-if (app.Environment.IsDevelopment())
+// Swagger is enabled in all environments but protected by Basic Auth in production
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Market Price Comparison API v1");
+    c.RoutePrefix = "swagger";
+});
+
+// Basic Auth protection for Swagger in production
+if (!app.Environment.IsDevelopment())
+{
+    app.Use(async (context, next) =>
+    {
+        // Only protect swagger endpoints
+        if (context.Request.Path.StartsWithSegments("/swagger"))
+        {
+            string authHeader = context.Request.Headers["Authorization"].ToString();
+            if (authHeader != null && authHeader.StartsWith("Basic "))
+            {
+                var encodedCredentials = authHeader.Substring("Basic ".Length).Trim();
+                var credentials = Encoding.UTF8.GetString(Convert.FromBase64String(encodedCredentials));
+                var parts = credentials.Split(':');
+                
+                // Admin credentials from config
+                var adminUser = builder.Configuration["SwaggerAuth:Username"] ?? "admin";
+                var adminPass = builder.Configuration["SwaggerAuth:Password"] ?? "MarketAdmin2024!";
+                
+                if (parts.Length == 2 && parts[0] == adminUser && parts[1] == adminPass)
+                {
+                    await next();
+                    return;
+                }
+            }
+            
+            context.Response.Headers["WWW-Authenticate"] = "Basic realm=\"Swagger\"";
+            context.Response.StatusCode = 401;
+            await context.Response.WriteAsync("Unauthorized");
+            return;
+        }
+        await next();
+    });
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
