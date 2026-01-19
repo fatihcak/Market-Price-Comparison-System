@@ -70,7 +70,6 @@ function App() {
           );
 
           if (match) {
-            console.log(`✅ Mapped Category: ${frontendCat.name} (ID: ${frontendCat.id} -> ${match.id})`);
             return { ...frontendCat, id: match.id };
           } else {
             return frontendCat;
@@ -84,7 +83,6 @@ function App() {
 
     // Use mapped IDs for preloading, or fallback to default
     const currentCats = updatedCategories.length > 0 ? updatedCategories : CATEGORIES;
-    console.log("🚀 Starting background category preload with IDs:", currentCats.map(c => c.id));
 
     // Process one by one with a delay to prevent request waterfall
     for (const cat of currentCats) {
@@ -116,13 +114,12 @@ function App() {
               totalCount: result.totalCount
             };
             localStorage.setItem(key, JSON.stringify(cacheData));
-            console.log(`✅ Preloaded Category ${id} (${cat.name})`);
           }
         } catch (err) {
           console.error(`Failed to preload category ${id}`, err);
         }
       } else {
-        console.log(`⚡ Category ${id} already cached and valid in LocalStorage.`);
+        // Already cached
       }
     }
   };

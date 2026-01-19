@@ -75,7 +75,6 @@ export default function ProductGrid({ searchQuery, categories, onAdd, onCompare 
                             const parsed = JSON.parse(cached);
                             // Check expiry (6h)
                             if (Date.now() - parsed.timestamp < 6 * 60 * 60 * 1000) {
-                                console.log(`⚡ Loaded Category ${catDef.id} from LocalStorage!`);
                                 setLoadedProducts(parsed.products);
                                 setTotalCount(parsed.totalCount || 50); // Use cached totalCount or fallback
                                 dataFound = true;
@@ -100,9 +99,6 @@ export default function ProductGrid({ searchQuery, categories, onAdd, onCompare 
 
                             if (result.products.length === 0) {
                                 // Parent category is empty, this is expected since products are in subcategories
-                                // Try fetching from first subcategory as a fallback
-                                console.log(`[ProductGrid] Parent category ${catDef.id} is empty, trying subcategories...`);
-
                                 // Get subcategory IDs by fetching categories from API
                                 const allCats = await api.getCategories();
                                 const subCatIds = allCats
@@ -110,7 +106,6 @@ export default function ProductGrid({ searchQuery, categories, onAdd, onCompare 
                                     .map(bc => bc.id);
 
                                 if (subCatIds.length > 0) {
-                                    console.log(`[ProductGrid] Fetching from subcategory IDs:`, subCatIds);
                                     const subResult = await api.getProductsBySubcategories(subCatIds, 1, pageSize);
                                     setLoadedProducts(subResult.products);
                                     setTotalCount(subResult.totalCount);
@@ -134,7 +129,6 @@ export default function ProductGrid({ searchQuery, categories, onAdd, onCompare 
                         const matchingCat = allCats.find(bc => bc.categoryName === selectedCategory);
 
                         if (matchingCat) {
-                            console.log(`[ProductGrid] Found subcategory ${selectedCategory} with ID ${matchingCat.id}`);
                             const result = await api.getProductsByCategory(matchingCat.id, 1, pageSize);
                             setLoadedProducts(result.products);
                             setTotalCount(result.totalCount);
@@ -163,7 +157,6 @@ export default function ProductGrid({ searchQuery, categories, onAdd, onCompare 
         const neededItems = (packetNumber + 1) * 3 * itemsPerPage;
 
         if (isMiddleOfPacket && loadedProducts.length < neededItems && loadedProducts.length < totalCount && !isLoading) {
-            console.log(`🚀 Prefetching next packet from page ${currentPage}...`);
             handleLoadMore();
         }
     }, [currentPage, loadedProducts.length, totalCount, isLoading]);

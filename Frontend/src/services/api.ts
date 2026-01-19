@@ -250,7 +250,6 @@ export const api = {
 
     getProductsByCategory: async (categoryId: number, page: number = 1, pageSize: number = 50): Promise<{ products: Product[]; totalCount: number }> => {
         try {
-            console.log(`[API] Fetching category ${categoryId} page ${page}`);
             const response = await fetch(`${API_BASE_URL}/Product/category/${categoryId}?page=${page}&pageSize=${pageSize}`);
             if (!response.ok) {
                 console.error(`[API] Category fetch failed: ${response.status} ${response.statusText}`);
@@ -297,8 +296,6 @@ export const api = {
                 return { products: [], totalCount: 0 };
             }
 
-            console.log(`[API] Fetching from ${subcategoryIds.length} subcategories:`, subcategoryIds);
-
             // Fetch from all subcategories in parallel
             const results = await Promise.all(
                 subcategoryIds.map(id =>
@@ -338,7 +335,6 @@ export const api = {
                 }
             }
 
-            console.log(`[API] Combined ${allProducts.length} products from subcategories`);
             return { products: allProducts, totalCount: totalCountSum };
         } catch (error) {
             console.error('Error fetching products by subcategories:', error);
