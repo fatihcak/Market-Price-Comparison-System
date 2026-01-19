@@ -1,4 +1,4 @@
-import { ShoppingBag, Menu, X, ShoppingBasket, Store, Map, Heart } from 'lucide-react';
+import { Menu, X, ShoppingBasket, Store, Map, Heart } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -19,12 +19,14 @@ export default function Header({ onOpenList, itemCount = 0, onOpenFavorites, fav
           to="/"
           className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
         >
-          <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-md">
-            <ShoppingBag className="text-white" size={24} />
-          </div>
+          <img
+            src="/MarketComparisonLogo.png"
+            alt="Market Comparison System Logo"
+            className="w-14 h-12 object-contain"
+          />
           <div>
             <span className="text-xl font-bold text-gray-900">Market Comparison System</span>
-            <p className="text-xs text-gray-500">Find and Compare the Best Prices</p>
+            <p className="text-xs text-green-700">Find and Compare the Best Prices</p>
           </div>
         </Link>
 
