@@ -51,7 +51,6 @@ export default function CategorySection({ categories }: Props) {
             duration-300 
             origin-top
             group-hover:scale-y-100
-            hover:scale-x-125
             hover:shadow-lg
             ${isSelected ? 'ring-2 ring-offset-2 ring-green-500 scale-105 shadow-md' : ''}`}
           >
