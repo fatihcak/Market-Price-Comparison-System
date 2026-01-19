@@ -260,7 +260,7 @@ export default function ProductGrid({ searchQuery, categories, onAdd, onCompare 
     };
 
     return (
-        <section className="mt-16">
+        <section className="mt-2">
             <FilterBar onFilterChange={handleFilterChange} />
 
             <div className="flex items-center justify-between mb-8">
