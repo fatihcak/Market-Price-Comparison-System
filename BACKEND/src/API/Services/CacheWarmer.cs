@@ -26,20 +26,17 @@ public class CacheWarmer : ICacheWarmer
 
     public async Task WarmupAsync()
     {
-        Console.WriteLine("🔥 Warming up cache...");
-
-        try 
+        try
         {
             // 1. Discounted Products
             var (discounted, _) = await _productService.GetProductsOrderedByDiscountAsync(1, 100);
             _cache.Set(CacheKeys.DiscountedProducts, discounted, TimeSpan.FromHours(6));
-             Console.WriteLine("  ✓ Discounted products cached (Top 100)");
 
             // 2. Categories (First Pages)
             // UPDATED: Use correct backend category IDs (15-21)
             // 15: Fruits & Vegetables, 16: Meat/Chicken/Fish, 17: Dairy/Breakfast
             // 18: Staple Food, 19: Drink, 20: Snacks/Dessert, 21: Cleaning/Personal Care
-            int[] categoryIds = { 15, 16, 17, 18, 19, 20, 21 }; 
+            int[] categoryIds = { 15, 16, 17, 18, 19, 20, 21 };
             int processed = 0;
             foreach (var catId in categoryIds)
             {
@@ -49,17 +46,13 @@ public class CacheWarmer : ICacheWarmer
                 _cache.Set(CacheKeys.CategoryPage(catId), top50, TimeSpan.FromHours(6));
                 processed++;
             }
-             Console.WriteLine($"  ✓ Categories cached ({processed}/7)");
 
             // 3. Markets
             _cache.Set(CacheKeys.AllMarkets, await _marketService.GetAllMarketsAsync(), TimeSpan.FromHours(24));
-             Console.WriteLine("  ✓ Markets cached (24h)");
-            
-            Console.WriteLine("✅ Cache ready! Server is blazing fast 🚀");
         }
-        catch (Exception ex)
+        catch
         {
-            Console.WriteLine($"⚠️ Cache warmup failed: {ex.Message}");
+            // Cache warmup failed silently - not critical
         }
     }
 }
