@@ -298,7 +298,13 @@ function App() {
         onRemoveAll={clearShoppingList}
       />
 
-      <AiChatbot hideOnMobile={listOpen} />
+      <AiChatbot
+        hideOnMobile={listOpen}
+        onAddToCart={addToShoppingList}
+        onOpenList={() => setListOpen(true)}
+        onCompareList={() => setBasketComparisonOpen(true)}
+        onClearList={clearShoppingList}
+      />
 
       <FavoritesList
         isOpen={favoritesOpen}

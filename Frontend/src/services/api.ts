@@ -342,20 +342,24 @@ export const api = {
         }
     },
 
-    sendMessage: async (message: string): Promise<any> => {
+    sendMessage: async (message: string, sessionId?: string): Promise<{ reply: string, foundProducts?: any[] }> => {
         try {
             const response = await fetch(`${API_BASE_URL}/Chat`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ message }),
+                body: JSON.stringify({ message, sessionId }),
             });
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
             const result = await response.json();
-            return result.data || result;
+            const data = result.data || result;
+            return {
+                reply: data.reply || '',
+                foundProducts: data.foundProducts || []
+            };
         } catch (error) {
             console.error('Error sending message:', error);
             throw error;

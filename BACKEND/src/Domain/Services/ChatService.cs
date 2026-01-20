@@ -366,6 +366,54 @@ namespace Domain.Services
 
                         // For 'chat' intent, use the reply generated (or RAG updated)
                         response = new ChatResponseDto { Reply = reply ?? "I'm sorry, I didn't understand that." };
+                        
+                        // Add found products to response for frontend cart integration
+                        if (analysis.Items != null && analysis.Items.Any())
+                        {
+                            var productsToAdd = new List<Product>();
+                            var exactMatches = await _productRepository.SearchByNamesAsync(analysis.Items);
+                            productsToAdd.AddRange(exactMatches);
+                            
+                            if (!productsToAdd.Any())
+                            {
+                                foreach (var item in analysis.Items)
+                                {
+                                    var fuzzy = await _productRepository.SearchWithFuzzyAsync(item);
+                                    productsToAdd.AddRange(fuzzy);
+                                }
+                            }
+                            
+                            if (productsToAdd.Any())
+                            {
+                                var pIds = productsToAdd.Select(p => p.Id).Distinct();
+                                var pPrices = await _priceRepository.GetPricesForProductsAsync(pIds);
+                                var allMarketsForProducts = await _marketRepository.GetAllAsync();
+                                
+                                response.FoundProducts = productsToAdd
+                                    .DistinctBy(p => p.Id)
+                                    .Take(5)
+                                    .Select(p =>
+                                    {
+                                        var priceInfo = pPrices.Where(pr => pr.ProductId == p.Id).OrderBy(pr => pr.Price).FirstOrDefault();
+                                        var marketName = priceInfo != null 
+                                            ? allMarketsForProducts.FirstOrDefault(m => m.Id == priceInfo.MarketId)?.MarketName ?? "Unknown"
+                                            : "N/A";
+                                        return new ChatProductDto
+                                        {
+                                            Id = p.Id,
+                                            Name = p.ProductName,
+                                            Price = priceInfo?.Price ?? 0,
+                                            Market = marketName,
+                                            Category = p.Category?.CategoryName,
+                                            ImageUrl = null // Could be added later if available
+                                        };
+                                    })
+                                    .ToList();
+                                
+                                // Don't cache responses with products (so frontend always gets fresh data)
+                                isCacheable = false;
+                            }
+                        }
                         break;
                 }
 
@@ -378,6 +426,13 @@ namespace Domain.Services
                 if (response.BasketSuggestion != null)
                 {
                     lastResponse = response;
+                }
+                
+                // Also keep FoundProducts if present
+                if (response.FoundProducts != null && response.FoundProducts.Any())
+                {
+                    if (lastResponse == null) lastResponse = response;
+                    else lastResponse.FoundProducts = response.FoundProducts;
                 }
             }
 
@@ -443,6 +498,67 @@ namespace Domain.Services
                 ? string.Join(", ", allMarkets.Select(m => m.MarketName))
                 : "No markets available";
             
+            // --- RAG-LITE: Search for products if items were mentioned ---
+            var contextString = "";
+            if (firstAnalysis.Items != null && firstAnalysis.Items.Any())
+            {
+                var foundProducts = new List<Product>();
+                
+                // 1. Exact search
+                var exactMatches = await _productRepository.SearchByNamesAsync(firstAnalysis.Items);
+                foundProducts.AddRange(exactMatches);
+                
+                // 2. Fuzzy search if no exact matches
+                if (!foundProducts.Any())
+                {
+                    foreach (var item in firstAnalysis.Items)
+                    {
+                        var fuzzyMatches = await _productRepository.SearchWithFuzzyAsync(item);
+                        foundProducts.AddRange(fuzzyMatches);
+                    }
+                }
+                
+                // 3. Category search as fallback
+                if (!foundProducts.Any())
+                {
+                    foreach (var item in firstAnalysis.Items)
+                    {
+                        var catMatches = await _productRepository.SearchByCategoryAsync(item);
+                        foundProducts.AddRange(catMatches);
+                    }
+                }
+                
+                if (foundProducts.Any())
+                {
+                    // Score and rank products
+                    var scoredProducts = foundProducts
+                        .DistinctBy(p => p.Id)
+                        .Select(p => new { Product = p, Score = RelevanceScoring.CalculateRelevanceScore(userMessage, p) })
+                        .OrderByDescending(x => x.Score)
+                        .Take(10)
+                        .Select(x => x.Product)
+                        .ToList();
+                    
+                    // Get prices
+                    var productIds = scoredProducts.Select(p => p.Id).Distinct();
+                    var prices = await _priceRepository.GetPricesForProductsAsync(productIds);
+                    
+                    // Build context
+                    var sb = new StringBuilder();
+                    sb.AppendLine("\n=== REAL DATABASE PRODUCTS (USE THIS DATA!) ===");
+                    foreach (var p in scoredProducts)
+                    {
+                        var priceInfo = prices.Where(pr => pr.ProductId == p.Id).OrderBy(pr => pr.Price).FirstOrDefault();
+                        var priceStr = priceInfo != null ? $"{priceInfo.Price} TL" : "Price N/A";
+                        var marketName = priceInfo != null ? allMarkets.FirstOrDefault(m => m.Id == priceInfo.MarketId)?.MarketName ?? "Unknown" : "N/A";
+                        sb.AppendLine($"- {p.ProductName} | Category: {p.Category?.CategoryName ?? "N/A"} | Price: {priceStr} at {marketName}");
+                    }
+                    sb.AppendLine("=== END OF DATABASE PRODUCTS ===\n");
+                    contextString = sb.ToString();
+                }
+            }
+            // --- END RAG-LITE ---
+            
             var prompt = $@"
             You are a Market Price Comparison Assistant for Turkish supermarkets. Your ONLY role is to help users with:
             - Product prices and availability
@@ -462,13 +578,16 @@ namespace Domain.Services
             - Only discuss products, prices, markets, and shopping
             - Be helpful and friendly, but stay in your role
             - When asked about markets, ONLY mention: {marketNames}
+            - If DATABASE PRODUCTS are provided below, USE THEM to answer with real prices!
+
+            {contextString}
 
             Previous conversation history:
             {string.Join("\n", history)}
 
             User Message: {userMessage}
 
-            Generate a helpful response about markets/products, or politely decline if the question is off-topic.
+            Generate a helpful response. If database products are provided, list them with their prices!
             ";
 
             var fullResponse = new StringBuilder();
