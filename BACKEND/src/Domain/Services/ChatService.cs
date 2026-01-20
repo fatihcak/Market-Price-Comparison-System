@@ -398,13 +398,19 @@ namespace Domain.Services
                         if (analysis.Items != null && analysis.Items.Any())
                         {
                             var productsToAdd = new List<Product>();
-                            var exactMatches = await _productRepository.SearchByNamesAsync(analysis.Items);
-                            productsToAdd.AddRange(exactMatches);
                             
-                            if (!productsToAdd.Any())
+                            // Search for EACH item separately to ensure all items are found
+                            foreach (var item in analysis.Items)
                             {
-                                foreach (var item in analysis.Items)
+                                // 1. Try exact match first
+                                var exactMatches = await _productRepository.SearchByNamesAsync(new[] { item });
+                                if (exactMatches.Any())
                                 {
+                                    productsToAdd.AddRange(exactMatches);
+                                }
+                                else
+                                {
+                                    // 2. Fuzzy search if exact match fails
                                     var fuzzy = await _productRepository.SearchWithFuzzyAsync(item);
                                     productsToAdd.AddRange(fuzzy);
                                 }
@@ -659,13 +665,13 @@ namespace Domain.Services
             Analyze the message based on the history above.
             
             1. Identify the user's intent(s). The user might want to do multiple things (e.g., 'Add milk and remove bread').
-               - If the user explicitly asks to create a basket, comparison, or buy multiple items AND mentions specific products, set intent to 'smart_basket'.
+               - If the user explicitly asks to CREATE A SHOPPING BASKET, CALCULATE TOTAL COST, or COMPARE MARKET PRICES for multiple items using keywords like 'basket', 'sepet', 'total', 'toplam', 'compare markets', 'en ucuz market', set intent to 'smart_basket'.
                - If the user wants to ADD items to their current shopping list (e.g., 'Add milk', 'Also eggs', 'Listeye ekle'), set intent to 'add_to_list'.
                - If the user wants to REMOVE items (e.g., 'Remove milk', 'Listeden çıkar'), set intent to 'remove_from_list'.
                - If the user asks to SEE their list (e.g., 'What is in my list?', 'Show list', 'Listem'), set intent to 'show_list'.
                - If the user wants to CLEAR/EMPTY the list (e.g., 'Clear list', 'Listeyi temizle'), set intent to 'clear_list'.
                - If the user wants to CALCULATE/FIND CHEAPEST MARKET for the accumulated list (e.g., 'Calculate now', 'Find best price', 'Hesapla'), set intent to 'calculate_list'.
-               - If the user asks to create a list but DOES NOT mention specific products (e.g., 'I want to make a list'), set intent to 'chat' and ask them what they want to add.
+               - If the user simply asks about products, prices, or lists items WITHOUT asking for basket calculation (e.g., 'milk and eggs', 'yumurta', 'show me bread prices'), set intent to 'chat'. This is for browsing products.
                - If it's a general question (e.g., 'Do you have milk?', 'Price of tomato'), set intent to 'chat'.
 
             2. Extract Information:
