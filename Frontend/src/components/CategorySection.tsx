@@ -55,7 +55,7 @@ export default function CategorySection({ categories }: Props) {
             ${isSelected ? 'ring-2 ring-offset-2 ring-green-500 scale-105 shadow-md' : ''}`}
           >
             <Icon size={28} />
-            <span className="text-xs font-semibold text-center">{cat.name}</span>
+            <span className="text-sm font-semibold text-center">{cat.name}</span>
           </button>
         );
       })}

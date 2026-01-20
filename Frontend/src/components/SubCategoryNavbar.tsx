@@ -32,8 +32,8 @@ export default function SubCategoryNavbar({ categories }: Props) {
     }
 
     return (
-        <div className="relative group mb-8">
-            <div className="flex flex-wrap gap-3 py-2 px-1 items-center">
+        <div className="relative group mb-2">
+            <div className="flex flex-wrap gap-3 py-3 px-1 items-center">
                 <button
                     onClick={() => handleNavigate(`/products/${currentCategory.slug}`)}
                     className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap
