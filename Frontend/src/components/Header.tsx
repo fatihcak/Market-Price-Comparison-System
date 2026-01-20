@@ -1,6 +1,6 @@
 import { Menu, X, ShoppingBasket, Store, Map, Heart } from 'lucide-react';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 interface HeaderProps {
   onOpenList?: () => void;
@@ -11,13 +11,26 @@ interface HeaderProps {
 
 export default function Header({ onOpenList, itemCount = 0, onOpenFavorites, favoritesCount = 0 }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleLogoClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    // If already on home page, force reload to reset all state
+    if (location.pathname === '/' || location.pathname === '/products/All') {
+      window.location.href = '/';
+    } else {
+      navigate('/');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   return (
     <header className="bg-white border-b border-gray-100 sticky top-0 z-50 backdrop-blur-sm bg-opacity-95">
       <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-        <Link
-          to="/"
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        <a
+          href="/"
+          onClick={handleLogoClick}
           className="flex items-center gap-2 cursor-pointer "
         >
           <img
@@ -29,7 +42,7 @@ export default function Header({ onOpenList, itemCount = 0, onOpenFavorites, fav
             <span className="text-xl font-bold text-gray-900">Market Comparison System</span>
             <p className="text-xs text-green-700">Find and Compare the Best Prices</p>
           </div>
-        </Link>
+        </a>
 
         <div className="flex items-center gap-2 md:gap-4">
           <nav className="hidden md:flex items-center gap-6 mr-4">

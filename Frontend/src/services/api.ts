@@ -218,30 +218,67 @@ export const api = {
         }
     },
 
-    searchProducts: async (query: string, page: number = 1, pageSize: number = 50): Promise<{ products: Product[]; totalCount: number }> => {
+    searchProducts: async (query: string, page: number = 1, pageSize: number = 50, categoryFilter?: string, validCategories?: string[]): Promise<{ products: Product[]; totalCount: number }> => {
         try {
-            const response = await fetch(`${API_BASE_URL}/Product/search?name=${encodeURIComponent(query)}&page=${page}&pageSize=${pageSize}`);
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
+            // Import search utilities dynamically to avoid circular deps
+            const { generateSearchVariants, sortByRelevance, filterByCategory } = await import('../utils/searchUtils');
+
+            // Generate search variants (e.g., "sut" -> ["sut", "süt"])
+            const variants = generateSearchVariants(query);
+
+            if (variants.length === 0) {
+                return { products: [], totalCount: 0 };
             }
-            const totalCount = parseInt(response.headers.get('X-Total-Count') || '0', 10);
-            const result = await response.json();
-            const data: ProductResponseDTO[] = result.data || result;
-            const products = data.map(item => ({
-                id: item.id,
-                name: item.productName,
-                price: item.price,
-                oldPrice: item.oldPrice || null,
-                market: item.marketName,
-                discount: item.discount,
-                category: item.categoryName,
-                image: item.imageUrl || 'https://placehold.co/200x200?text=No+Image',
-                brand: item.brand,
-                unit: item.unit,
-                marketCount: item.marketCount || 1,
-                variantIds: [item.id]
-            }));
-            return { products, totalCount };
+
+            // Search all variants in parallel
+            const searchPromises = variants.map(variant =>
+                fetch(`${API_BASE_URL}/Product/search?name=${encodeURIComponent(variant)}&page=${page}&pageSize=${pageSize}`)
+                    .then(async res => {
+                        if (!res.ok) return [];
+                        const result = await res.json();
+                        const data: ProductResponseDTO[] = result.data || result;
+                        return data;
+                    })
+                    .catch(() => [])
+            );
+
+            const results = await Promise.all(searchPromises);
+
+            // Combine and dedupe results by ID
+            const seenIds = new Set<number>();
+            const allProducts: Product[] = [];
+
+            for (const data of results) {
+                for (const item of data) {
+                    if (!seenIds.has(item.id)) {
+                        seenIds.add(item.id);
+                        allProducts.push({
+                            id: item.id,
+                            name: item.productName,
+                            price: item.price,
+                            oldPrice: item.oldPrice || null,
+                            market: item.marketName,
+                            discount: item.discount,
+                            category: item.categoryName,
+                            image: item.imageUrl || 'https://placehold.co/200x200?text=No+Image',
+                            brand: item.brand,
+                            unit: item.unit,
+                            marketCount: item.marketCount || 1,
+                            variantIds: [item.id]
+                        });
+                    }
+                }
+            }
+
+            // Filter by category if provided (with subcategory support)
+            let filteredProducts = categoryFilter
+                ? filterByCategory(allProducts, categoryFilter, validCategories)
+                : allProducts;
+
+            // Sort by relevance
+            filteredProducts = sortByRelevance(filteredProducts, query);
+
+            return { products: filteredProducts, totalCount: filteredProducts.length };
         } catch (error) {
             console.error('Error searching products:', error);
             return { products: [], totalCount: 0 };

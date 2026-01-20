@@ -49,9 +49,21 @@ export default function ProductGrid({ searchQuery, categories, onAdd, onCompare 
 
             let dataFound = false;
 
-            // 0. Search Logic (Priority)
+            // 0. Search Logic (Priority) - now with category filtering
             if (searchQuery && searchQuery.trim().length > 0) {
-                const result = await api.searchProducts(searchQuery, 1, pageSize);
+                // Pass current category for filtered search (except 'All')
+                const categoryFilter = selectedCategory !== 'All' ? selectedCategory : undefined;
+
+                // Build list of valid categories (parent + subcategories)
+                let validCategories: string[] | undefined;
+                if (categoryFilter) {
+                    const catDef = categories.find(c => c.slug === selectedCategory);
+                    if (catDef) {
+                        validCategories = [catDef.name, ...catDef.subCategories.map(sc => sc.name)];
+                    }
+                }
+
+                const result = await api.searchProducts(searchQuery, 1, pageSize, categoryFilter, validCategories);
                 setLoadedProducts(result.products);
                 setTotalCount(result.totalCount);
                 dataFound = true;
