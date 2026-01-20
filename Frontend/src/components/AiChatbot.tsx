@@ -165,6 +165,33 @@ export default function AiChatbot({ hideOnMobile = false, onAddToCart, onOpenLis
         e?.preventDefault();
         if (!inputText.trim() || isLoading) return; // Prevent double submission
 
+        const lowerInput = inputText.toLowerCase().trim();
+
+        // Check for frontend-only commands
+        if (lowerInput.includes('calculate') || lowerInput.includes('best price') || lowerInput.includes('compare my')) {
+            if (onCompareList) {
+                onCompareList();
+                setInputText('');
+                return;
+            }
+        }
+
+        if (lowerInput.includes('show my list') || lowerInput.includes('my shopping list') || lowerInput === 'my list') {
+            if (onOpenList) {
+                onOpenList();
+                setInputText('');
+                return;
+            }
+        }
+
+        if (lowerInput.includes('clear my list') || lowerInput.includes('clear list') || lowerInput.includes('empty my list')) {
+            if (onClearList) {
+                onClearList();
+                setInputText('');
+                return;
+            }
+        }
+
         const userMessageId = Date.now();
         const botMessageId = userMessageId + 1;
 
@@ -222,6 +249,25 @@ export default function AiChatbot({ hideOnMobile = false, onAddToCart, onOpenLis
                         console.log('Product response:', productResponse); // DEBUG
                         if (productResponse.foundProducts && productResponse.foundProducts.length > 0) {
                             console.log('Found products:', productResponse.foundProducts); // DEBUG
+
+                            // If this was an 'add' command, automatically add products to the frontend cart
+                            const lowerText = newUserMessage.text.toLowerCase();
+                            if (lowerText.includes('add') && onAddToCart) {
+                                productResponse.foundProducts.forEach((product: any) => {
+                                    onAddToCart({
+                                        id: product.id,
+                                        name: product.name,
+                                        productName: product.name,
+                                        price: product.price,
+                                        oldPrice: null,
+                                        market: product.market,
+                                        discount: 0,
+                                        category: product.category || 'Other',
+                                        image: product.imageUrl || '/placeholder.png'
+                                    });
+                                });
+                            }
+
                             setMessages(prev =>
                                 prev.map(msg =>
                                     msg.id === botMessageId
@@ -538,10 +584,10 @@ export default function AiChatbot({ hideOnMobile = false, onAddToCart, onOpenLis
                                 type="button"
                                 onClick={toggleVoiceInput}
                                 className={`p-1.5 rounded-full transition-all ${isListening
-                                        ? 'bg-red-500 text-white animate-pulse'
-                                        : isVoiceSupported
-                                            ? 'text-gray-400 hover:text-green-600 hover:bg-green-50'
-                                            : 'text-gray-300 cursor-not-allowed'
+                                    ? 'bg-red-500 text-white animate-pulse'
+                                    : isVoiceSupported
+                                        ? 'text-gray-400 hover:text-green-600 hover:bg-green-50'
+                                        : 'text-gray-300 cursor-not-allowed'
                                     }`}
                                 disabled={!isVoiceSupported}
                                 title={isVoiceSupported ? (isListening ? 'Stop listening' : 'Voice input') : 'Voice not supported'}
