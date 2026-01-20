@@ -124,6 +124,33 @@ namespace Domain.Services
                             
                             _memoryCache.Set(shoppingListKey, shoppingList, TimeSpan.FromMinutes(60));
                             response.Reply = $"Added {string.Join(", ", addedItems)} to your list.";
+                            
+                            // Also return the added products for frontend to add to its cart
+                            var allMatchedProducts = batchMatches.ToList();
+                            var pIds = allMatchedProducts.Select(p => p.Id).Distinct();
+                            var pPrices = await _priceRepository.GetPricesForProductsAsync(pIds);
+                            var allMarketsForProducts = await _marketRepository.GetAllAsync();
+                            
+                            response.FoundProducts = allMatchedProducts
+                                .Where(p => addedItems.Contains(p.ProductName))
+                                .Take(5)
+                                .Select(p =>
+                                {
+                                    var priceInfo = pPrices.Where(pr => pr.ProductId == p.Id).OrderBy(pr => pr.Price).FirstOrDefault();
+                                    var marketName = priceInfo != null 
+                                        ? allMarketsForProducts.FirstOrDefault(m => m.Id == priceInfo.MarketId)?.MarketName ?? "Unknown"
+                                        : "N/A";
+                                    return new ChatProductDto
+                                    {
+                                        Id = p.Id,
+                                        Name = p.ProductName,
+                                        Price = priceInfo?.Price ?? 0,
+                                        Market = marketName,
+                                        Category = p.Category?.CategoryName,
+                                        ImageUrl = null
+                                    };
+                                })
+                                .ToList();
                         }
                         else
                         {
@@ -216,10 +243,10 @@ namespace Domain.Services
                         }
                         break;
 
+
                     case "find_cheaper":
-                        // Placeholder for future implementation
-                        response.Reply = "The 'Smart Alternatives' feature is currently under maintenance. Please try again later.";
-                        break;
+                        // Redirect to chat/RAG - it already handles price queries well
+                        goto default;
 
                     default: // chat
                         // Cacheable
@@ -391,7 +418,6 @@ namespace Domain.Services
                                 
                                 response.FoundProducts = productsToAdd
                                     .DistinctBy(p => p.Id)
-                                    .Take(5)
                                     .Select(p =>
                                     {
                                         var priceInfo = pPrices.Where(pr => pr.ProductId == p.Id).OrderBy(pr => pr.Price).FirstOrDefault();
@@ -408,6 +434,8 @@ namespace Domain.Services
                                             ImageUrl = null // Could be added later if available
                                         };
                                     })
+                                    .OrderBy(p => p.Price) // Sort by price (cheapest first)
+                                    .Take(15) // Show more products (was 5)
                                     .ToList();
                                 
                                 // Don't cache responses with products (so frontend always gets fresh data)
