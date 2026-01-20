@@ -1,21 +1,36 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, Send, Bot, User, /*Minimize2, Maximize2*/ } from 'lucide-react';
+import { X, Send, Bot, User, ShoppingCart, TrendingDown, Trash2, Plus, Mic, MicOff } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { api } from '../services/api';
+import { Product } from '../types';
 
+// Product returned from chatbot RAG
+interface ChatProduct {
+    id: number;
+    name: string;
+    price: number;
+    market: string;
+    category?: string;
+    imageUrl?: string;
+}
 
 interface Message {
     id: number;
     text: string;
     sender: 'user' | 'bot';
     timestamp: Date;
+    products?: ChatProduct[];
 }
 
 interface AiChatbotProps {
     hideOnMobile?: boolean;
+    onAddToCart?: (product: Product) => void;
+    onOpenList?: () => void;
+    onCompareList?: () => void;
+    onClearList?: () => void;
 }
 
-export default function AiChatbot({ hideOnMobile = false }: AiChatbotProps) {
+export default function AiChatbot({ hideOnMobile = false, onAddToCart, onOpenList, onCompareList, onClearList }: AiChatbotProps) {
     const [/*isOpen/*, /*setIsOpen*/] = useState(true);
     const [isMinimized, setIsMinimized] = useState(true);
     const [inputText, setInputText] = useState('');
@@ -42,6 +57,11 @@ export default function AiChatbot({ hideOnMobile = false }: AiChatbotProps) {
     });
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const chatbotRef = useRef<HTMLDivElement>(null);
+
+    // Speech recognition
+    const [isListening, setIsListening] = useState(false);
+    const [isVoiceSupported, setIsVoiceSupported] = useState(true);
+    const recognitionRef = useRef<any>(null);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -71,6 +91,75 @@ export default function AiChatbot({ hideOnMobile = false }: AiChatbotProps) {
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [isMinimized]);
+
+    // Speech recognition setup
+    useEffect(() => {
+        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            setIsVoiceSupported(false);
+            return;
+        }
+
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US'; // English for chatbot
+
+        recognition.onstart = () => {
+            setIsListening(true);
+        };
+
+        recognition.onend = () => {
+            setIsListening(false);
+        };
+
+        recognition.onerror = (event: any) => {
+            console.error('Speech recognition error:', event.error);
+            setIsListening(false);
+        };
+
+        recognition.onresult = (event: any) => {
+            const transcript = Array.from(event.results)
+                .map((result: any) => result[0].transcript)
+                .join('');
+
+            setInputText(transcript);
+
+            // If this is a final result, send the message
+            if (event.results[0].isFinal) {
+                // Small delay to let user see what was transcribed
+                setTimeout(() => {
+                    const form = document.getElementById('chatbot-form') as HTMLFormElement;
+                    if (form) form.requestSubmit();
+                }, 300);
+            }
+        };
+
+        recognitionRef.current = recognition;
+
+        return () => {
+            if (recognitionRef.current) {
+                recognitionRef.current.abort();
+            }
+        };
+    }, []);
+
+    const toggleVoiceInput = () => {
+        if (!isVoiceSupported || !recognitionRef.current) {
+            alert('Voice input is not supported in your browser. Please use Chrome or Edge.');
+            return;
+        }
+
+        if (isListening) {
+            recognitionRef.current.stop();
+        } else {
+            try {
+                recognitionRef.current.start();
+            } catch (error) {
+                console.error('Error starting speech recognition:', error);
+            }
+        }
+    };
 
     const handleSendMessage = async (e?: React.FormEvent) => {
         e?.preventDefault();
@@ -123,8 +212,27 @@ export default function AiChatbot({ hideOnMobile = false }: AiChatbotProps) {
                         );
                     }
                 },
-                // onComplete
-                () => {
+                // onComplete: fetch products after streaming
+                async () => {
+                    // After streaming completes, fetch products from non-streaming endpoint
+                    // Use a different sessionId to avoid history pollution
+                    try {
+                        const productFetchSessionId = `product-fetch-${Date.now()}`;
+                        const productResponse = await api.sendMessage(newUserMessage.text, productFetchSessionId);
+                        console.log('Product response:', productResponse); // DEBUG
+                        if (productResponse.foundProducts && productResponse.foundProducts.length > 0) {
+                            console.log('Found products:', productResponse.foundProducts); // DEBUG
+                            setMessages(prev =>
+                                prev.map(msg =>
+                                    msg.id === botMessageId
+                                        ? { ...msg, products: productResponse.foundProducts }
+                                        : msg
+                                )
+                            );
+                        }
+                    } catch (e) {
+                        console.warn('Could not fetch products:', e);
+                    }
                     setIsLoading(false);
                 },
                 // onError
@@ -158,6 +266,110 @@ export default function AiChatbot({ hideOnMobile = false }: AiChatbotProps) {
             setIsLoading(false);
         }
     };
+
+    // Quick action handler
+    const sendQuickAction = async (message: string) => {
+        if (isLoading) return;
+
+        const userMessageId = Date.now();
+        const botMessageId = userMessageId + 1;
+
+        const newUserMessage: Message = {
+            id: userMessageId,
+            text: message,
+            sender: 'user',
+            timestamp: new Date()
+        };
+
+        setMessages(prev => [...prev, newUserMessage]);
+        setIsLoading(true);
+
+        const sessionId = sessionStorage.getItem('chat_session_id') || `session-${Date.now()}`;
+        sessionStorage.setItem('chat_session_id', sessionId);
+
+        let botMessageAdded = false;
+
+        try {
+            await api.sendMessageStream(
+                message,
+                sessionId,
+                (chunk: string) => {
+                    if (!botMessageAdded) {
+                        botMessageAdded = true;
+                        setMessages(prev => [...prev, {
+                            id: botMessageId,
+                            text: chunk,
+                            sender: 'bot',
+                            timestamp: new Date()
+                        }]);
+                    } else {
+                        setMessages(prev =>
+                            prev.map(msg =>
+                                msg.id === botMessageId
+                                    ? { ...msg, text: msg.text + chunk }
+                                    : msg
+                            )
+                        );
+                    }
+                },
+                // onComplete: fetch products after streaming
+                async () => {
+                    try {
+                        const productFetchSessionId = `product-fetch-${Date.now()}`;
+                        const productResponse = await api.sendMessage(message, productFetchSessionId);
+                        if (productResponse.foundProducts && productResponse.foundProducts.length > 0) {
+                            setMessages(prev =>
+                                prev.map(msg =>
+                                    msg.id === botMessageId
+                                        ? { ...msg, products: productResponse.foundProducts }
+                                        : msg
+                                )
+                            );
+                        }
+                    } catch (e) {
+                        console.warn('Could not fetch products:', e);
+                    }
+                    setIsLoading(false);
+                },
+                () => {
+                    if (!botMessageAdded) {
+                        setMessages(prev => [...prev, {
+                            id: botMessageId,
+                            text: "Connection error.",
+                            sender: 'bot',
+                            timestamp: new Date()
+                        }]);
+                    }
+                    setIsLoading(false);
+                }
+            );
+        } catch {
+            setMessages(prev => [...prev, {
+                id: botMessageId,
+                text: "Sunucuya bağlanılamadı.",
+                sender: 'bot',
+                timestamp: new Date()
+            }]);
+            setIsLoading(false);
+        }
+    };
+
+    // Quick actions configuration - actions with callbacks don't send chat messages
+    const quickActions = [
+        { icon: ShoppingCart, label: 'My List', color: 'bg-blue-500 hover:bg-blue-600', action: onOpenList },
+        { icon: TrendingDown, label: 'Best Price', color: 'bg-green-500 hover:bg-green-600', action: onCompareList },
+        { icon: Trash2, label: 'Clear', color: 'bg-red-500 hover:bg-red-600', action: onClearList },
+    ];
+
+    // Suggestion chips - shown when conversation is new
+    const suggestionChips = [
+        "What's the price of milk?",
+        "Add eggs to my list",
+        "Compare tomato prices",
+        "Find cheapest bread",
+    ];
+
+    const showSuggestions = messages.length <= 2;
 
 
 
@@ -221,6 +433,38 @@ export default function AiChatbot({ hideOnMobile = false }: AiChatbotProps) {
                                         }`}>
                                         {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </span>
+
+                                    {/* Product Cards from RAG */}
+                                    {msg.products && msg.products.length > 0 && onAddToCart && (
+                                        <div className="mt-3 space-y-2 border-t border-gray-100 pt-3">
+                                            <p className="text-xs text-gray-500 font-medium">Found Products:</p>
+                                            {msg.products.map((product) => (
+                                                <div key={product.id} className="flex items-center justify-between bg-gray-50 rounded-lg p-2">
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-xs font-medium text-gray-800 truncate">{product.name}</p>
+                                                        <p className="text-[10px] text-gray-500">{product.market} - {product.price.toFixed(2)} TL</p>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => onAddToCart({
+                                                            id: product.id,
+                                                            name: product.name,
+                                                            productName: product.name,
+                                                            price: product.price,
+                                                            oldPrice: null,
+                                                            market: product.market,
+                                                            discount: 0,
+                                                            category: product.category || 'Other',
+                                                            image: product.imageUrl || '/placeholder.png'
+                                                        })}
+                                                        className="ml-2 p-1.5 bg-green-500 hover:bg-green-600 text-white rounded-full transition-colors flex-shrink-0"
+                                                        title="Add to cart"
+                                                    >
+                                                        <Plus size={12} />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         ))}
@@ -240,19 +484,70 @@ export default function AiChatbot({ hideOnMobile = false }: AiChatbotProps) {
                             </div>
                         )}
 
+                        {/* Suggestion Chips - shown at conversation start */}
+                        {showSuggestions && !isLoading && (
+                            <div className="flex flex-wrap gap-2 mt-2">
+                                {suggestionChips.map((chip, index) => (
+                                    <button
+                                        key={index}
+                                        onClick={() => sendQuickAction(chip)}
+                                        className="px-3 py-1.5 bg-white border border-green-200 text-green-700 text-xs rounded-full hover:bg-green-50 hover:border-green-400 transition-all shadow-sm"
+                                    >
+                                        {chip}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
                         <div ref={messagesEndRef} />
                     </div>
 
+                    {/* Quick Actions */}
+                    <div className="px-3 py-2 border-t border-gray-100 bg-gray-50">
+                        <div className="flex gap-2 overflow-x-auto pb-1">
+                            {quickActions.map((actionItem, index) => (
+                                <button
+                                    key={index}
+                                    onClick={() => {
+                                        // Only trigger the action callback, don't send chat message
+                                        if (actionItem.action) {
+                                            actionItem.action();
+                                        }
+                                    }}
+                                    disabled={isLoading}
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white text-xs font-medium whitespace-nowrap transition-all ${actionItem.color} disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md`}
+                                >
+                                    <actionItem.icon size={12} />
+                                    {actionItem.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
                     {/* Input Area */}
-                    <form onSubmit={handleSendMessage} className="p-3 bg-white border-t border-gray-100">
+                    <form id="chatbot-form" onSubmit={handleSendMessage} className="p-3 bg-white border-t border-gray-100">
                         <div className="flex items-center gap-2 bg-gray-50 rounded-full px-4 py-2 border border-gray-200 focus-within:border-green-500 focus-within:ring-1 focus-within:ring-green-500 transition-all">
                             <input
                                 type="text"
                                 value={inputText}
                                 onChange={(e) => setInputText(e.target.value)}
-                                placeholder="Ask about prices..."
+                                placeholder={isListening ? "Listening..." : "Ask about prices..."}
                                 className="flex-1 bg-transparent border-none focus:ring-0 outline-none text-sm placeholder-gray-400"
                             />
+                            <button
+                                type="button"
+                                onClick={toggleVoiceInput}
+                                className={`p-1.5 rounded-full transition-all ${isListening
+                                        ? 'bg-red-500 text-white animate-pulse'
+                                        : isVoiceSupported
+                                            ? 'text-gray-400 hover:text-green-600 hover:bg-green-50'
+                                            : 'text-gray-300 cursor-not-allowed'
+                                    }`}
+                                disabled={!isVoiceSupported}
+                                title={isVoiceSupported ? (isListening ? 'Stop listening' : 'Voice input') : 'Voice not supported'}
+                            >
+                                {isVoiceSupported ? <Mic size={14} /> : <MicOff size={14} />}
+                            </button>
                             <button
                                 type="submit"
                                 disabled={!inputText.trim() || isLoading}
