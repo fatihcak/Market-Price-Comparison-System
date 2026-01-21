@@ -52,6 +52,7 @@ export interface Product {
     // For consolidated products (same product from different markets)
     variantIds?: number[];
     marketCount?: number;
+    allMarkets?: string[]; // All markets that sell this product
 }
 
 export interface CartItem extends Product {
@@ -72,6 +73,7 @@ export interface ProductResponseDTO {
     discount: number;
     marketName: string;
     marketCount: number;
+    allMarketNames?: string[];
     imageUrl: string;
 }
 

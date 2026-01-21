@@ -148,6 +148,7 @@ export default function SearchBar({ onSearch }: SearchBarProps) {
               <option>All Cities</option>
               <option>Lefkoşa</option>
               <option>Gazimağusa</option>
+              <option>Girne</option>
             </select>
           </div>
         </div>
