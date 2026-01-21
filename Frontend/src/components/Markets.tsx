@@ -22,6 +22,26 @@ const MARKETS = [
         color: 'from-blue-500 to-indigo-600',
         openHours: '10:00 - 22:00',
         url: 'https://www.kibrissanalmarket.com/'
+    },
+    {
+        id: 3,
+        name: 'Ünimar Market',
+        description: 'Fresh local produce and daily essentials in Cyprus.',
+        image: 'https://lh3.googleusercontent.com/p/AF1QipMNRGpWvyj0ulwydewe5JGxyhJRTs6yNXBMQeYZ=s680-w680-h510-rw',
+        address: 'Girne Mahallesi, Lefkoşa',
+        color: 'from-orange-500 to-red-600',
+        openHours: '08:30 - 22:00',
+        url: 'https://www.unimarmarket.com/'
+    },
+    {
+        id: 4,
+        name: 'Starling Market',
+        description: 'Fresh local produce and daily essentials in Cyprus.',
+        image: 'https://lh3.googleusercontent.com/gps-cs-s/AG0ilSz9BTeDk837pPTQzJoxO36AQlGSNAF7OB6rcOVunJf7yFna6xkZaGvo3Z3sUYriQFOJGxpVOXDCXiw2-RWiuGLsrdaYTU3uJkXj_7T0Qajt3sRHT8D2iyEScGDrnNXIQS0Db6VbCA=s680-w680-h510-rw',
+        address: 'Girne Mahallesi, Lefkoşa',
+        color: 'from-orange-500 to-red-600',
+        openHours: '08:30 - 22:00',
+        url: 'https://www.starlingsupermarket.com/'
     }
 ];
 
@@ -44,7 +64,7 @@ export default function Markets() {
                     {MARKETS.map((market) => (
                         <div
                             key={market.id}
-                            className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-gray-100 flex flex-col"
+                            className="group bg-white rounded-3xl overflow-hidden shadow-sm transition-all duration-500 border border-gray-100 flex flex-col"
                         >
                             {/* Image Section */}
                             <div className="relative h-64 overflow-hidden">

@@ -233,6 +233,7 @@ public class ProductService : IProductService
                 Price = 0,
                 MarketName = "Unknown",
                 MarketCount = 0,
+                AllMarketNames = new List<string>(),
                 LastUpdated = product.LastUpdated,
                 CreatedAt = null,
                 ImageUrl = !string.IsNullOrWhiteSpace(product.ImageUrl) ? product.ImageUrl : product.Category?.Icon
@@ -243,15 +244,17 @@ public class ProductService : IProductService
         decimal minPrice = decimal.MaxValue;
         decimal maxPrice = decimal.MinValue;
         string cheapestMarket = "Unknown";
-        var uniqueMarkets = new HashSet<int>();
+        var uniqueMarketNames = new HashSet<string>(); // Changed to store names
 
         foreach (var price in prices)
         {
+            var marketName = price.Market?.MarketName ?? "Unknown";
+            
             // Find min and update cheapest market
             if (price.Price < minPrice)
             {
                 minPrice = price.Price;
-                cheapestMarket = price.Market?.MarketName ?? "Unknown";
+                cheapestMarket = marketName;
             }
 
             // Find max
@@ -260,8 +263,8 @@ public class ProductService : IProductService
                 maxPrice = price.Price;
             }
 
-            // Count unique markets
-            uniqueMarkets.Add(price.MarketId);
+            // Collect unique market names
+            uniqueMarketNames.Add(marketName);
         }
 
         var discount = maxPrice > minPrice ? (int)((maxPrice - minPrice) / maxPrice * 100) : 0;
@@ -278,7 +281,8 @@ public class ProductService : IProductService
             OldPrice = maxPrice > minPrice ? maxPrice : null,
             Discount = discount,
             MarketName = cheapestMarket,
-            MarketCount = uniqueMarkets.Count,
+            MarketCount = uniqueMarketNames.Count,
+            AllMarketNames = uniqueMarketNames.ToList(),
             LastUpdated = product.LastUpdated,
             CreatedAt = null,
             ImageUrl = !string.IsNullOrWhiteSpace(product.ImageUrl) ? product.ImageUrl : product.Category?.Icon

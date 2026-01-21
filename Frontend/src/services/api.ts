@@ -110,7 +110,8 @@ export const api = {
                 brand: item.brand,
                 unit: item.unit,
                 marketCount: item.marketCount || 1,
-                variantIds: [item.id]
+                variantIds: [item.id],
+                allMarkets: item.allMarketNames || [item.marketName] // Use backend data
             }));
 
             // Sort by marketCount descending so products with multiple markets appear first
@@ -155,6 +156,17 @@ export const api = {
                         existing.variantIds?.push(p.id);
                     }
 
+                    // 4. Accumulate all markets (for filtering)
+                    if (p.allMarkets) {
+                        const existingMarkets = existing.allMarkets || [];
+                        for (const m of p.allMarkets) {
+                            if (!existingMarkets.includes(m)) {
+                                existingMarkets.push(m);
+                            }
+                        }
+                        existing.allMarkets = existingMarkets;
+                    }
+
                 } else {
                     // Initialize variantIds if not present
                     if (!p.variantIds || p.variantIds.length === 0) {
@@ -193,7 +205,8 @@ export const api = {
                 brand: item.brand,
                 unit: item.unit,
                 marketCount: item.marketCount || 1,
-                variantIds: [item.id]
+                variantIds: [item.id],
+                allMarkets: item.allMarketNames || [item.marketName]
             }));
 
             return { products, totalCount };
@@ -264,7 +277,8 @@ export const api = {
                             brand: item.brand,
                             unit: item.unit,
                             marketCount: item.marketCount || 1,
-                            variantIds: [item.id]
+                            variantIds: [item.id],
+                            allMarkets: item.allMarketNames || [item.marketName]
                         });
                     }
                 }
@@ -314,7 +328,8 @@ export const api = {
                 brand: item.brand,
                 unit: item.unit,
                 marketCount: item.marketCount || 1,
-                variantIds: [item.id]
+                variantIds: [item.id],
+                allMarkets: item.allMarketNames || [item.marketName]
             }));
 
             return { products, totalCount };
@@ -367,7 +382,8 @@ export const api = {
                         brand: item.brand,
                         unit: item.unit,
                         marketCount: item.marketCount || 1,
-                        variantIds: [item.id]
+                        variantIds: [item.id],
+                        allMarkets: item.allMarketNames || [item.marketName]
                     });
                 }
             }

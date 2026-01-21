@@ -229,7 +229,10 @@ export default function ProductGrid({ searchQuery, categories, onAdd, onCompare 
         }
 
         if (filters.selectedMarkets.length > 0) {
-            if (!filters.selectedMarkets.includes(product.market)) {
+            // Check if any of the product's markets match the selected filters
+            const productMarkets = product.allMarkets || [product.market];
+            const hasMatchingMarket = productMarkets.some(m => filters.selectedMarkets.includes(m));
+            if (!hasMatchingMarket) {
                 return false;
             }
         }

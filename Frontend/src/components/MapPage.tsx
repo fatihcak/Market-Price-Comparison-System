@@ -18,17 +18,19 @@ L.Icon.Default.mergeOptions({
 
 // Market data with coordinates
 const MARKET_LOCATIONS = [
+    // Sarper Market - Lefkoşa
     {
         id: 1,
         name: 'Sarper Market',
-        lat: 35.13584058827877,
-        lng: 33.921356996980506,
-        address: 'Girne Mahallesi, Mağusa',
+        lat: 35.135910749660084,
+        lng: 33.92135769838634,
+        address: 'Gönyeli, Lefkoşa',
         description: 'Fresh local produce and daily essentials.',
-        openHours: '08:00 - 22:00',
+        openHours: '08:30 - 23:00',
         website: 'https://sarpermarket.com',
-        color: '#f97316'
+        color: '#f97316' // Orange
     },
+    // Kıbrıs Sanal Market - Lefkoşa
     {
         id: 2,
         name: 'Kıbrıs Sanal Market',
@@ -38,7 +40,122 @@ const MARKET_LOCATIONS = [
         description: 'Online grocery market.',
         openHours: '10:00 - 22:00',
         website: 'https://kibrissanalmarket.com',
+        color: '#3b82f6' // Blue
+    },
+    // Ünimar Market - Mağusa (3 locations) - GREEN
+    {
+        id: 3,
+        name: 'Ünimar Market - Maraş',
+        lat: 35.115651090630934,
+        lng: 33.9404434327198,
+        address: 'Salamis Yolu, Mağusa',
+        description: 'Fresh local produce and daily essentials.',
+        openHours: '08:30 - 22:00',
+        website: 'https://unimarmarket.com',
+        color: '#22c55e' // Green
+    },
+    {
+        id: 4,
+        name: 'Ünimar Market - CityMall',
+        lat: 35.12702413342683,
+        lng: 33.920616544814855,
+        address: 'CityMall, Mağusa',
+        description: 'Fresh local produce and daily essentials.',
+        openHours: '08:30 - 22:00',
+        website: 'https://unimarmarket.com',
+        color: '#22c55e' // Green
+    },
+    {
+        id: 5,
+        name: 'Ünimar Market - Sakarya',
+        lat: 35.142703146954176,
+        lng: 33.904422643454524,
+        address: 'Baykal, Mağusa',
+        description: 'Fresh local produce and daily essentials.',
+        openHours: '08:30 - 22:00',
+        website: 'https://unimarmarket.com',
+        color: '#22c55e' // Green
+    },
+    // Starling Market - Girne (3 locations) - PURPLE
+    {
+        id: 6,
+        name: 'Starling Market - Girne Merkez',
+        lat: 35.33778,
+        lng: 33.31833,
+        address: 'Merkez, Girne',
+        description: 'Fresh local produce and daily essentials.',
+        openHours: '08:30 - 22:00',
+        website: 'https://starlingsupermarket.com',
+        color: '#8b5cf6' // Purple
+    },
+    {
+        id: 7,
+        name: 'Starling Market - Karakum',
+        lat: 35.34194,
+        lng: 33.29500,
+        address: 'Karakum, Girne',
+        description: 'Fresh local produce and daily essentials.',
+        openHours: '08:30 - 22:00',
+        website: 'https://starlingsupermarket.com',
+        color: '#8b5cf6' // Purple
+    },
+    {
+        id: 8,
+        name: 'Starling Market - Alsancak',
+        lat: 35.33500,
+        lng: 33.23361,
+        address: 'Alsancak, Girne',
+        description: 'Fresh local produce and daily essentials.',
+        openHours: '08:30 - 22:00',
+        website: 'https://starlingsupermarket.com',
+        color: '#8b5cf6' // Purple
+    },
+    {
+        id: 9,
+        name: 'Sarper Market - Lefkoşa',
+        lat: 35.203184365230086,
+        lng: 33.34406071832413,
+        address: 'Lefkoşa',
+        description: 'Fresh local produce and daily essentials.',
+        openHours: '08:30 - 22:00',
+        website: 'https://starlingsupermarket.com',
+        color: '#f97316' // Purple
+    }
+];
+
+// Unique markets for the card list (one card per market chain)
+const UNIQUE_MARKETS = [
+    {
+        id: 1,
+        name: 'Sarper Market',
+        address: 'Lefkoşa & Gazimağusa',
+        openHours: '08:30 - 23:00',
+        website: 'https://sarpermarket.com',
+        color: '#f97316'
+    },
+    {
+        id: 2,
+        name: 'Kıbrıs Sanal Market',
+        address: 'Lefkoşa',
+        openHours: '10:00 - 22:00',
+        website: 'https://kibrissanalmarket.com',
         color: '#3b82f6'
+    },
+    {
+        id: 3,
+        name: 'Ünimar Market',
+        address: 'Gazimağusa',
+        openHours: '08:30 - 22:00',
+        website: 'https://unimarmarket.com',
+        color: '#22c55e'
+    },
+    {
+        id: 4,
+        name: 'Starling Market',
+        address: 'Girne',
+        openHours: '08:30 - 22:00',
+        website: 'https://starlingsupermarket.com',
+        color: '#8b5cf6'
     }
 ];
 
@@ -144,7 +261,7 @@ export default function MapPage() {
 
                 {/* Market List Below Map */}
                 <div className="mt-8 grid md:grid-cols-2 gap-4">
-                    {MARKET_LOCATIONS.map((market) => (
+                    {UNIQUE_MARKETS.map((market) => (
                         <div
                             key={market.id}
                             className="bg-white rounded-xl p-4 border border-gray-100"
