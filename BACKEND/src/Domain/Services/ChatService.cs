@@ -133,7 +133,7 @@ namespace Domain.Services
                             
                             response.FoundProducts = allMatchedProducts
                                 .Where(p => addedItems.Contains(p.ProductName))
-                                .Take(5)
+                                .Take(15)
                                 .Select(p =>
                                 {
                                     var priceInfo = pPrices.Where(pr => pr.ProductId == p.Id).OrderBy(pr => pr.Price).FirstOrDefault();
