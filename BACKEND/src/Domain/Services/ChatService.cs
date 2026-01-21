@@ -147,7 +147,7 @@ namespace Domain.Services
                                         Price = priceInfo?.Price ?? 0,
                                         Market = marketName,
                                         Category = p.Category?.CategoryName,
-                                        ImageUrl = null
+                                        ImageUrl = p.ImageUrl
                                     };
                                 })
                                 .ToList();
@@ -292,7 +292,7 @@ namespace Domain.Services
                                         Score = RelevanceScoring.CalculateRelevanceScore(userMessage, p)
                                     })
                                     .OrderByDescending(x => x.Score)
-                                    .Take(20) // Increased from 5 to 20 for better context
+                                    .Take(25) // Increased for better context
                                     .Select(x => x.Product)
                                     .ToList();
 
@@ -437,11 +437,11 @@ namespace Domain.Services
                                             Price = priceInfo?.Price ?? 0,
                                             Market = marketName,
                                             Category = p.Category?.CategoryName,
-                                            ImageUrl = null // Could be added later if available
+                                            ImageUrl = p.ImageUrl
                                         };
                                     })
                                     .OrderBy(p => p.Price) // Sort by price (cheapest first)
-                                    .Take(15) // Show more products (was 5)
+                                    .Take(25) // Show more products (was 5)
                                     .ToList();
                                 
                                 // Don't cache responses with products (so frontend always gets fresh data)
@@ -569,7 +569,7 @@ namespace Domain.Services
                         .DistinctBy(p => p.Id)
                         .Select(p => new { Product = p, Score = RelevanceScoring.CalculateRelevanceScore(userMessage, p) })
                         .OrderByDescending(x => x.Score)
-                        .Take(10)
+                        .Take(15)
                         .Select(x => x.Product)
                         .ToList();
                     
@@ -674,8 +674,30 @@ namespace Domain.Services
                - If the user simply asks about products, prices, or lists items WITHOUT asking for basket calculation (e.g., 'milk and eggs', 'yumurta', 'show me bread prices'), set intent to 'chat'. This is for browsing products.
                - If it's a general question (e.g., 'Do you have milk?', 'Price of tomato'), set intent to 'chat'.
 
+
             2. Extract Information:
-               - Example: 'Do you have milk?' -> items: ['milk']
+               - Extract product names/items from the message.
+               - IMPORTANT: Include BOTH English AND Turkish versions of product names to search our database comprehensively:
+                 * milk → include both 'sut' and 'milk'
+                 * eggs, egg → include both 'yumurta' and 'egg'
+                 * bread → include both 'ekmek' and 'bread'
+                 * cheese → include both 'peynir' and 'cheese'
+                 * butter → include both 'tereyagi' and 'butter'
+                 * tomato → include both 'domates' and 'tomato'
+                 * water → include both 'su' and 'water'
+                 * sugar → include both 'seker' and 'sugar'
+                 * oil, olive oil → include both 'zeytinyagi' and 'oil'
+                 * chicken → include both 'tavuk' and 'chicken'
+                 * meat → include both 'et' and 'meat'
+                 * rice → include both 'pirinc' and 'rice'
+                 * pasta → include both 'makarna' and 'pasta'
+                 * coffee → include both 'kahve' and 'coffee'
+                 * tea → include both 'cay' and 'tea'
+                 * juice → include both 'meyve suyu' and 'juice'
+                 * yogurt → include 'yogurt'
+                 * chocolate → include both 'cikolata' and 'chocolate'
+               - Example: 'Do you have milk?' -> items: ['sut', 'milk']
+               - Example: 'Add eggs and bread' -> items: ['yumurta', 'egg', 'ekmek', 'bread']
             
             3. Generate Reply (if 'chat'):
                - If intent is 'chat', generate a helpful response.

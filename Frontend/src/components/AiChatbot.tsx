@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, Send, Bot, User, ShoppingCart, TrendingDown, Trash2, Plus, Mic, MicOff } from 'lucide-react';
+import { X, Send, Bot, User, ShoppingCart, TrendingDown, Trash2, Plus, Mic, MicOff, RotateCcw, Eye, Heart } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { api } from '../services/api';
 import { Product } from '../types';
@@ -28,13 +28,15 @@ interface AiChatbotProps {
     onOpenList?: () => void;
     onCompareList?: () => void;
     onClearList?: () => void;
+    onOpenFavorites?: () => void;
 }
 
-export default function AiChatbot({ hideOnMobile = false, onAddToCart, onOpenList, onCompareList, onClearList }: AiChatbotProps) {
-    const [/*isOpen/*, /*setIsOpen*/] = useState(true);
+export default function AiChatbot({ hideOnMobile = false, onAddToCart, onOpenList, onCompareList, onClearList, onOpenFavorites }: AiChatbotProps) {
+    const [isHidden, setIsHidden] = useState(false);
     const [isMinimized, setIsMinimized] = useState(true);
     const [inputText, setInputText] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState<ChatProduct | null>(null);
     const [messages, setMessages] = useState<Message[]>(() => {
         const saved = sessionStorage.getItem('chat_history');
         if (saved) {
@@ -400,11 +402,27 @@ export default function AiChatbot({ hideOnMobile = false, onAddToCart, onOpenLis
         }
     };
 
+    // Clear chat history
+    const clearChatHistory = () => {
+        if (window.confirm('Clear chat history? This will start a new conversation.')) {
+            const welcomeMessage: Message = {
+                id: Date.now(),
+                text: "Hello! I'm your Market Price Assistant. I can help you find the best prices, compare markets, or suggest products. How can I help you today?",
+                sender: 'bot',
+                timestamp: new Date()
+            };
+            setMessages([welcomeMessage]);
+            sessionStorage.removeItem('chat_history');
+            sessionStorage.removeItem('chat_session_id');
+        }
+    };
+
     // Quick actions configuration - actions with callbacks don't send chat messages
     const quickActions = [
         { icon: ShoppingCart, label: 'My List', color: 'bg-blue-500 hover:bg-blue-600', action: onOpenList },
+        { icon: Heart, label: 'Favorites', color: 'bg-red-500 hover:bg-red-600', action: onOpenFavorites },
         { icon: TrendingDown, label: 'Best Price', color: 'bg-green-500 hover:bg-green-600', action: onCompareList },
-        { icon: Trash2, label: 'Clear', color: 'bg-red-500 hover:bg-red-600', action: onClearList },
+        { icon: Trash2, label: 'Clear', color: 'bg-orange-500 hover:bg-orange-600', action: onClearList },
     ];
 
     // Suggestion chips - shown when conversation is new
@@ -418,6 +436,19 @@ export default function AiChatbot({ hideOnMobile = false, onAddToCart, onOpenLis
     const showSuggestions = messages.length <= 2;
 
 
+
+    // If hidden, show only floating button
+    if (isHidden) {
+        return (
+            <button
+                onClick={() => { setIsHidden(false); setIsMinimized(false); }}
+                className={`fixed bottom-3 left-2 bg-green-600 hover:bg-green-700 text-white p-4 rounded-full shadow-2xl z-40 transition-all duration-300 hover:scale-110 ${hideOnMobile ? 'hidden md:flex' : 'flex'} items-center justify-center`}
+                title="Open Market Assistant"
+            >
+                <Bot size={24} className="text-white" />
+            </button>
+        );
+    }
 
     return (
         <div
@@ -439,10 +470,17 @@ export default function AiChatbot({ hideOnMobile = false, onAddToCart, onOpenLis
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
-
                     <button
-                        onClick={(e) => { e.stopPropagation(); setIsMinimized(true); }}
+                        onClick={(e) => { e.stopPropagation(); clearChatHistory(); }}
                         className="text-white/80 hover:text-white p-1 hover:bg-white/10 rounded transition-colors"
+                        title="Clear chat history"
+                    >
+                        <RotateCcw size={16} />
+                    </button>
+                    <button
+                        onClick={(e) => { e.stopPropagation(); setIsHidden(true); }}
+                        className="text-white/80 hover:text-white p-1 hover:bg-white/10 rounded transition-colors"
+                        title="Hide chatbot"
                     >
                         <X size={18} />
                     </button>
@@ -485,23 +523,48 @@ export default function AiChatbot({ hideOnMobile = false, onAddToCart, onOpenLis
                                         <div className="mt-3 space-y-2 border-t border-gray-100 pt-3">
                                             <p className="text-xs text-gray-500 font-medium">Found Products:</p>
                                             {msg.products.map((product) => (
-                                                <div key={product.id} className="flex items-center justify-between bg-gray-50 rounded-lg p-2">
+                                                <div
+                                                    key={product.id}
+                                                    className="flex items-center gap-2 bg-gray-50 rounded-lg p-2 hover:bg-gray-100 transition-colors cursor-pointer"
+                                                    onClick={() => setSelectedProduct(product)}
+                                                >
+                                                    {/* Product Image */}
+                                                    <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-200 flex-shrink-0">
+                                                        {product.imageUrl ? (
+                                                            <img
+                                                                src={product.imageUrl}
+                                                                alt={product.name}
+                                                                className="w-full h-full object-cover"
+                                                                onError={(e) => {
+                                                                    (e.target as HTMLImageElement).src = '/placeholder.png';
+                                                                }}
+                                                            />
+                                                        ) : (
+                                                            <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                                                <ShoppingCart size={16} />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    {/* Product Info */}
                                                     <div className="flex-1 min-w-0">
                                                         <p className="text-xs font-medium text-gray-800 truncate">{product.name}</p>
                                                         <p className="text-[10px] text-gray-500">{product.market} - {product.price.toFixed(2)} TL</p>
                                                     </div>
                                                     <button
-                                                        onClick={() => onAddToCart({
-                                                            id: product.id,
-                                                            name: product.name,
-                                                            productName: product.name,
-                                                            price: product.price,
-                                                            oldPrice: null,
-                                                            market: product.market,
-                                                            discount: 0,
-                                                            category: product.category || 'Other',
-                                                            image: product.imageUrl || '/placeholder.png'
-                                                        })}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            onAddToCart({
+                                                                id: product.id,
+                                                                name: product.name,
+                                                                productName: product.name,
+                                                                price: product.price,
+                                                                oldPrice: null,
+                                                                market: product.market,
+                                                                discount: 0,
+                                                                category: product.category || 'Other',
+                                                                image: product.imageUrl || '/placeholder.png'
+                                                            });
+                                                        }}
                                                         className="ml-2 p-1.5 bg-green-500 hover:bg-green-600 text-white rounded-full transition-colors flex-shrink-0"
                                                         title="Add to cart"
                                                     >
@@ -604,6 +667,78 @@ export default function AiChatbot({ hideOnMobile = false, onAddToCart, onOpenLis
                         </div>
                     </form>
                 </>
+            )}
+
+            {/* Product Detail Popup */}
+            {selectedProduct && (
+                <div
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+                    onClick={() => setSelectedProduct(null)}
+                >
+                    <div
+                        className="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="relative h-48 bg-gradient-to-br from-green-100 to-emerald-50">
+                            {selectedProduct.imageUrl ? (
+                                <img
+                                    src={selectedProduct.imageUrl}
+                                    alt={selectedProduct.name}
+                                    className="w-full h-full object-contain p-4"
+                                />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                    <ShoppingCart size={64} className="text-green-300" />
+                                </div>
+                            )}
+                            <button
+                                onClick={() => setSelectedProduct(null)}
+                                className="absolute top-3 right-3 p-2 bg-white/80 hover:bg-white rounded-full shadow"
+                            >
+                                <X size={18} className="text-gray-600" />
+                            </button>
+                        </div>
+                        <div className="p-5">
+                            <h3 className="text-lg font-bold text-gray-800 mb-2">{selectedProduct.name}</h3>
+                            <div className="space-y-2 mb-4">
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-gray-500">Market:</span>
+                                    <span className="font-medium">{selectedProduct.market}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-gray-500">Category:</span>
+                                    <span className="font-medium">{selectedProduct.category || 'N/A'}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-gray-500">Price:</span>
+                                    <span className="text-2xl font-bold text-green-600">{selectedProduct.price.toFixed(2)} TL</span>
+                                </div>
+                            </div>
+                            {onAddToCart && (
+                                <button
+                                    onClick={() => {
+                                        onAddToCart({
+                                            id: selectedProduct.id,
+                                            name: selectedProduct.name,
+                                            productName: selectedProduct.name,
+                                            price: selectedProduct.price,
+                                            oldPrice: null,
+                                            market: selectedProduct.market,
+                                            discount: 0,
+                                            category: selectedProduct.category || 'Other',
+                                            image: selectedProduct.imageUrl || '/placeholder.png'
+                                        });
+                                        setSelectedProduct(null);
+                                    }}
+                                    className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl flex items-center justify-center gap-2"
+                                >
+                                    <Plus size={18} />
+                                    Add to Cart
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );
