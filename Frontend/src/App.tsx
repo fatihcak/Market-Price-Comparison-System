@@ -304,6 +304,7 @@ function App() {
         onOpenList={() => setListOpen(true)}
         onCompareList={() => setBasketComparisonOpen(true)}
         onClearList={clearShoppingList}
+        onOpenFavorites={() => setFavoritesOpen(true)}
       />
 
       <FavoritesList
