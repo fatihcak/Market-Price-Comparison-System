@@ -1,7 +1,8 @@
 import { ChevronDown, Filter, Loader2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { api } from '../services/api';
 import { Market } from '../types';
+import { CITY_MARKETS } from '../constants/locationMarkets';
 
 export interface FilterState {
   sortBy: string;
@@ -12,9 +13,10 @@ export interface FilterState {
 
 interface FilterBarProps {
   onFilterChange: (filters: FilterState) => void;
+  selectedCity?: string;
 }
 
-export default function FilterBar({ onFilterChange }: FilterBarProps) {
+export default function FilterBar({ onFilterChange, selectedCity = 'All Cities' }: FilterBarProps) {
   const [sortBy, setSortBy] = useState('popular');
   const [showFilters, setShowFilters] = useState(false);
   const [minPrice, setMinPrice] = useState(0);
@@ -38,6 +40,15 @@ export default function FilterBar({ onFilterChange }: FilterBarProps) {
     };
     fetchMarkets();
   }, []);
+
+  // Filter markets based on selected city
+  const displayedMarkets = useMemo(() => {
+    if (selectedCity === 'All Cities' || !selectedCity) {
+      return markets;
+    }
+    const cityMarketList = CITY_MARKETS[selectedCity] || [];
+    return markets.filter(m => cityMarketList.includes(m.name));
+  }, [markets, selectedCity]);
 
   // Apply filters when sortBy changes (immediate effect for sorting)
   useEffect(() => {
@@ -112,7 +123,7 @@ export default function FilterBar({ onFilterChange }: FilterBarProps) {
               onChange={(e) => setSortBy(e.target.value)}
               className="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-2 text-sm font-medium text-gray-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500"
             >
-              <option value="popular">Popular Products</option>
+
               <option value="price-low">Cheapest Price</option>
               <option value="price-high">Higher Price</option>
               <option value="discount">Most Discount</option>
@@ -184,7 +195,7 @@ export default function FilterBar({ onFilterChange }: FilterBarProps) {
               <div className="text-gray-500 text-sm py-2">No markets available</div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {markets.map((market) => (
+                {displayedMarkets.map((market) => (
                   <label key={market.id} className="flex items-center gap-2 cursor-pointer group">
                     <div className="relative flex items-center">
                       <input
