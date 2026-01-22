@@ -33,15 +33,13 @@ export default function Header({ onOpenList, itemCount = 0, onOpenFavorites, fav
 
         <div className="flex items-center gap-2 md:gap-4">
           <nav className="hidden md:flex items-center gap-6 mr-4">
-            <Link to="/markets" className="flex items-center text-gray-600 hover:text-green-600 font-medium text-sm transition-colors relative group">
+            <Link to="/markets" className="flex items-center text-gray-600 hover:text-green-600 font-medium text-sm transition-colors">
               <Store size={18} className="mr-1.5" />
               Markets
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-green-600 transition-all group-hover:w-full"></span>
             </Link>
-            <Link to="/map" className="flex items-center text-gray-600 hover:text-green-600 font-medium text-sm transition-colors relative group">
+            <Link to="/map" className="flex items-center text-gray-600 hover:text-green-600 font-medium text-sm transition-colors">
               <Map size={18} className="mr-1.5" />
               Map
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-green-600 transition-all group-hover:w-full"></span>
             </Link>
           </nav>
           <button
