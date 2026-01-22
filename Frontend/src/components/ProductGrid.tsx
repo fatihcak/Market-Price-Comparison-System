@@ -6,15 +6,17 @@ import FilterBar, { FilterState } from './FilterBar';
 import { Product } from '../types';
 import { api } from '../services/api';
 import { CATEGORIES, Category } from '../constants/categories';
+import { isProductInCity, getBestMarketForCity, CITY_MARKETS } from '../constants/locationMarkets';
 
 interface ProductGridProps {
     searchQuery?: string;
     categories: Category[];
     onAdd: (product: Product) => void;
     onCompare: (product: Product) => void;
+    selectedCity?: string;
 }
 
-export default function ProductGrid({ searchQuery, categories, onAdd, onCompare }: ProductGridProps) {
+export default function ProductGrid({ searchQuery, categories, onAdd, onCompare, selectedCity = 'All Cities' }: ProductGridProps) {
     const { category, subcategory } = useParams<{ category: string; subcategory?: string }>();
     const navigate = useNavigate();
     const [currentPage, setCurrentPage] = useState(1);
@@ -214,7 +216,7 @@ export default function ProductGrid({ searchQuery, categories, onAdd, onCompare 
         setFilters(newFilters);
     };
 
-    // Apply category, market, and price filters
+    // Apply category, market, city, and price filters
     const filteredProducts = loadedProducts.filter(product => {
         const mainCatDef = CATEGORIES.find(c => c.slug === selectedCategory);
 
@@ -228,9 +230,14 @@ export default function ProductGrid({ searchQuery, categories, onAdd, onCompare 
             }
         }
 
+        // City-based filtering - filter products by markets in the selected city
+        const productMarkets = product.allMarkets || [product.market];
+        if (!isProductInCity(productMarkets, selectedCity)) {
+            return false;
+        }
+
         if (filters.selectedMarkets.length > 0) {
             // Check if any of the product's markets match the selected filters
-            const productMarkets = product.allMarkets || [product.market];
             const hasMatchingMarket = productMarkets.some(m => filters.selectedMarkets.includes(m));
             if (!hasMatchingMarket) {
                 return false;
@@ -265,7 +272,32 @@ export default function ProductGrid({ searchQuery, categories, onAdd, onCompare 
 
     const totalPages = Math.ceil(sortedProducts.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
-    const displayedProducts = sortedProducts.slice(startIndex, startIndex + itemsPerPage);
+
+    // Transform products to show correct market for selected city
+    const displayedProducts = sortedProducts.slice(startIndex, startIndex + itemsPerPage).map(product => {
+        // Update market name based on selected city
+        const cityMarket = getBestMarketForCity(
+            product.market,
+            product.allMarkets || [product.market],
+            selectedCity
+        );
+
+        // If market changed, also update marketCount to only show city markets
+        if (cityMarket !== product.market && selectedCity !== 'All Cities') {
+            const cityMarketList = CITY_MARKETS[selectedCity] || [];
+            const cityMarketsForProduct = (product.allMarkets || []).filter(m =>
+                cityMarketList.includes(m)
+            );
+
+            return {
+                ...product,
+                market: cityMarket,
+                marketCount: cityMarketsForProduct.length
+            };
+        }
+
+        return { ...product, market: cityMarket };
+    });
 
     const handlePageChange = (page: number) => {
         if (page >= 1 && page <= totalPages) {

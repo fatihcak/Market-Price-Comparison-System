@@ -1,8 +1,11 @@
 import { Search, Mic, MicOff, MapPin } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
+import { CITIES } from '../constants/locationMarkets';
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
+  onCityChange?: (city: string) => void;
+  selectedCity?: string;
 }
 
 // Extend Window interface for SpeechRecognition
@@ -13,7 +16,7 @@ declare global {
   }
 }
 
-export default function SearchBar({ onSearch }: SearchBarProps) {
+export default function SearchBar({ onSearch, onCityChange, selectedCity = 'All Cities' }: SearchBarProps) {
   const [searchFocus, setSearchFocus] = useState(false);
   const [query, setQuery] = useState('');
   const [isListening, setIsListening] = useState(false);
@@ -144,11 +147,14 @@ export default function SearchBar({ onSearch }: SearchBarProps) {
 
           <div className="relative">
             <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-            <select className="w-full pl-12 pr-4 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500 bg-white text-gray-900 appearance-none cursor-pointer">
-              <option>All Cities</option>
-              <option>Lefkoşa</option>
-              <option>Gazimağusa</option>
-              <option>Girne</option>
+            <select
+              value={selectedCity}
+              onChange={(e) => onCityChange?.(e.target.value)}
+              className="w-full pl-12 pr-4 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500 bg-white text-gray-900 appearance-none cursor-pointer"
+            >
+              {CITIES.map(city => (
+                <option key={city} value={city}>{city}</option>
+              ))}
             </select>
           </div>
         </div>

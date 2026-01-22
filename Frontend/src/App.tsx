@@ -51,6 +51,7 @@ function App() {
   });
 
   const [activeCategories, setActiveCategories] = useState<Category[]>(CATEGORIES);
+  const [selectedCity, setSelectedCity] = useState('All Cities');
 
   // Preload Categories & Fetch Real IDs
   const preloadCategories = async () => {
@@ -230,6 +231,8 @@ function App() {
             activeCategories={activeCategories}
             onAdd={addToShoppingList}
             onCompare={openComparison}
+            selectedCity={selectedCity}
+            onCityChange={setSelectedCity}
           />
         } />
       </Routes>
@@ -277,6 +280,7 @@ function App() {
         productImage={selectedProductForComparison?.image}
         variantIds={selectedProductForComparison?.variantIds}
         onAdd={addToShoppingList}
+        selectedCity={selectedCity}
       />
 
       <BasketComparison

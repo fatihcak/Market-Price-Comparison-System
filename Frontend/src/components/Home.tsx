@@ -13,9 +13,11 @@ interface HomeProps {
     activeCategories: Category[];
     onAdd: (product: Product) => void;
     onCompare: (product: Product) => void;
+    selectedCity: string;
+    onCityChange: (city: string) => void;
 }
 
-export default function Home({ activeCategories, onAdd, onCompare }: HomeProps) {
+export default function Home({ activeCategories, onAdd, onCompare, selectedCity, onCityChange }: HomeProps) {
     const [searchQuery, setSearchQuery] = useState('');
     const [showStickySearch, setShowStickySearch] = useState(false);
     const [stickyQuery, setStickyQuery] = useState('');
@@ -52,7 +54,7 @@ export default function Home({ activeCategories, onAdd, onCompare }: HomeProps) 
         <main className="max-w-7xl mx-auto px-4 py-8">
             {/* Main Search Bar */}
             <div ref={mainSearchRef}>
-                <SearchBar onSearch={handleSearch} />
+                <SearchBar onSearch={handleSearch} onCityChange={onCityChange} selectedCity={selectedCity} />
             </div>
 
             <section className="mt-12">
@@ -102,6 +104,7 @@ export default function Home({ activeCategories, onAdd, onCompare }: HomeProps) 
                             categories={activeCategories}
                             onAdd={onAdd}
                             onCompare={onCompare}
+                            selectedCity={selectedCity}
                         />
                     }
                 />
@@ -113,6 +116,7 @@ export default function Home({ activeCategories, onAdd, onCompare }: HomeProps) 
                             categories={activeCategories}
                             onAdd={onAdd}
                             onCompare={onCompare}
+                            selectedCity={selectedCity}
                         />
                     }
                 />

@@ -2,6 +2,7 @@ import { MapPin, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { api } from '../services/api';
 import { PriceResponseDTO, Product } from '../types';
+import { CITY_MARKETS } from '../constants/locationMarkets';
 
 interface PriceComparisonProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface PriceComparisonProps {
   productImage?: string;
   variantIds?: number[];
   onAdd?: (product: Product) => void;
+  selectedCity?: string;
 }
 
 // Group prices by market, then by price within each market
@@ -26,7 +28,7 @@ interface MarketGroup {
   lowestPrice: number;
 }
 
-export default function PriceComparison({ isOpen, onClose, productName = 'Product', productId, productImage = '📦', variantIds, onAdd }: PriceComparisonProps) {
+export default function PriceComparison({ isOpen, onClose, productName = 'Product', productId, productImage = '📦', variantIds, onAdd, selectedCity = 'All Cities' }: PriceComparisonProps) {
   const [prices, setPrices] = useState<PriceResponseDTO[]>([]);
   const [loading, setLoading] = useState(false);
   const [expandedMarkets, setExpandedMarkets] = useState<Set<number>>(new Set());
@@ -111,8 +113,16 @@ export default function PriceComparison({ isOpen, onClose, productName = 'Produc
     });
 
     // Sort markets by their lowest price
-    return groups.sort((a, b) => a.lowestPrice - b.lowestPrice);
-  }, [prices]);
+    const sortedGroups = groups.sort((a, b) => a.lowestPrice - b.lowestPrice);
+
+    // Filter by selected city if applicable
+    if (selectedCity && selectedCity !== 'All Cities') {
+      const cityMarkets = CITY_MARKETS[selectedCity] || [];
+      return sortedGroups.filter(group => cityMarkets.includes(group.marketName));
+    }
+
+    return sortedGroups;
+  }, [prices, selectedCity]);
 
   const toggleMarket = (marketId: number) => {
     setExpandedMarkets(prev => {
