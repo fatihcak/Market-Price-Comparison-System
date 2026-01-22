@@ -6,15 +6,17 @@ import FilterBar, { FilterState } from './FilterBar';
 import { Product } from '../types';
 import { api } from '../services/api';
 import { CATEGORIES, Category } from '../constants/categories';
+import { isProductInCity, getBestMarketForCity, CITY_MARKETS } from '../constants/locationMarkets';
 
 interface ProductGridProps {
     searchQuery?: string;
     categories: Category[];
     onAdd: (product: Product) => void;
     onCompare: (product: Product) => void;
+    selectedCity?: string;
 }
 
-export default function ProductGrid({ searchQuery, categories, onAdd, onCompare }: ProductGridProps) {
+export default function ProductGrid({ searchQuery, categories, onAdd, onCompare, selectedCity = 'All Cities' }: ProductGridProps) {
     const { category, subcategory } = useParams<{ category: string; subcategory?: string }>();
     const navigate = useNavigate();
     const [currentPage, setCurrentPage] = useState(1);
@@ -38,6 +40,9 @@ export default function ProductGrid({ searchQuery, categories, onAdd, onCompare 
     const [totalCount, setTotalCount] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
     const pageSize = 48; // Fetch 3 pages worth of data (16 * 3)
+
+    // City-based pricing cache: productId -> { marketName: price }
+    const [cityPrices, setCityPrices] = useState<Record<number, Record<string, number>>>({});
 
     const selectedCategory = category || 'All';
 
@@ -214,7 +219,7 @@ export default function ProductGrid({ searchQuery, categories, onAdd, onCompare 
         setFilters(newFilters);
     };
 
-    // Apply category, market, and price filters
+    // Apply category, market, city, and price filters
     const filteredProducts = loadedProducts.filter(product => {
         const mainCatDef = CATEGORIES.find(c => c.slug === selectedCategory);
 
@@ -228,9 +233,14 @@ export default function ProductGrid({ searchQuery, categories, onAdd, onCompare 
             }
         }
 
+        // City-based filtering - filter products by markets in the selected city
+        const productMarkets = product.allMarkets || [product.market];
+        if (!isProductInCity(productMarkets, selectedCity)) {
+            return false;
+        }
+
         if (filters.selectedMarkets.length > 0) {
             // Check if any of the product's markets match the selected filters
-            const productMarkets = product.allMarkets || [product.market];
             const hasMatchingMarket = productMarkets.some(m => filters.selectedMarkets.includes(m));
             if (!hasMatchingMarket) {
                 return false;
@@ -265,7 +275,106 @@ export default function ProductGrid({ searchQuery, categories, onAdd, onCompare 
 
     const totalPages = Math.ceil(sortedProducts.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
-    const displayedProducts = sortedProducts.slice(startIndex, startIndex + itemsPerPage);
+
+    // Transform products to show correct market for selected city
+    const displayedProducts = sortedProducts.slice(startIndex, startIndex + itemsPerPage).map(product => {
+        // Update market name based on selected city
+        const cityMarket = getBestMarketForCity(
+            product.market,
+            product.allMarkets || [product.market],
+            selectedCity
+        );
+
+        // When a city is selected, recalculate marketCount to only count city markets
+        if (selectedCity !== 'All Cities') {
+            const cityMarketList = CITY_MARKETS[selectedCity] || [];
+            const cityMarketsForProduct = (product.allMarkets || []).filter(m =>
+                cityMarketList.includes(m)
+            );
+
+            // Get city-specific price from cache
+            const productPrices = cityPrices[product.id];
+            let cityPrice = product.price;
+            let bestMarket = cityMarket;
+            let cityDiscount = product.discount;
+            let cityOldPrice = product.oldPrice;
+
+            if (productPrices) {
+                // Find lowest and highest price among city markets
+                let lowestPrice = Infinity;
+                let highestPrice = 0;
+
+                for (const market of cityMarketsForProduct) {
+                    if (productPrices[market] !== undefined) {
+                        if (productPrices[market] < lowestPrice) {
+                            lowestPrice = productPrices[market];
+                            bestMarket = market;
+                        }
+                        if (productPrices[market] > highestPrice) {
+                            highestPrice = productPrices[market];
+                        }
+                    }
+                }
+
+                if (lowestPrice !== Infinity) {
+                    cityPrice = lowestPrice;
+
+                    // Calculate discount based on city markets (highest vs lowest)
+                    if (highestPrice > lowestPrice) {
+                        cityOldPrice = highestPrice;
+                        cityDiscount = Math.round(((highestPrice - lowestPrice) / highestPrice) * 100);
+                    } else {
+                        // Same price in all city markets, no discount
+                        cityOldPrice = null;
+                        cityDiscount = 0;
+                    }
+                }
+            }
+
+            return {
+                ...product,
+                market: bestMarket,
+                price: cityPrice,
+                oldPrice: cityOldPrice,
+                discount: cityDiscount,
+                marketCount: cityMarketsForProduct.length,
+                allMarkets: cityMarketsForProduct
+            };
+        }
+
+        return { ...product, market: cityMarket };
+    });
+
+    // Fetch prices for displayed products when city changes
+    useEffect(() => {
+        if (selectedCity === 'All Cities') return;
+
+        const productIds = sortedProducts
+            .slice(startIndex, startIndex + itemsPerPage)
+            .flatMap(p => p.variantIds || [p.id]);
+
+        if (productIds.length === 0) return;
+
+        const fetchCityPrices = async () => {
+            const prices = await api.getPricesByProductIds(productIds);
+            const priceMap: Record<number, Record<string, number>> = {};
+
+            for (const price of prices) {
+                if (!priceMap[price.productId]) {
+                    priceMap[price.productId] = {};
+                }
+                // Keep lowest price per market
+                const current = priceMap[price.productId][price.marketName];
+                if (current === undefined || price.price < current) {
+                    priceMap[price.productId][price.marketName] = price.price;
+                }
+            }
+
+            setCityPrices(prev => ({ ...prev, ...priceMap }));
+        };
+
+        fetchCityPrices();
+    }, [selectedCity, currentPage, sortedProducts.length]);
 
     const handlePageChange = (page: number) => {
         if (page >= 1 && page <= totalPages) {
@@ -276,7 +385,7 @@ export default function ProductGrid({ searchQuery, categories, onAdd, onCompare 
 
     return (
         <section className="mt-2">
-            <FilterBar onFilterChange={handleFilterChange} />
+            <FilterBar onFilterChange={handleFilterChange} selectedCity={selectedCity} />
 
             <div className="flex items-center justify-between mb-8">
                 <h2 className="text-3xl font-bold text-gray-900">

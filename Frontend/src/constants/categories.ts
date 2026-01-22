@@ -2,7 +2,7 @@ import { Apple, Milk, Wheat, Droplet, Wine, Coffee, Egg } from 'lucide-react';
 
 export interface SubCategory {
     name: string;
-    slug: string; // Must match Database CategoryName exactly
+    slug: string;
 }
 
 export interface Category {
@@ -14,22 +14,19 @@ export interface Category {
     subCategories: SubCategory[];
 }
 
-// IMPORTANT: Names and slugs MUST exactly match the backend database CategoryName values.
-// IDs are placeholders - the real IDs (15-21) are fetched from the API in App.tsx.
-// Backend Categories (from https://compare-market.site/api/Category):
-//   15: "Fruits & Vegetables"
-//   16: "Meat, Chicken & Fish"
-//   17: "Dairy Products & Breakfast Foods"
-//   18: "Staple Food"
-//   19: "Drink"
-//   20: "Snacks & Dessert"
-//   21: "Cleaning & Personal Care Products"
+//   15: Fruits & Vegetables
+//   16: Meat, Chicken & Fish
+//   17: Dairy Products & Breakfast Foods
+//   18: Staple Food
+//   19: Drink
+//   20: Snacks & Dessert
+//   21: Cleaning & Personal Care Products
 
 export const CATEGORIES: Category[] = [
     {
-        id: 15, // Backend ID
+        id: 15,
         name: 'Fruits & Vegetables',
-        slug: 'Fruits & Vegetables', // MUST match backend CategoryName
+        slug: 'Fruits & Vegetables',
         icon: Apple,
         color: 'bg-transparent hover:bg-green-50 text-emerald-600 border border-green-300',
         subCategories: [
@@ -38,9 +35,9 @@ export const CATEGORIES: Category[] = [
         ]
     },
     {
-        id: 16, // Backend ID
+        id: 16,
         name: 'Meat, Chicken & Fish',
-        slug: 'Meat, Chicken & Fish', // MUST match backend CategoryName
+        slug: 'Meat, Chicken & Fish',
         icon: Milk,
         color: 'bg-transparent hover:bg-green-50 text-rose-600 border border-green-300',
         subCategories: [
@@ -52,9 +49,9 @@ export const CATEGORIES: Category[] = [
         ]
     },
     {
-        id: 17, // Backend ID
+        id: 17,
         name: 'Dairy Products & Breakfast Foods',
-        slug: 'Dairy Products & Breakfast Foods', // MUST match backend CategoryName
+        slug: 'Dairy Products & Breakfast Foods',
         icon: Wheat,
         color: 'bg-transparent hover:bg-green-50 text-amber-600 border border-green-300',
         subCategories: [
@@ -73,9 +70,9 @@ export const CATEGORIES: Category[] = [
         ]
     },
     {
-        id: 18, // Backend ID
+        id: 18,
         name: 'Staple Food',
-        slug: 'Staple Food', // MUST match backend CategoryName
+        slug: 'Staple Food',
         icon: Droplet,
         color: 'bg-transparent hover:bg-green-50 text-yellow-600 border border-green-300',
         subCategories: [
@@ -96,9 +93,9 @@ export const CATEGORIES: Category[] = [
         ]
     },
     {
-        id: 19, // Backend ID
+        id: 19,
         name: 'Drink',
-        slug: 'Drink', // MUST match backend CategoryName
+        slug: 'Drink',
         icon: Wine,
         color: 'bg-transparent hover:bg-green-50 text-blue-600 border border-green-300',
         subCategories: [
@@ -112,9 +109,9 @@ export const CATEGORIES: Category[] = [
         ]
     },
     {
-        id: 20, // Backend ID
+        id: 20,
         name: 'Snacks & Dessert',
-        slug: 'Snacks & Dessert', // MUST match backend CategoryName
+        slug: 'Snacks & Dessert',
         icon: Coffee,
         color: 'bg-transparent hover:bg-green-50 text-orange-600 border border-green-300',
         subCategories: [
@@ -130,9 +127,9 @@ export const CATEGORIES: Category[] = [
         ]
     },
     {
-        id: 21, // Backend ID
+        id: 21,
         name: 'Cleaning & Personal Care Products',
-        slug: 'Cleaning & Personal Care Products', // MUST match backend CategoryName
+        slug: 'Cleaning & Personal Care Products',
         icon: Egg,
         color: 'bg-transparent hover:bg-green-50 text-pink-600 border border-green-300',
         subCategories: [

@@ -81,9 +81,12 @@ export default function ProductCard({ product, onAdd, onCompare }: ProductCardPr
         )}
 
         <div className="absolute top-3 right-3 flex gap-2">
-          <div className="bg-green-400 text-white px-3 py-1 rounded-full text-sm font-bold">
-            {product.discount}%
-          </div>
+          {/* Only show discount badge when multiple markets available */}
+          {product.marketCount && product.marketCount > 1 && (
+            <div className="bg-green-400 text-white px-3 py-1 rounded-full text-sm font-bold">
+              {product.discount}%
+            </div>
+          )}
           <button
             onClick={handleToggleFavorite}
             className="bg-white rounded-full p-2 hover:bg-gray-100 transition-colors cursor-pointer"
