@@ -43,12 +43,13 @@ Market-Price-Comparison-System/
 └── README.md
 ```
 
-**Key Backend Contributions (My Role)**
-As the Team Leader and Backend/AI Engineer, my primary focus was architecting the backend infrastructure and designing the AI decision engine:
-• Designed and implemented the Onion Architecture, strictly decoupling domain logic from external data access and API layers.
-• Engineered the RAG Pipeline and AI Intent Parsing mechanism, bridging the Google Gemini API with our internal SQL Server database to provide real-time, accurate shopping decisions.
-• Developed the Smart Basket Optimization logic, allowing the system to process arrays of products and return the cheapest market route in milliseconds.
-• Optimized database queries using Entity Framework Core (LINQ) and Eager Loading mechanisms to ensure the API handles high-traffic search and comparison requests   efficiently.
+### Key Backend Contributions (My Role)
+As the **Team Leader and Backend/AI Engineer**, my primary focus was architecting the backend infrastructure and designing the AI decision engine:
+
+* Designed and implemented the **Onion Architecture**, strictly decoupling domain logic from external data access and API layers.
+* Engineered the **RAG Pipeline and AI Intent Parsing mechanism**, bridging the Google Gemini API with our internal SQL Server database to provide real-time, accurate shopping decisions.
+* Developed the **Smart Basket Optimization** logic, allowing the system to process arrays of products and return the cheapest market route in milliseconds.
+* Optimized database queries using **Entity Framework Core (LINQ)** and Eager Loading mechanisms to ensure the API handles high-traffic search and comparison requests efficiently.
 
 ## Technology Stack
 
