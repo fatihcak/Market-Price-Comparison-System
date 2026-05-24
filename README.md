@@ -104,16 +104,16 @@ The application will be available at `http://localhost:5173`
 
 | Name | Role | GitHub |
 |------|------|--------|
+| Fatih Çakır | Team Leader - Backend & AI Developer | [@fatihcak](https://github.com/fatihcak) |
 | Doğukan Örs | Frontend Developer | [@DogukanOrs](https://github.com/DogukanOrs) |
 | Doğukan Güler | Backend Developer | [@gulerdogukan](https://github.com/gulerdogukan) |
-| Fatih Çakır | Backend Developer | [@fatihcak](https://github.com/fatihcak) |
 | Aleyna Yılmaz | Database Engineer | [@aleynayilmz](https://github.com/aleynayilmz) |
 
 ---
 
 ## 📄 License
 
-This project is created as a graduation project.
+An award-winning, AI-powered system architecture built for dynamic price comparison and data processing.
 
 ---
 
